@@ -49,7 +49,7 @@
 /* User can use this section to tailor TIMx instance used and associated 
    resources */
 /* Definition for TIMx clock resources */
-#define TIMx                           TIM3
+//#define TIMx                           TIM3
 #define TIMx_CLK_ENABLE                __HAL_RCC_TIM3_CLK_ENABLE
 
 /* Definition for TIMx's NVIC */

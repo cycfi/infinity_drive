@@ -21,9 +21,8 @@ constexpr uint32_t period = 10000;
 
 void start()
 {
-//   inf::timer<3> tmr(base_freq, period); // one second period
-//   tmr.enable_interrupt();
-//   tmr.enable();
+   inf::timer<3> tmr(base_freq, period); // one second period
+   tmr.start();
 
    red_led = on;
    blue_led = off;
@@ -32,12 +31,12 @@ void start()
       ;
 }
 
-//void irq(timer_task<3>)
-//{
-//   red_led = !red_led;
-//   blue_led = !blue_led;
-//}
-//
-//// The actual "C" interrupt handlers are defined here:
-//#include <inf/irq.hpp>
+void irq(timer_task<3>)
+{
+   red_led = !red_led;
+   blue_led = !blue_led;
+}
+
+// The actual "C" interrupt handlers are defined here:
+#include <inf/irq.hpp>
 
