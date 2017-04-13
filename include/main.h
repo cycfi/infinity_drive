@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * @file    TIM/TIM_TimeBase/Src/stm32f4xx_hal_msp.c
+  * @file    TIM/TIM_TimeBase/Inc/main.h 
   * @author  MCD Application Team
   * @version V1.2.7
   * @date    17-February-2017
-  * @brief   HAL MSP module.    
+  * @brief   Header for main.c module
   ******************************************************************************
   * @attention
   *
@@ -32,64 +32,32 @@
   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
-  ******************************************************************************  
-  */ 
+  ******************************************************************************
+  */
+
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __MAIN_H
+#define __MAIN_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32f4xx_hal.h"
+#include "stm32f4_discovery.h"
 
-/** @addtogroup STM32F4xx_HAL_Examples
-  * @{
-  */
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
+/* Exported macro ------------------------------------------------------------*/
+/* User can use this section to tailor TIMx instance used and associated 
+   resources */
+/* Definition for TIMx clock resources */
+#define TIMx                           TIM3
+#define TIMx_CLK_ENABLE                __HAL_RCC_TIM3_CLK_ENABLE
 
-/** @defgroup HAL_MSP
-  * @brief HAL MSP module.
-  * @{
-  */
+/* Definition for TIMx's NVIC */
+#define TIMx_IRQn                      TIM3_IRQn
+#define TIMx_IRQHandler                TIM3_IRQHandler
 
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
+/* Exported functions ------------------------------------------------------- */
 
-/** @defgroup HAL_MSP_Private_Functions
-  * @{
-  */
-
-/**
-  * @brief TIM MSP Initialization 
-  *        This function configures the hardware resources used in this example: 
-  *           - Peripheral's clock enable
-  *           - Peripheral's GPIO Configuration  
-  * @param htim: TIM handle pointer
-  * @retval None
-  */
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
-{
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* TIMx Peripheral clock enable */
-  __HAL_RCC_TIM3_CLK_ENABLE();
-  
-  /*##-2- Configure the NVIC for TIMx ########################################*/
-  /* Set Interrupt Group Priority */ 
-  HAL_NVIC_SetPriority(TIMx_IRQn, 4, 0);
-  
-  /* Enable the TIMx global Interrupt */
-  HAL_NVIC_EnableIRQ(TIMx_IRQn);
-}
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+#endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
