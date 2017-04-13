@@ -17,7 +17,8 @@ constexpr uint32_t sps = pwm_freq / pwm_resolution;
 inf::timer<3> pwm(pwm_freq, pwm_resolution);
 
 // our synthesizer
-inf::sin synth(1000.0, sps);
+//inf::sin synth(1000.0, sps);
+inf::pulse synth(1000.0, 0.5, sps);
 
 void start()
 {

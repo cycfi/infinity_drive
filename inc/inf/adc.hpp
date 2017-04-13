@@ -28,7 +28,7 @@ namespace cycfi { namespace infinity
 
    ////////////////////////////////////////////////////////////////////////////
    // The ADCs: We provide template functions for getting the memory mapped
-	//	adcs given a constant N. That way, we can use generic programming.
+   // adcs given a constant N. That way, we can use generic programming.
    ////////////////////////////////////////////////////////////////////////////
    template <std::size_t N>
    ADC_TypeDef& get_adc();

@@ -40,6 +40,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.95482861" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407VGTx"/>
+									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="STM32F4"/>
 									<listOptionValue builtIn="false" value="STM32F4DISCOVERY"/>
 									<listOptionValue builtIn="false" value="STM32"/>
@@ -63,6 +64,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.269112879" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407VGTx"/>
+									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="STM32F4"/>
 									<listOptionValue builtIn="false" value="STM32F4DISCOVERY"/>
 									<listOptionValue builtIn="false" value="STM32"/>

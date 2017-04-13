@@ -168,7 +168,7 @@ namespace cycfi { namespace infinity
             port = timer_pin<pin_>::port,
             pin = timer_pin<pin_>::bit
          };
-         GPIO_PinAFConfig(&get_port<port>(), pin_, 0x02);
+         GPIO_PinAFConfig(&get_port<port>(), pin, 0x02);
 
          TIM_OCInitTypeDef init;
          TIM_OCStructInit(&init);
