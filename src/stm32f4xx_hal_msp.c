@@ -1,14 +1,16 @@
 /**
   ******************************************************************************
-  * @file    TIM/TIM_TimeBase/Src/stm32f4xx_hal_msp.c
+  * @file    stm32f4xx_hal_msp_template.c
   * @author  MCD Application Team
-  * @version V1.2.7
-  * @date    17-February-2017
-  * @brief   HAL MSP module.    
+  * @version V1.5.0
+  * @date    06-May-2016
+  * @brief   This file contains the HAL System and Peripheral (PPP) MSP initialization
+  *          and de-initialization functions.
+  *          It should be copied to the application folder and renamed into 'stm32f4xx_hal_msp.c'.           
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -32,17 +34,23 @@
   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
-  ******************************************************************************  
+  ******************************************************************************
   */ 
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32f4xx_hal.h"
 
-/** @addtogroup STM32F4xx_HAL_Examples
+// [ILG]
+#if defined ( __GNUC__ )
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+
+/** @addtogroup STM32F4xx_HAL_Driver
   * @{
   */
 
-/** @defgroup HAL_MSP
+/** @defgroup HAL_MSP HAL MSP
   * @brief HAL MSP module.
   * @{
   */
@@ -54,30 +62,52 @@
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
-/** @defgroup HAL_MSP_Private_Functions
+/** @defgroup HAL_MSP_Private_Functions HAL MSP Private Functions
   * @{
   */
 
 /**
-  * @brief TIM MSP Initialization 
-  *        This function configures the hardware resources used in this example: 
-  *           - Peripheral's clock enable
-  *           - Peripheral's GPIO Configuration  
-  * @param htim: TIM handle pointer
+  * @brief  Initializes the Global MSP.
+  * @note   This function is called from HAL_Init() function to perform system
+  *         level initialization (GPIOs, clock, DMA, interrupt).
   * @retval None
   */
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+void HAL_MspInit(void)
 {
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* TIMx Peripheral clock enable */
-  __HAL_RCC_TIM3_CLK_ENABLE();
-  
-  /*##-2- Configure the NVIC for TIMx ########################################*/
-  /* Set Interrupt Group Priority */ 
-  HAL_NVIC_SetPriority(TIMx_IRQn, 4, 0);
-  
-  /* Enable the TIMx global Interrupt */
-  HAL_NVIC_EnableIRQ(TIMx_IRQn);
+
+}
+
+/**
+  * @brief  DeInitializes the Global MSP.
+  * @note   This functiona is called from HAL_DeInit() function to perform system
+  *         level de-initialization (GPIOs, clock, DMA, interrupt).
+  * @retval None
+  */
+void HAL_MspDeInit(void)
+{
+
+}
+
+/**
+  * @brief  Initializes the PPP MSP.
+  * @note   This functiona is called from HAL_PPP_Init() function to perform 
+  *         peripheral(PPP) system level initialization (GPIOs, clock, DMA, interrupt)
+  * @retval None
+  */
+void HAL_PPP_MspInit(void)
+{
+
+}
+
+/**
+  * @brief  DeInitializes the PPP MSP.
+  * @note   This functiona is called from HAL_PPP_DeInit() function to perform 
+  *         peripheral(PPP) system level de-initialization (GPIOs, clock, DMA, interrupt)
+  * @retval None
+  */
+void HAL_PPP_MspDeInit(void)
+{
+
 }
 
 /**
@@ -91,5 +121,10 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 /**
   * @}
   */
+
+// [ILG]
+#if defined ( __GNUC__ )
+#pragma GCC diagnostic pop
+#endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
