@@ -1,6 +1,8 @@
-/*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
-=============================================================================*/
+/*=======================================================================================
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
+=======================================================================================*/
 #include <inf/timer.hpp>
 #include <inf/pin.hpp>
 #include <inf/app.hpp>

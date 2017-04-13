@@ -1,8 +1,8 @@
-/*=======================================================================================
+/*=============================================================================
    Copyright © 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
-=======================================================================================*/
+=============================================================================*/
 #if !defined(CYCFI_INFINITY_PIN_HPP_DECEMBER_20_2015)
 #define CYCFI_INFINITY_PIN_HPP_DECEMBER_20_2015
 
@@ -14,11 +14,11 @@ namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
    // The ports: We provide template functions for getting the memory mapped
-	//	ports given a constant N. That way, we can use generic programming.
+   // ports given a constant N. That way, we can use generic programming.
    ////////////////////////////////////////////////////////////////////////////
 
-	template <std::size_t port>
-	GPIO_TypeDef& get_port();
+   template <std::size_t port>
+   GPIO_TypeDef& get_port();
 
 #define INFINITY_IOPORT(N, PORT_NAME)                                          \
    template <>                                                                 \
