@@ -15,19 +15,6 @@
 
 namespace cycfi { namespace infinity
 {
-   namespace detail
-   {
-      constexpr uint16_t dac_gpio(std::size_t ch)
-      {
-         return (ch == 0) ? GPIO_PIN_4 : GPIO_PIN_5;
-      }
-
-      constexpr uint32_t dac_channel(std::size_t ch)
-      {
-         return (ch == 0) ? DAC_CHANNEL_1 : DAC_CHANNEL_2;
-      }
-   }
-
    template <std::size_t Channel>
    class dac
    {
@@ -35,7 +22,7 @@ namespace cycfi { namespace infinity
 
       static_assert(Channel >=0 && Channel <= 1, "Invalid DAC Channel");
 
-      dac()
+      dac(uint16_t init_val = 2048)
       {
          // Enable peripherals and GPIO Clocks
          __HAL_RCC_DAC_CLK_ENABLE();
@@ -43,12 +30,12 @@ namespace cycfi { namespace infinity
 
          // Configure peripheral GPIO
          GPIO_InitTypeDef init;
-         init.Pin = detail::dac_gpio(Channel);
+         init.Pin = dac_gpio();
          init.Mode = GPIO_MODE_ANALOG;
          init.Pull = GPIO_NOPULL;
          HAL_GPIO_Init(GPIOA, &init);
 
-         // Set channel settings
+         // Channel settings
          DAC_ChannelConfTypeDef ch_conf;
          ch_conf.DAC_Trigger = DAC_TRIGGER_NONE;
          ch_conf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
@@ -57,22 +44,44 @@ namespace cycfi { namespace infinity
          h.Instance = DAC;
          HAL_DAC_Init(&h);
 
-         // Initialize and enable DAC
-         HAL_DAC_ConfigChannel(&h, &ch_conf, detail::dac_channel(Channel));
+         // Configure DAC channel
+         HAL_DAC_ConfigChannel(&h, &ch_conf, dac_channel());
 
          // Start the DAC
-         HAL_DAC_Start(&h, detail::dac_channel(Channel));
-         (*this)(0);
+         start();
+         (*this)(init_val);
+      }
+
+      void start()
+      {
+         // Start the DAC
+         HAL_DAC_Start(&h, dac_channel());
+      }
+
+      void stop()
+      {
+         // Stop the DAC
+         HAL_DAC_Stop(&h, dac_channel());
       }
 
       void operator()(uint16_t val)
       {
          // Write a new value
          val = std::min<uint16_t>(val, 4095);
-         HAL_DAC_SetValue(&h, detail::dac_channel(Channel), DAC_ALIGN_12B_R, val);
+         HAL_DAC_SetValue(&h, dac_channel(), DAC_ALIGN_12B_R, val);
       }
 
    private:
+
+      constexpr uint16_t dac_gpio()
+      {
+         return (Channel == 0) ? GPIO_PIN_4 : GPIO_PIN_5;
+      }
+
+      constexpr uint32_t dac_channel()
+      {
+         return (Channel == 0) ? DAC_CHANNEL_1 : DAC_CHANNEL_2;
+      }
 
       DAC_HandleTypeDef h;
    };

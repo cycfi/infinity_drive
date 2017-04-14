@@ -1,5 +1,5 @@
 /*=============================================================================
-   Copyright � 2015-2017 Cycfi Research. All rights reserved.
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
@@ -13,9 +13,9 @@
 namespace inf = cycfi::infinity;
 using inf::portc;
 
-constexpr uint32_t pwm_freq = 84000000;
-constexpr uint32_t pwm_resolution = 1024;
-constexpr uint32_t sps = pwm_freq / pwm_resolution;
+constexpr uint32_t tmr_freq = 84000000;
+constexpr uint32_t tmr_resolution = 1024;
+constexpr uint32_t sps = tmr_freq / tmr_resolution;
 
 // our synthesizer
 inf::sin synth(1000.0, sps);
@@ -25,7 +25,7 @@ inf::dac<0> dac;
 
 void start()
 {
-   inf::timer<3> tmr(pwm_freq, pwm_resolution);
+   inf::timer<3> tmr(tmr_freq, tmr_resolution);
    tmr.enable_interrupt();
    tmr.start();
 

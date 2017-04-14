@@ -15,16 +15,62 @@
 
 namespace cycfi { namespace infinity
 {
-   namespace detail
+   ////////////////////////////////////////////////////////////////////////////
+   // timer
+   ////////////////////////////////////////////////////////////////////////////
+   template <std::size_t N>
+   struct timer
    {
-      constexpr int sys_clock_div(int timer)
+      static_assert(N >=1 && N <= 14, "Invalid Timer N");
+
+      timer(uint32_t clock_frequency, uint32_t period)
       {
-         return (timer == 1 || timer == 9 || timer == 10 || timer == 11) ? 1 : 2;
+         h.Instance = get_timer();
+
+         h.Init.Period = period - 1;
+
+         uint32_t timer_clock = SystemCoreClock / sys_clock_div();
+         uint32_t prescaler_val = (timer_clock / clock_frequency) - 1;
+         if (prescaler_val > int_max<decltype(h.Init.Prescaler)>())
+            error_handler();  // Overflow error
+
+         h.Init.Prescaler = prescaler_val;
+         h.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+         h.Init.CounterMode = TIM_COUNTERMODE_UP;
+
+         enable_timer_clock();
+         HAL_TIM_Base_Init(&h);
       }
 
-      constexpr TIM_TypeDef* get_timer(int timer)
+      void enable_interrupt(std::size_t priority = 0)
       {
-         switch (timer)
+         auto id = get_timer_irq();
+         if (id == -1)
+            error_handler();
+         HAL_NVIC_SetPriority(IRQn_Type(id), priority, 0);
+         HAL_NVIC_EnableIRQ(IRQn_Type(id));
+      }
+
+      void start()
+      {
+         HAL_TIM_Base_Start_IT(&h);
+      }
+
+      void stop()
+      {
+         HAL_TIM_Base_Stop_IT(&h);
+      }
+
+   private:
+
+      constexpr int sys_clock_div()
+      {
+         return (N == 1 || N == 9 || N == 10 || N == 11) ? 1 : 2;
+      }
+
+      constexpr TIM_TypeDef* get_timer()
+      {
+         switch (N)
          {
             case 1:  return TIM1;
             case 2:  return TIM2;
@@ -44,9 +90,9 @@ namespace cycfi { namespace infinity
          return 0;
       }
 
-      constexpr int get_timer_irq(int timer)
+      constexpr int get_timer_irq()
       {
-         switch (timer)
+         switch (N)
          {
             case 2:  return TIM2_IRQn;
             case 3:  return TIM3_IRQn;
@@ -59,10 +105,10 @@ namespace cycfi { namespace infinity
          return 0;
       }
 
-      inline void enable_timer_clock(int timer)
+      inline void enable_timer_clock()
       {
          // TIMx Peripheral clock enable
-         switch (timer)
+         switch (N)
          {
             case 1:  __HAL_RCC_TIM1_CLK_ENABLE();  break;
             case 2:  __HAL_RCC_TIM2_CLK_ENABLE();  break;
@@ -80,60 +126,6 @@ namespace cycfi { namespace infinity
             case 14: __HAL_RCC_TIM14_CLK_ENABLE(); break;
          }
       }
-
-      inline void enable_interrupt(int timer, std::size_t priority)
-      {
-         auto id = get_timer_irq(timer);
-         if (id == -1)
-            error_handler();
-         HAL_NVIC_SetPriority(IRQn_Type(id), priority, 0);
-         HAL_NVIC_EnableIRQ(IRQn_Type(id));
-      }
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   // timer
-   ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t N>
-   struct timer
-   {
-      static_assert(N >=1 && N <= 14, "Invalid Timer N");
-
-      timer(uint32_t clock_frequency, uint32_t period)
-      {
-         h.Instance = detail::get_timer(N);
-
-         h.Init.Period = period - 1;
-
-         uint32_t timer_clock = SystemCoreClock / detail::sys_clock_div(N);
-         uint32_t prescaler_val = (timer_clock / clock_frequency) - 1;
-         if (prescaler_val > int_max<decltype(h.Init.Prescaler)>())
-            error_handler();  // Overflow error
-
-         h.Init.Prescaler = prescaler_val;
-         h.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-         h.Init.CounterMode = TIM_COUNTERMODE_UP;
-
-         detail::enable_timer_clock(N);
-         HAL_TIM_Base_Init(&h);
-      }
-
-      void enable_interrupt(std::size_t priority = 0)
-      {
-         detail::enable_interrupt(N, priority);
-      }
-
-      void start()
-      {
-         HAL_TIM_Base_Start_IT(&h);
-      }
-
-      void stop()
-      {
-         HAL_TIM_Base_Stop_IT(&h);
-      }
-
-   private:
 
       TIM_HandleTypeDef h;
    };
