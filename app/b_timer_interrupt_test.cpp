@@ -22,6 +22,7 @@ constexpr uint32_t period = 10000;
 void start()
 {
    inf::timer<3> tmr(base_freq, period); // one second period
+   tmr.enable_interrupt();
    tmr.start();
 
    red_led = on;
