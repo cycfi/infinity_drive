@@ -115,8 +115,7 @@ namespace cycfi { namespace infinity
          h.Init.CounterMode = TIM_COUNTERMODE_UP;
 
          detail::enable_timer_clock(N);
-         if (HAL_TIM_Base_Init(&h) != HAL_OK)
-           error_handler();   // Initialization Error
+         HAL_TIM_Base_Init(&h);
       }
 
       void enable_interrupt(std::size_t priority = 0)
@@ -126,14 +125,12 @@ namespace cycfi { namespace infinity
 
       void start()
       {
-         if (HAL_TIM_Base_Start_IT(&h) != HAL_OK)
-            error_handler();
+         HAL_TIM_Base_Start_IT(&h);
       }
 
       void stop()
       {
-         if (HAL_TIM_Base_Stop_IT(&h) != HAL_OK)
-            error_handler();
+         HAL_TIM_Base_Stop_IT(&h);
       }
 
    private:
