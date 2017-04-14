@@ -26,19 +26,6 @@ namespace cycfi { namespace infinity
       {
          return (ch == 0) ? DAC_CHANNEL_1 : DAC_CHANNEL_2;
       }
-
-      constexpr uint16_t dac_channel_enable(std::size_t ch)
-      {
-         return (ch == 0) ? DAC_CR_EN1 : DAC_CR_EN2;
-      }
-
-      inline void out_dac(std::size_t ch, uint16_t val)
-      {
-         if (ch == 0)
-            DAC->DHR12R1 = val;
-         else
-            DAC->DHR12R2 = val;
-      }
    }
 
    template <std::size_t Channel>
@@ -61,26 +48,28 @@ namespace cycfi { namespace infinity
          init.Pull = GPIO_NOPULL;
          HAL_GPIO_Init(GPIOA, &init);
 
-         // Set DAC options
-         h.Instance = DAC;
-
          // Set channel settings
          DAC_ChannelConfTypeDef ch_conf;
          ch_conf.DAC_Trigger = DAC_TRIGGER_NONE;
          ch_conf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
 
          // Initialize DAC
+         h.Instance = DAC;
          HAL_DAC_Init(&h);
 
          // Initialize and enable DAC
          HAL_DAC_ConfigChannel(&h, &ch_conf, detail::dac_channel(Channel));
-         DAC->CR |= detail::dac_channel_enable(Channel);
+
+         // Start the DAC
+         HAL_DAC_Start(&h, detail::dac_channel(Channel));
+         (*this)(0);
       }
 
       void operator()(uint16_t val)
       {
+         // Write a new value
          val = std::min<uint16_t>(val, 4095);
-         detail::out_dac(Channel, val);
+         HAL_DAC_SetValue(&h, detail::dac_channel(Channel), DAC_ALIGN_12B_R, val);
       }
 
    private:
