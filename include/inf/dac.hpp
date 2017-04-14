@@ -32,9 +32,12 @@ namespace cycfi { namespace infinity
          return (ch == 0) ? DAC_CR_EN1 : DAC_CR_EN2;
       }
 
-      inline auto& dac_port(std::size_t ch)
+      inline void out_dac(std::size_t ch, uint16_t val)
       {
-         return (ch == 0) ? DAC->DHR12R1 : DAC->DHR12R2;
+         if (ch == 0)
+            DAC->DHR12R1 = val;
+         else
+            DAC->DHR12R2 = val;
       }
    }
 
@@ -64,7 +67,7 @@ namespace cycfi { namespace infinity
          // Set channel settings
          DAC_ChannelConfTypeDef ch_conf;
          ch_conf.DAC_Trigger = DAC_TRIGGER_NONE;
-         ch_conf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+         ch_conf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
 
          // Initialize DAC
          HAL_DAC_Init(&h);
@@ -76,9 +79,8 @@ namespace cycfi { namespace infinity
 
       void operator()(uint16_t val)
       {
-         val = std::max<uint16_t>(val, 4095);
-         detail::dac_port(Channel) = val;
-         HAL_DAC_SetValue(&h, detail::dac_channel(Channel), DAC_ALIGN_12B_R, val);
+         val = std::min<uint16_t>(val, 4095);
+         detail::out_dac(Channel, val);
       }
 
    private:
