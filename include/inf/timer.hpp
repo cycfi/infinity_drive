@@ -25,8 +25,7 @@ namespace cycfi { namespace infinity
 
       timer(uint32_t clock_frequency, uint32_t period)
       {
-         h.Instance = get_timer();
-
+         h.Instance = timer_instance();
          h.Init.Period = period - 1;
 
          uint32_t timer_clock = SystemCoreClock / sys_clock_div();
@@ -44,9 +43,8 @@ namespace cycfi { namespace infinity
 
       void enable_interrupt(std::size_t priority = 0)
       {
-         auto id = get_timer_irq();
-         if (id == -1)
-            error_handler();
+         enum { id = timer_irq() };
+         static_assert(id != -1, "Error: Interrupts are not allowed for this timer.");
          HAL_NVIC_SetPriority(IRQn_Type(id), priority, 0);
          HAL_NVIC_EnableIRQ(IRQn_Type(id));
       }
@@ -63,12 +61,12 @@ namespace cycfi { namespace infinity
 
    private:
 
-      constexpr int sys_clock_div()
+      static constexpr int sys_clock_div()
       {
          return (N == 1 || N == 9 || N == 10 || N == 11) ? 1 : 2;
       }
 
-      constexpr TIM_TypeDef* get_timer()
+      static constexpr TIM_TypeDef* timer_instance()
       {
          switch (N)
          {
@@ -90,7 +88,7 @@ namespace cycfi { namespace infinity
          return 0;
       }
 
-      constexpr int get_timer_irq()
+      static constexpr int timer_irq()
       {
          switch (N)
          {
@@ -98,7 +96,6 @@ namespace cycfi { namespace infinity
             case 3:  return TIM3_IRQn;
             case 4:  return TIM4_IRQn;
             case 5:  return TIM5_IRQn;
-            case 6:  return -1;
             case 7:  return TIM7_IRQn;
             default: return -1;
          }

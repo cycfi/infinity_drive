@@ -73,12 +73,12 @@ namespace cycfi { namespace infinity
 
    private:
 
-      constexpr uint16_t dac_gpio()
+      static constexpr uint16_t dac_gpio()
       {
          return (Channel == 0) ? GPIO_PIN_4 : GPIO_PIN_5;
       }
 
-      constexpr uint32_t dac_channel()
+      static constexpr uint32_t dac_channel()
       {
          return (Channel == 0) ? DAC_CHANNEL_1 : DAC_CHANNEL_2;
       }
