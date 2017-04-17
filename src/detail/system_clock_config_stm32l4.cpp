@@ -3,51 +3,9 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =======================================================================================*/
-#include <inf/support.hpp>
-#include <inf/app.hpp>
 #include "stm32l4xx_it.h"
 
-// The main start function entry point xxx
-void start();
-
-namespace inf = cycfi::infinity;
-
-namespace
-{
-   static void system_clock_config();
-}
-
-int main()
-{
-   // Configure the system clock to 168 MHz
-   system_clock_config();
-
-   start();
-   return 0;
-}
-
-namespace cycfi { namespace infinity
-{
-   // Our error handler
-   void error_handler()
-   {
-      red_led_type red_led;
-      red_led = on;
-      while (true)
-      {
-         for (int i = 0; i < 3; ++i)
-         {
-            red_led = off;
-            delay_ms(100);
-            red_led = on;
-            delay_ms(100);
-         }
-         delay_ms(2000);
-      }
-   }
-}}
-
-namespace
+namespace detail
 {
    ////////////////////////////////////////////////////////////////////////////
    // System Clock Configuration
@@ -69,7 +27,7 @@ namespace
       /* MSI configuration and activation */
       LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
       LL_RCC_MSI_Enable();
-      while(LL_RCC_MSI_IsReady() != 1)
+      while (LL_RCC_MSI_IsReady() != 1)
       {
       };
 
@@ -77,14 +35,14 @@ namespace
       LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_MSI, LL_RCC_PLLM_DIV_1, 40, LL_RCC_PLLR_DIV_2);
       LL_RCC_PLL_Enable();
       LL_RCC_PLL_EnableDomain_SYS();
-      while(LL_RCC_PLL_IsReady() != 1)
+      while (LL_RCC_PLL_IsReady() != 1)
       {
       };
 
       /* Sysclk activation on the main PLL */
       LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
       LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-      while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL)
+      while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL)
       {
       };
 
@@ -102,5 +60,3 @@ namespace
       LL_SetSystemCoreClock(80000000);
    }
 }
-
-
