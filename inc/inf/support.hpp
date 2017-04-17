@@ -1,11 +1,14 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_SUPPORT_HPP_DECEMBER_20_2015)
 #define CYCFI_INFINITY_SUPPORT_HPP_DECEMBER_20_2015
 
 #include <cstdint>
-#include "system_stm32f4xx.h"
+#include "system_stm32l4xx.h"
+#include "stm32l4xx_it.h"
 
 extern "C"
 {
@@ -24,10 +27,13 @@ namespace cycfi { namespace infinity
 	////////////////////////////////////////////////////////////////////////////
    inline void delay_ms(uint32_t ms)
    {
-      timer_delay = ms;
-      while (timer_delay != 0)
-         ;
+	   LL_mDelay(ms);
    }
+
+   ////////////////////////////////////////////////////////////////////////////
+   // error_handler
+   ////////////////////////////////////////////////////////////////////////////
+   void error_handler();
 
    ////////////////////////////////////////////////////////////////////////////
    // static int types

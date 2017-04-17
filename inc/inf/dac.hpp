@@ -1,48 +1,90 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_DAC_HPP_FEBRUARY_6_2016)
 #define CYCFI_INFINITY_DAC_HPP_FEBRUARY_6_2016
 
 #include "stm32f4xx.h"
+#include <algorithm>
+
+#if !defined(DAC)
+#error "Error: Target device does not have a DAC."
+#endif
 
 namespace cycfi { namespace infinity
 {
-   // This is a barebones DAC converter, for now only used for testing
-   struct dac
+   template <std::size_t Channel>
+   class dac
    {
-      dac()
+   public:
+
+      static_assert(Channel >=0 && Channel <= 1, "Invalid DAC Channel");
+
+      dac(uint16_t init_val = 2048)
       {
-         // Enable clocks for port A and DAC
-         RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-         RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
+         // Enable peripherals and GPIO Clocks
+         __HAL_RCC_DAC_CLK_ENABLE();
+         __HAL_RCC_GPIOA_CLK_ENABLE();
 
-         // Set up PA.5 as DAC channel 2 output
-         GPIO_InitTypeDef GPIO_InitStructure;
-         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-         GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-         GPIO_Init(GPIOA, &GPIO_InitStructure);
+         // Configure peripheral GPIO
+         GPIO_InitTypeDef init;
+         init.Pin = dac_gpio();
+         init.Mode = GPIO_MODE_ANALOG;
+         init.Pull = GPIO_NOPULL;
+         HAL_GPIO_Init(GPIOA, &init);
 
-         /* DAC channel 2 Configuration */
-         DAC_InitTypeDef DAC_InitStructure;
-         DAC_StructInit(&DAC_InitStructure);
+         // Channel settings
+         DAC_ChannelConfTypeDef ch_conf;
+         ch_conf.DAC_Trigger = DAC_TRIGGER_NONE;
+         ch_conf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
 
-         DAC_InitStructure.DAC_Trigger = DAC_Trigger_None;
-         DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
-         DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Enable;
-         DAC_Init(DAC_Channel_2, &DAC_InitStructure);
+         // Initialize DAC
+         h.Instance = DAC;
+         HAL_DAC_Init(&h);
 
-         /* Enable DAC Channel 2 */
-         DAC_Cmd(DAC_Channel_2, ENABLE);
+         // Configure DAC channel
+         HAL_DAC_ConfigChannel(&h, &ch_conf, dac_channel());
+
+         // Start the DAC
+         start();
+         (*this)(init_val);
+      }
+
+      void start()
+      {
+         // Start the DAC
+         HAL_DAC_Start(&h, dac_channel());
+      }
+
+      void stop()
+      {
+         // Stop the DAC
+         HAL_DAC_Stop(&h, dac_channel());
       }
 
       void operator()(uint16_t val)
       {
-         DAC_SetChannel2Data(DAC_Align_12b_R, val);
+         // Write a new value
+         val = std::min<uint16_t>(val, 4095);
+         HAL_DAC_SetValue(&h, dac_channel(), DAC_ALIGN_12B_R, val);
       }
+
+   private:
+
+      static constexpr uint16_t dac_gpio()
+      {
+         return (Channel == 0) ? GPIO_PIN_4 : GPIO_PIN_5;
+      }
+
+      static constexpr uint32_t dac_channel()
+      {
+         return (Channel == 0) ? DAC_CHANNEL_1 : DAC_CHANNEL_2;
+      }
+
+      DAC_HandleTypeDef h;
    };
 }}
 
 #endif
-

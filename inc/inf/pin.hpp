@@ -1,24 +1,35 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_PIN_HPP_DECEMBER_20_2015)
 #define CYCFI_INFINITY_PIN_HPP_DECEMBER_20_2015
 
 #include <cstddef>
 #include <cstdint>
-#include "stm32f4xx.h"
+#include "stm32l4xx.h"
 
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
    // The ports: We provide template functions for getting the memory mapped
-	//	ports given a constant N. That way, we can use generic programming.
+   // ports given a constant N. That way, we can use generic programming.
    ////////////////////////////////////////////////////////////////////////////
 
-	template <std::size_t port>
-	GPIO_TypeDef& get_port();
+   template <std::size_t port>
+   GPIO_TypeDef& get_port();
+
+   template <std::size_t port>
+   void enable_port_clock();
 
 #define INFINITY_IOPORT(N, PORT_NAME)                                          \
+   template <>                                                                 \
+   inline void enable_port_clock<N>()                                          \
+   {                                                                           \
+      LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_##PORT_NAME);               \
+   }                                                                           \
+                                                                               \
    template <>                                                                 \
    inline GPIO_TypeDef& get_port<N>()                                          \
    {                                                                           \
@@ -26,15 +37,33 @@ namespace cycfi { namespace infinity
    }                                                                           \
    /***/
 
-INFINITY_IOPORT(0, GPIOA)
-INFINITY_IOPORT(1, GPIOB)
-INFINITY_IOPORT(2, GPIOC)
-INFINITY_IOPORT(3, GPIOD)
-INFINITY_IOPORT(4, GPIOE)
-INFINITY_IOPORT(5, GPIOF)
-INFINITY_IOPORT(6, GPIOG)
-INFINITY_IOPORT(7, GPIOH)
-INFINITY_IOPORT(8, GPIOI)
+#ifdef GPIOA
+  INFINITY_IOPORT(0, GPIOA)
+#endif
+#ifdef GPIOB
+  INFINITY_IOPORT(1, GPIOB)
+#endif
+#ifdef GPIOC
+  INFINITY_IOPORT(2, GPIOC)
+#endif
+#ifdef GPIOD
+  INFINITY_IOPORT(3, GPIOD)
+#endif
+#ifdef GPIOE
+  INFINITY_IOPORT(4, GPIOE)
+#endif
+#ifdef GPIOF
+  INFINITY_IOPORT(5, GPIOF)
+#endif
+#ifdef GPIOG
+  INFINITY_IOPORT(6, GPIOG)
+#endif
+#ifdef GPIOH
+  INFINITY_IOPORT(7, GPIOH)
+#endif
+#ifdef GPIOI
+  INFINITY_IOPORT(8, GPIOI)
+#endif
 
    ////////////////////////////////////////////////////////////////////////////
    // Constants
@@ -52,25 +81,16 @@ INFINITY_IOPORT(8, GPIOI)
 
    enum class port_output_speed
    {
-      low_speed = 0,       // 2MHz low speed
-      mid_speed = 1,       // 12.5 MHz to 50 MHz medium speed
-      high_speed = 2,      // 25 MHz to 100 MHz high speed
-      very_high_speed = 3  // 50 MHz to 200 MHz very high speed
+      low_speed = LL_GPIO_SPEED_FREQ_LOW,             // 2MHz low speed
+      mid_speed = LL_GPIO_SPEED_FREQ_MEDIUM,          // 12.5 MHz to 50 MHz medium speed
+      high_speed = LL_GPIO_SPEED_FREQ_HIGH,           // 25 MHz to 100 MHz high speed
+      very_high_speed = LL_GPIO_SPEED_FREQ_VERY_HIGH  // 50 MHz to 200 MHz very high speed
    };
 
    enum class port_output_type
    {
-      output_push_pull = true,
-      output_open_drain = false
-   };
-
-   enum class port_output_mode
-   {
-      // allows the GPIO pin to be used as an output pin
-      output_mode = 1,
-
-      // allow the GPIO pins to be used by peripherals such as the UART, SPI e.t.c.
-      alternate_function_mode = 2
+      output_push_pull = LL_GPIO_OUTPUT_PUSHPULL,
+      output_open_drain = LL_GPIO_OUTPUT_OPENDRAIN
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -124,9 +144,8 @@ INFINITY_IOPORT(8, GPIOI)
    ////////////////////////////////////////////////////////////////////////////
    template <
       std::size_t N,
-      port_output_speed speed = port_output_speed::very_high_speed,
-      port_output_type push_pull = port_output_type::output_push_pull,
-      port_output_mode mode = port_output_mode::output_mode
+      port_output_speed speed = port_output_speed::high_speed,
+      port_output_type type = port_output_type::output_push_pull
    >
    struct output_pin
    {
@@ -144,24 +163,19 @@ INFINITY_IOPORT(8, GPIOI)
       void setup()
       {
          // Enable GPIO peripheral clock
-         RCC->AHB1ENR |= 1 << port;
+         enable_port_clock<port>();
 
          // Configure output mode
-         gpio().MODER |=
-            (gpio().MODER & mask2) | (uint32_t(mode) << (bit * 2));
+         LL_GPIO_SetPinMode(&gpio(), mask, LL_GPIO_MODE_OUTPUT);
 
          // Configure output push pull or open drain
-         if (bool(push_pull))
-            gpio().OTYPER &= ~mask;
-         else
-            gpio().OTYPER |= mask;
+         LL_GPIO_SetPinOutputType(&gpio(), mask, uint32_t(type));
 
          // Configure output speed
-         gpio().OSPEEDR |=
-            (gpio().OSPEEDR & mask2) | (uint32_t(speed) << (bit * 2));
+         LL_GPIO_SetPinSpeed(&gpio(), mask, uint32_t(speed));
 
          // Configure pull-up/down resistor
-         gpio().PUPDR &= ~mask2;
+         LL_GPIO_SetPinPull(&gpio(), mask, LL_GPIO_PULL_NO);
       }
 
       output_pin()
@@ -185,7 +199,7 @@ INFINITY_IOPORT(8, GPIOI)
       {
       }
 
-      volatile GPIO_TypeDef& gpio() const
+      GPIO_TypeDef& gpio() const
       {
          return get_port<port>();
       }
@@ -238,28 +252,14 @@ INFINITY_IOPORT(8, GPIOI)
    ////////////////////////////////////////////////////////////////////////////
    // input_pin
    ////////////////////////////////////////////////////////////////////////////
-   enum class port_input_mode
-   {
-      // allows the GPIO pin to be used as an input pin
-      input_mode = 0,
-
-      // allow the GPIO pins to be used by peripherals such as the UART, SPI e.t.c.
-      alternate_function_mode = 2,
-
-      // allows the GPIO pin to be used as an Analog input pin
-      analog_mode = 3
-   };
-
    enum class port_input_type
    {
-      input_normal = true,
-      input_pull_down = false
+      input_normal = LL_GPIO_PULL_NO,
+      input_pull_up = LL_GPIO_PULL_UP,
+      input_pull_down = LL_GPIO_PULL_DOWN
    };
 
-   template <std::size_t N,
-      port_input_mode mode = port_input_mode::input_mode,
-      port_input_type pull_down = port_input_type::input_normal
-   >
+   template <std::size_t N, port_input_type type = port_input_type::input_normal>
    struct input_pin
    {
       static constexpr uint16_t bit = N % 16;
@@ -274,18 +274,14 @@ INFINITY_IOPORT(8, GPIOI)
 
       input_pin()
       {
-         // Enable the AHB peripheral clock
-         RCC->AHB1ENR |= 1 << port;
+         // Enable GPIO peripheral clock
+         enable_port_clock<port>();
 
          // Configure input mode
-         gpio().MODER |=
-            (gpio().MODER & mask2) | (uint32_t(mode) << (bit * 2));
+         LL_GPIO_SetPinMode(&gpio(), mask, LL_GPIO_MODE_INPUT);
 
          // Configure pull-up/down resistor
-         if (pull_down == port_input_type::input_normal)
-            gpio().PUPDR &= ~mask2;
-         else
-            gpio().PUPDR |= mask2;
+         LL_GPIO_SetPinPull(&gpio(), mask, uint32_t(type));
       }
 
       volatile GPIO_TypeDef& gpio() const

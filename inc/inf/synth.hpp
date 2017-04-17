@@ -1,5 +1,7 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_SYNTH_HPP_DECEMBER_24_2015)
 #define CYCFI_INFINITY_SYNTH_HPP_DECEMBER_24_2015

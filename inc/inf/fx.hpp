@@ -1,5 +1,7 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_FILTER_HPP_DECEMBER_24_2015)
 #define CYCFI_INFINITY_FILTER_HPP_DECEMBER_24_2015
@@ -121,7 +123,7 @@ namespace cycfi { namespace infinity
        : a(a)
       {}
 
-      constexpr float operator()(float s)
+      constexpr float operator()(float s) const
       {
          return s * a;
       }
@@ -132,25 +134,25 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // The peak_trigger generates pulses that coincide with the peaks of a
    // waveform. This is accomplished by sending the signal through a peak-
-   // detector and comparing the result with the original sißgnal (slightly
+   // detector and comparing the result with the original signal (slightly
    // attenuated) using a schmitt_trigger.
    ////////////////////////////////////////////////////////////////////////////
-//   struct peak_trigger // $$$ For now $$$ß
-//   {
-//      peak_trigger(float d = 0.001f)
-//       : pk(d)
-//       , cmp(0.002f)
-//      {}
-//
-//      float operator()(float s)
-//      {
-//         constexpr gain g{0.9f};
-//         return cmp(s, g(pk(s)));
-//      }
-//
-//      peak_detector pk;
-//      schmitt_trigger cmp;
-//   };
+   struct peak_trigger
+   {
+      peak_trigger(float d = 0.001f)
+       : pk(d)
+       , cmp(0.002f)
+      {}
+
+      float operator()(float s)
+      {
+         constexpr gain g{0.9f};
+         return cmp(s, g(pk(s)));
+      }
+
+      peak_detector pk;
+      schmitt_trigger cmp;
+   };
 
    ////////////////////////////////////////////////////////////////////////////
    // clip a signal to range -max...+max
