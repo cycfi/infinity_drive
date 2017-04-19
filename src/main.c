@@ -1,11 +1,11 @@
 /**
   ******************************************************************************
-  * @file    Examples_LL/GPIO/GPIO_InfiniteLedToggling/Src/main.c
+  * @file    Examples_LL/TIM/TIM_TimeBase/Src/main.c
   * @author  MCD Application Team
   * @version V1.7.0
   * @date    17-February-2017
-  * @brief   This example describes how to configure and use GPIOs through
-  *          the STM32L4xx  GPIO LL API.
+  * @brief   This example describes how to use a timer instance to generate a 
+  *          time base using the STM32L4xx TIM LL API.
   *          Peripheral initialization done using LL unitary services functions.
   ******************************************************************************
   * @attention
@@ -44,18 +44,31 @@
   * @{
   */
 
-/** @addtogroup GPIO_InfiniteLedToggling
+/** @addtogroup TIM_TimeBase
   * @{
   */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+#define BUTTON_MODE_GPIO  0
+#define BUTTON_MODE_EXTI  1
+
+/* Number of time base frequencies */
+#define TIM_BASE_FREQ_NB 10
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
-void     SystemClock_Config(void);
-void     Configure_GPIO(void);
+/* Initial autoreload value */
+static uint32_t InitialAutoreload = 0;
 
+/* Actual autoreload value multiplication factor */
+static uint8_t AutoreloadMult = 1;
+
+/* Private function prototypes -----------------------------------------------*/
+__STATIC_INLINE void     SystemClock_Config(void);
+__STATIC_INLINE void     Configure_TIMTimeBase(void);
+__STATIC_INLINE void     LED_Init(void);
+__STATIC_INLINE void     UserButton_Init(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -68,29 +81,73 @@ int main(void)
 {
   /* Configure the system clock to 80 MHz */
   SystemClock_Config();
-  
-  /* -2- Configure IO in output push-pull mode to drive external LED */
-  Configure_GPIO();
 
-  /* Toggle IO in an infinite loop */
+  /* Initialize LED2 */
+  LED_Init();
+
+  /* Initialize button in EXTI mode */
+  UserButton_Init();
+
+  /* Configure the timer time base */
+  Configure_TIMTimeBase();
+
+  /* Infinite loop */
   while (1)
   {
-    LL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
-    
-    /* Insert delay 250 ms */
-    LL_mDelay(250);
   }
 }
 
 /**
-  * @brief  This function configures GPIO
+  * @brief  Configures the timer as a time base.
   * @note   Peripheral configuration is minimal configuration from reset values.
   *         Thus, some useless LL unitary functions calls below are provided as
   *         commented examples - setting is default configuration from reset.
   * @param  None
   * @retval None
   */
-void Configure_GPIO(void)
+__STATIC_INLINE void  Configure_TIMTimeBase(void)
+{
+  /* Enable the timer peripheral clock */
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1); 
+  
+  /* Set counter mode */
+  /* Reset value is LL_TIM_COUNTERMODE_UP */
+  //LL_TIM_SetCounterMode(TIM1, LL_TIM_COUNTERMODE_UP);
+
+  /* Set the pre-scaler value to have TIM1 counter clock equal to 10 kHz      */
+  /*
+   In this example TIM1 input clock TIM1CLK is set to APB2 clock (PCLK2),   
+   since APB2 pre-scaler is equal to 1.                                     
+      TIM1CLK = PCLK2                                                       
+      PCLK2 = HCLK                                                          
+      => TIM1CLK = SystemCoreClock (80 MHz)                                 
+  */
+  LL_TIM_SetPrescaler(TIM1, __LL_TIM_CALC_PSC(SystemCoreClock, 10000));
+  
+  /* Set the auto-reload value to have an initial update event frequency of 10 Hz */
+  InitialAutoreload = __LL_TIM_CALC_ARR(SystemCoreClock, LL_TIM_GetPrescaler(TIM1), 10);
+  LL_TIM_SetAutoReload(TIM1, InitialAutoreload);
+  
+  /* Enable the update interrupt */
+  LL_TIM_EnableIT_UPDATE(TIM1);
+  
+  /* Configure the NVIC to handle TIM1 update interrupt */
+  NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 0);
+  NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
+  
+  /* Enable counter */
+  LL_TIM_EnableCounter(TIM1);
+  
+  /* Force update generation */
+  LL_TIM_GenerateEvent_UPDATE(TIM1);
+}
+
+/**
+  * @brief  Initialize LED2.
+  * @param  None
+  * @retval None
+  */
+__STATIC_INLINE void LED_Init(void)
 {
   /* Enable the LED2 Clock */
   LED2_GPIO_CLK_ENABLE();
@@ -103,6 +160,32 @@ void Configure_GPIO(void)
   //LL_GPIO_SetPinSpeed(LED2_GPIO_PORT, LED2_PIN, LL_GPIO_SPEED_FREQ_LOW);
   /* Reset value is LL_GPIO_PULL_NO */
   //LL_GPIO_SetPinPull(LED2_GPIO_PORT, LED2_PIN, LL_GPIO_PULL_NO);
+}
+
+/**
+  * @brief  Configures User push-button in GPIO or EXTI Line Mode.
+  * @param  None
+  * @retval None
+  */
+__STATIC_INLINE void UserButton_Init(void)
+{
+  /* Enable the BUTTON Clock */
+  USER_BUTTON_GPIO_CLK_ENABLE();
+  
+  /* Configure GPIO for BUTTON */
+  LL_GPIO_SetPinMode(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, LL_GPIO_MODE_INPUT);
+  LL_GPIO_SetPinPull(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, LL_GPIO_PULL_NO);
+  
+  /* Connect External Line to the GPIO*/
+  USER_BUTTON_SYSCFG_SET_EXTI();
+    
+  /* Enable a rising trigger EXTI line 13 Interrupt */
+  USER_BUTTON_EXTI_LINE_ENABLE();
+  USER_BUTTON_EXTI_FALLING_TRIG_ENABLE();
+    
+  /* Configure NVIC for USER_BUTTON_EXTI_IRQn */
+  NVIC_EnableIRQ(USER_BUTTON_EXTI_IRQn); 
+  NVIC_SetPriority(USER_BUTTON_EXTI_IRQn,0x03);  
 }
 
 /**
@@ -158,6 +241,41 @@ void SystemClock_Config(void)
   
   /* Update CMSIS variable (which can be updated also through SystemCoreClockUpdate function) */
   LL_SetSystemCoreClock(80000000);
+}
+
+/******************************************************************************/
+/*   USER IRQ HANDLER TREATMENT                                               */
+/******************************************************************************/
+/**
+  * @brief  Update the timer update event period
+  * @param  None
+  * @retval None
+  */
+void UserButton_Callback(void)
+{
+  /* Change the update event period by modifying the autoreload value.        */
+  /* In up-counting update event is generated at each counter overflow (when  */
+  /* the counter reaches the auto-reload value).                              */
+  /* Update event period is calculated as follows:                            */
+  /*   Update_event = TIM1CLK /((PSC + 1)*(ARR + 1)*(RCR + 1))                */
+  /*   where TIM1CLK is 80 MHz                                                */
+  AutoreloadMult = AutoreloadMult % TIM_BASE_FREQ_NB;
+  LL_TIM_SetAutoReload(TIM1, InitialAutoreload * (AutoreloadMult +1));
+
+  /* Force update generation */
+  LL_TIM_GenerateEvent_UPDATE(TIM1);
+
+  AutoreloadMult++;
+}
+
+/**
+  * @brief  Timer update interrupt processing
+  * @param  None
+  * @retval None
+  */
+void TimerUpdate_Callback(void)
+{
+  LL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);  
 }
 
 #ifdef  USE_FULL_ASSERT

@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    Examples_LL/GPIO/GPIO_InfiniteLedToggling/Inc/stm32l4xx_it.h
+  * @file    Examples_LL/TIM/TIM_TimeBase/Inc/stm32l4xx_it.h
   * @author  MCD Application Team
   * @version V1.7.0
   * @date    17-February-2017
@@ -60,7 +60,8 @@ void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
-
+void USER_BUTTON_IRQHANDLER(void);
+void TIM1_UP_TIM16_IRQHandler(void);
 #ifdef __cplusplus
 }
 #endif

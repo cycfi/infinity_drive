@@ -1,6 +1,6 @@
 /** 
   ******************************************************************************
-  * @file    Examples_LL/GPIO/GPIO_InfiniteLedToggling/Src/stm32l4xx_it.c
+  * @file    Examples_LL/TIM/TIM_TimeBase/Src/stm32l4xx_it.c
   * @author  MCD Application Team
   * @version V1.7.0
   * @date    17-February-2017
@@ -44,7 +44,7 @@
   * @{
   */
 
-/** @addtogroup GPIO_InfiniteLedToggling
+/** @addtogroup TIM_TimeBase
   * @{
   */
 
@@ -59,7 +59,6 @@
 /******************************************************************************/
 /*            Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
-
 /**
   * @brief  This function handles NMI exception.
   * @param  None
@@ -159,10 +158,44 @@ void SysTick_Handler(void)
 
 /******************************************************************************/
 /*                 STM32L4xx Peripherals Interrupt Handlers                   */
-/*  Add here the Interrupt Handler for the used peripheral(s) (GPIO), for the  */
+/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32l4xx.s).                                               */
 /******************************************************************************/
+/**
+* @brief  This function handles TIM1 update interrupt.
+* @param  None
+* @retval None
+*/
+void TIM1_UP_TIM16_IRQHandler(void)
+{
+  /* Check whether update interrupt is pending */
+  if(LL_TIM_IsActiveFlag_UPDATE(TIM1) == 1)
+  {
+    /* Clear the update interrupt flag*/
+    LL_TIM_ClearFlag_UPDATE(TIM1);
+  }
+  
+  /* TIM1 update interrupt processing */
+  TimerUpdate_Callback();
+}
+
+/**
+  * @brief  This function handles external lines 10 to 15 interrupt request.
+  * @param  None
+  * @retval None
+  */
+void USER_BUTTON_IRQHANDLER(void)
+{
+  /* Manage Flags */
+  if(LL_EXTI_IsActiveFlag_0_31(USER_BUTTON_EXTI_LINE) != RESET)
+  {
+    LL_EXTI_ClearFlag_0_31(USER_BUTTON_EXTI_LINE);
+
+    /* Manage code in main.c.*/
+    UserButton_Callback(); 
+  }
+}
 
 /**
   * @}

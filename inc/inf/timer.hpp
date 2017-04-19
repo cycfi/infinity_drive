@@ -6,7 +6,7 @@
 #if !defined(CYCFI_INFINITY_TIMER_HPP_DECEMBER_21_2015)
 #define CYCFI_INFINITY_TIMER_HPP_DECEMBER_21_2015
 
-#include "stm32f4xx.h"
+#include "stm32l4xx.h"
 #include <cstdint>
 #include <type_traits>
 
