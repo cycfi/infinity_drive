@@ -100,19 +100,19 @@ namespace cycfi { namespace infinity { namespace detail
 
 #if defined(TIM15)
  INFINITY_TIMER(15, TIM15)
- INFINITY_TIMER_IRQN(15, TIM1_BRK_TIM15_IRQn)
+ INFINITY_TIMER_IRQN(15, -1) // we don't allow interrupts for timers 15-17
  INFINITY_TIMER_PERIPH_ID(15, LL_APB2_GRP1_PERIPH_TIM15)
 #endif
 
 #if defined(TIM16)
  INFINITY_TIMER(16, TIM16)
- INFINITY_TIMER_IRQN(16, TIM1_UP_TIM16_IRQn)
+ INFINITY_TIMER_IRQN(16, -1) // we don't allow interrupts for timers 15-17
  INFINITY_TIMER_PERIPH_ID(16, LL_APB2_GRP1_PERIPH_TIM16)
 #endif
 
 #if defined(TIM17)
  INFINITY_TIMER(17, TIM17)
- INFINITY_TIMER_IRQN(17, TIM1_TRG_COM_TIM17_IRQn)
+ INFINITY_TIMER_IRQN(17, -1) // we don't allow interrupts for timers 15-17
  INFINITY_TIMER_PERIPH_ID(17, LL_APB2_GRP1_PERIPH_TIM17)
 #endif
 
