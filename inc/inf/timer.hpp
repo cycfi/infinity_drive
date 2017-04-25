@@ -18,10 +18,10 @@ namespace cycfi { namespace infinity
    template <std::size_t N>
    struct timer
    {
+      static_assert(detail::check_valid_timer(N), "Invalid Timer N");
+
       timer(uint32_t clock_frequency, uint32_t period)
       {
-         static_assert(detail::check_valid_timer(N), "Invalid Timer N");
-
           // Enable the timer peripheral clock
          LL_APB2_GRP1_EnableClock(get_periph_id());
 
@@ -39,6 +39,8 @@ namespace cycfi { namespace infinity
 
       void enable_interrupt(std::size_t priority = 0)
       {
+         static_assert(detail::timer_irqn<N>() != -1, "Timer has no interrupt capability.");
+
          // Enable the update interrupt
          LL_TIM_EnableIT_UPDATE(get_timer());
 
@@ -70,7 +72,6 @@ namespace cycfi { namespace infinity
 
       static constexpr IRQn_Type get_irqn()
       {
-         static_assert(detail::timer_irqn<N>() != -1, "Timer has no interrupt capability.");
          return IRQn_Type(detail::timer_irqn<N>());
       }
 
