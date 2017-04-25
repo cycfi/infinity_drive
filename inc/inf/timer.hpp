@@ -6,10 +6,6 @@
 #if !defined(CYCFI_INFINITY_TIMER_HPP_DECEMBER_21_2015)
 #define CYCFI_INFINITY_TIMER_HPP_DECEMBER_21_2015
 
-#include "stm32l4xx.h"
-#include <cstdint>
-#include <type_traits>
-
 #include <inf/pin.hpp>
 #include <inf/support.hpp>
 #include <inf/detail/timer_impl.hpp>
@@ -27,13 +23,13 @@ namespace cycfi { namespace infinity
          static_assert(detail::check_valid_timer(N), "Invalid Timer N");
 
           // Enable the timer peripheral clock
-         LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
+         LL_APB2_GRP1_EnableClock(get_periph_id());
 
          // Set the pre-scaler value
          LL_TIM_SetPrescaler(get_timer(), __LL_TIM_CALC_PSC(SystemCoreClock, clock_frequency));
 
-         // Set the auto-reload value to have an initial update event frequency of
-         // clock_frequency/period
+         // Set the auto-reload value to have an initial update event frequency
+         // of clock_frequency/period
          auto freq = clock_frequency/period;
          auto autoreload = __LL_TIM_CALC_ARR(
             SystemCoreClock, LL_TIM_GetPrescaler(get_timer()), freq);
@@ -78,48 +74,10 @@ namespace cycfi { namespace infinity
          return IRQn_Type(detail::timer_irqn<N>());
       }
 
-//      static constexpr int sys_clock_div()
-//      {
-//         return (N == 1 || N == 9 || N == 10 || N == 11) ? 1 : 2;
-//      }
-//
-//      static constexpr int timer_irq()
-//      {
-//         switch (N)
-//         {
-//            case 2:  return TIM2_IRQn;
-//            case 3:  return TIM3_IRQn;
-//            case 4:  return TIM4_IRQn;
-//            case 5:  return TIM5_IRQn;
-//            case 7:  return TIM7_IRQn;
-//            default: return -1;
-//         }
-//         return 0;
-//      }
-//
-//      inline void enable_timer_clock()
-//      {
-//         // TIMx Peripheral clock enable
-//         switch (N)
-//         {
-////            case 1:  __HAL_RCC_TIM1_CLK_ENABLE();  break;
-////            case 2:  __HAL_RCC_TIM2_CLK_ENABLE();  break;
-////            case 3:  __HAL_RCC_TIM3_CLK_ENABLE();  break;
-////            case 4:  __HAL_RCC_TIM4_CLK_ENABLE();  break;
-////            case 5:  __HAL_RCC_TIM5_CLK_ENABLE();  break;
-////            case 6:  __HAL_RCC_TIM6_CLK_ENABLE();  break;
-////            case 7:  __HAL_RCC_TIM7_CLK_ENABLE();  break;
-////            case 8:  __HAL_RCC_TIM8_CLK_ENABLE();  break;
-////            case 9:  __HAL_RCC_TIM9_CLK_ENABLE();  break;
-////            case 10: __HAL_RCC_TIM10_CLK_ENABLE(); break;
-////            case 11: __HAL_RCC_TIM11_CLK_ENABLE(); break;
-////            case 12: __HAL_RCC_TIM12_CLK_ENABLE(); break;
-////            case 13: __HAL_RCC_TIM13_CLK_ENABLE(); break;
-////            case 14: __HAL_RCC_TIM14_CLK_ENABLE(); break;
-//         }
-//      }
-
-      //TIM_HandleTypeDef h;
+      static constexpr uint32_t get_periph_id()
+      {
+         return detail::timer_periph_id<N>();
+      }
    };
 }}
 
