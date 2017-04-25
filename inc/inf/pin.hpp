@@ -9,6 +9,8 @@
 #include <cstddef>
 #include <cstdint>
 #include "stm32l4xx.h"
+#include "stm32l4xx_ll_gpio.h"
+#include "stm32l4xx_ll_bus.h"
 
 namespace cycfi { namespace infinity
 {
@@ -16,12 +18,14 @@ namespace cycfi { namespace infinity
    // The ports: We provide template functions for getting the memory mapped
    // ports given a constant N. That way, we can use generic programming.
    ////////////////////////////////////////////////////////////////////////////
+   namespace detail
+   {
+      template <std::size_t port>
+      GPIO_TypeDef& get_port();
 
-   template <std::size_t port>
-   GPIO_TypeDef& get_port();
-
-   template <std::size_t port>
-   void enable_port_clock();
+      template <std::size_t port>
+      void enable_port_clock();
+   }
 
 #define INFINITY_IOPORT(N, PORT_NAME)                                          \
    template <>                                                                 \
@@ -37,6 +41,8 @@ namespace cycfi { namespace infinity
    }                                                                           \
    /***/
 
+   namespace detail
+   {
 #ifdef GPIOA
   INFINITY_IOPORT(0, GPIOA)
 #endif
@@ -64,6 +70,7 @@ namespace cycfi { namespace infinity
 #ifdef GPIOI
   INFINITY_IOPORT(8, GPIOI)
 #endif
+   }
 
    ////////////////////////////////////////////////////////////////////////////
    // Constants
@@ -163,7 +170,7 @@ namespace cycfi { namespace infinity
       void setup()
       {
          // Enable GPIO peripheral clock
-         enable_port_clock<port>();
+         detail::enable_port_clock<port>();
 
          // Configure output mode
          LL_GPIO_SetPinMode(&gpio(), mask, LL_GPIO_MODE_OUTPUT);
@@ -201,7 +208,7 @@ namespace cycfi { namespace infinity
 
       GPIO_TypeDef& gpio() const
       {
-         return get_port<port>();
+         return detail::get_port<port>();
       }
 
       volatile uint32_t& ref() const
@@ -275,7 +282,7 @@ namespace cycfi { namespace infinity
       input_pin()
       {
          // Enable GPIO peripheral clock
-         enable_port_clock<port>();
+    	  detail::enable_port_clock<port>();
 
          // Configure input mode
          LL_GPIO_SetPinMode(&gpio(), mask, LL_GPIO_MODE_INPUT);
@@ -286,7 +293,7 @@ namespace cycfi { namespace infinity
 
       volatile GPIO_TypeDef& gpio() const
       {
-         return get_port<port>();
+         return detail::get_port<port>();
       }
 
       volatile uint16_t& ref() const

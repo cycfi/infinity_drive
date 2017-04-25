@@ -14,86 +14,121 @@
 
 extern "C"
 {
-   inline ITStatus TIM_GetITStatus(TIM_TypeDef* TIMx, uint16_t TIM_IT)
-   {
-     ITStatus bitstatus = RESET;
-     uint16_t itstatus = 0x0, itenable = 0x0;
-     itstatus = TIMx->SR & TIM_IT;
+   //inline ITStatus TIM_GetITStatus(TIM_TypeDef* TIMx, uint16_t TIM_IT)
+   //{
+   //  ITStatus bitstatus = RESET;
+   //  uint16_t itstatus = 0x0, itenable = 0x0;
+   //  itstatus = TIMx->SR & TIM_IT;
+   //
+   //  itenable = TIMx->DIER & TIM_IT;
+   //  if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET))
+   //  {
+   //    bitstatus = SET;
+   //  }
+   //  else
+   //  {
+   //    bitstatus = RESET;
+   //  }
+   //  return bitstatus;
+   //}
+   //
+   //inline void TIM_ClearITPendingBit(TIM_TypeDef* TIMx, uint16_t TIM_IT)
+   //{
+   //  /* Clear the IT pending Bit */
+   //  TIMx->SR = (uint16_t)~TIM_IT;
+   //}
 
-     itenable = TIMx->DIER & TIM_IT;
-     if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET))
-     {
-       bitstatus = SET;
-     }
-     else
-     {
-       bitstatus = RESET;
-     }
-     return bitstatus;
+void TIM1_UP_TIM16_IRQHandler(void)
+{
+   // Check whether update interrupt is pending
+   if (LL_TIM_IsActiveFlag_UPDATE(TIM1) == 1)
+   {
+      // Clear the update interrupt flag
+      LL_TIM_ClearFlag_UPDATE(TIM1);
    }
 
-   inline void TIM_ClearITPendingBit(TIM_TypeDef* TIMx, uint16_t TIM_IT)
-   {
-     /* Clear the IT pending Bit */
-     TIMx->SR = (uint16_t)~TIM_IT;
-   }
+   irq(timer_task<1>{});
+}
 
-#define TIMER_INTERRUPT_HANDLER(N)                                             \
-   void TIM##N##_IRQHandler(void)                                              \
-   {                                                                           \
-      if (TIM_GetITStatus(TIM##N, TIM_IT_UPDATE) != RESET)                     \
-      {                                                                        \
-         TIM_ClearITPendingBit(TIM##N, TIM_IT_UPDATE);                         \
-         irq(timer_task<N>{});                                                 \
-      }                                                                        \
-   }                                                                           \
-   /***/
-
-    //if(__HAL_TIM_GET_IT_SOURCE(htim, TIM_IT_UPDATE) !=RESET)
-    //{
-    //  __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
-    //  HAL_TIM_PeriodElapsedCallback(htim);
-    //}
-
-#if defined(TIM2)
- TIMER_INTERRUPT_HANDLER(2)
-#endif
-
-#if defined(TIM3)
- TIMER_INTERRUPT_HANDLER(3)
-#endif
-
-#if defined(TIM4)
- TIMER_INTERRUPT_HANDLER(4)
-#endif
-
-#if defined(TIM5)
- TIMER_INTERRUPT_HANDLER(5)
-#endif
-
-#if defined(TIM6)
- TIMER_INTERRUPT_HANDLER(6)
-#endif
-
-#if defined(TIM7)
- TIMER_INTERRUPT_HANDLER(7)
-#endif
-
-#if defined(TIM8)
- TIMER_INTERRUPT_HANDLER(8)
-#endif
-
-#if defined(TIM9)
- TIMER_INTERRUPT_HANDLER(9)
-#endif
-
-#if defined(TIM10)
- TIMER_INTERRUPT_HANDLER(10)
-#endif
-
-#if defined(TIM11)
- TIMER_INTERRUPT_HANDLER(11)
-#endif
+//#define TIMER_INTERRUPT_HANDLER(N)                                             \
+//   void TIM1_UP_TIM16_IRQHandler()                                             \
+//   {                                                                           \
+//      if (LL_TIM_IsActiveFlag_UPDATE(TIM##N) == 1)                             \
+//      {                                                                        \
+//         // Clear the update interrupt flag                                    \
+//         LL_TIM_ClearFlag_UPDATE(TIM##N);                                      \
+//         irq(timer_task<N>{});                                                 \
+//      }                                                                        \
+//   }                                                                           \
+//   /***/
+//
+//#if defined(TIM1)
+// TIMER_INTERRUPT_HANDLER(1)
+//#endif
+//
+//#if defined(TIM2)
+// TIMER_INTERRUPT_HANDLER(2)
+//#endif
+//
+//#if defined(TIM3)
+// TIMER_INTERRUPT_HANDLER(3)
+//#endif
+//
+//#if defined(TIM4)
+// TIMER_INTERRUPT_HANDLER(4)
+//#endif
+//
+//#if defined(TIM5)
+// TIMER_INTERRUPT_HANDLER(5)
+//#endif
+//
+//#if defined(TIM6)
+// TIMER_INTERRUPT_HANDLER(6)
+//#endif
+//
+//#if defined(TIM7)
+// TIMER_INTERRUPT_HANDLER(7)
+//#endif
+//
+//#if defined(TIM8)
+// TIMER_INTERRUPT_HANDLER(8)
+//#endif
+//
+//#if defined(TIM9)
+// TIMER_INTERRUPT_HANDLER(9)
+//#endif
+//
+//#if defined(TIM10)
+// TIMER_INTERRUPT_HANDLER(10)
+//#endif
+//
+//#if defined(TIM11)
+// TIMER_INTERRUPT_HANDLER(11)
+//#endif
+//
+//#if defined(TIM12)
+// TIMER_INTERRUPT_HANDLER(12)
+//#endif
+//
+//#if defined(TIM13)
+// TIMER_INTERRUPT_HANDLER(13)
+//#endif
+//
+//#if defined(TIM14)
+// TIMER_INTERRUPT_HANDLER(14)
+//#endif
+//
+//#if defined(TIM15)
+// TIMER_INTERRUPT_HANDLER(15)
+//#endif
+//
+//#if defined(TIM16)
+// TIMER_INTERRUPT_HANDLER(16)
+//#endif
+//
+//#if defined(TIM17)
+// TIMER_INTERRUPT_HANDLER(17)
+//#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // ADC Interrupt

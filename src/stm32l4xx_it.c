@@ -167,35 +167,35 @@ void SysTick_Handler(void)
 * @param  None
 * @retval None
 */
-void TIM1_UP_TIM16_IRQHandler(void)
-{
-  /* Check whether update interrupt is pending */
-  if(LL_TIM_IsActiveFlag_UPDATE(TIM1) == 1)
-  {
-    /* Clear the update interrupt flag*/
-    LL_TIM_ClearFlag_UPDATE(TIM1);
-  }
-  
-  /* TIM1 update interrupt processing */
-  TimerUpdate_Callback();
-}
-
-/**
-  * @brief  This function handles external lines 10 to 15 interrupt request.
-  * @param  None
-  * @retval None
-  */
-void USER_BUTTON_IRQHANDLER(void)
-{
-  /* Manage Flags */
-  if(LL_EXTI_IsActiveFlag_0_31(USER_BUTTON_EXTI_LINE) != RESET)
-  {
-    LL_EXTI_ClearFlag_0_31(USER_BUTTON_EXTI_LINE);
-
-    /* Manage code in main.c.*/
-    UserButton_Callback(); 
-  }
-}
+//void TIM1_UP_TIM16_IRQHandler(void)
+//{
+//  /* Check whether update interrupt is pending */
+//  if(LL_TIM_IsActiveFlag_UPDATE(TIM1) == 1)
+//  {
+//    /* Clear the update interrupt flag*/
+//    LL_TIM_ClearFlag_UPDATE(TIM1);
+//  }
+//
+//  /* TIM1 update interrupt processing */
+//  TimerUpdate_Callback();
+//}
+//
+///**
+//  * @brief  This function handles external lines 10 to 15 interrupt request.
+//  * @param  None
+//  * @retval None
+//  */
+//void USER_BUTTON_IRQHANDLER(void)
+//{
+//  /* Manage Flags */
+//  if(LL_EXTI_IsActiveFlag_0_31(USER_BUTTON_EXTI_LINE) != RESET)
+//  {
+//    LL_EXTI_ClearFlag_0_31(USER_BUTTON_EXTI_LINE);
+//
+//    /* Manage code in main.c.*/
+//    UserButton_Callback();
+//  }
+//}
 
 /**
   * @}
