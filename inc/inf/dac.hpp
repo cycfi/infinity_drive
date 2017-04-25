@@ -6,7 +6,8 @@
 #if !defined(CYCFI_INFINITY_DAC_HPP_FEBRUARY_6_2016)
 #define CYCFI_INFINITY_DAC_HPP_FEBRUARY_6_2016
 
-#include "stm32f4xx.h"
+#include "stm32l4xx.h"
+#include "stm32l4xx_ll_dac.h"
 #include <algorithm>
 
 #if !defined(DAC)
@@ -24,28 +25,28 @@ namespace cycfi { namespace infinity
 
       dac(uint16_t init_val = 2048)
       {
-         // Enable peripherals and GPIO Clocks
-         __HAL_RCC_DAC_CLK_ENABLE();
-         __HAL_RCC_GPIOA_CLK_ENABLE();
+         // Enable GPIO Clock
+         LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
 
-         // Configure peripheral GPIO
-         GPIO_InitTypeDef init;
-         init.Pin = dac_gpio();
-         init.Mode = GPIO_MODE_ANALOG;
-         init.Pull = GPIO_NOPULL;
-         HAL_GPIO_Init(GPIOA, &init);
+         // Configure GPIO in analog mode to be used as DAC output
+         LL_GPIO_SetPinMode(GPIOA, dac_gpio(), LL_GPIO_MODE_ANALOG);
 
-         // Channel settings
-         DAC_ChannelConfTypeDef ch_conf;
-         ch_conf.DAC_Trigger = DAC_TRIGGER_NONE;
-         ch_conf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
+         // Enable DAC clock
+         LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_DAC1);
 
-         // Initialize DAC
-         h.Instance = DAC;
-         HAL_DAC_Init(&h);
+         // Select trigger source
+         LL_DAC_SetTriggerSource(DAC1, dac_channel(), LL_DAC_TRIG_SOFTWARE);
 
-         // Configure DAC channel
-         HAL_DAC_ConfigChannel(&h, &ch_conf, dac_channel());
+         // Set the output for the selected DAC channel
+         LL_DAC_ConfigOutput(
+            DAC1, dac_channel(),
+            LL_DAC_OUTPUT_MODE_NORMAL,
+            LL_DAC_OUTPUT_BUFFER_ENABLE,
+            LL_DAC_OUTPUT_CONNECT_GPIO
+         );
+
+         // Enable interruption DAC channel1 underrun
+         LL_DAC_EnableIT_DMAUDR1(DAC1);
 
          // Start the DAC
          start();
@@ -55,35 +56,55 @@ namespace cycfi { namespace infinity
       void start()
       {
          // Start the DAC
-         HAL_DAC_Start(&h, dac_channel());
+         // Enable DAC channel
+         LL_DAC_Enable(DAC1, dac_channel());
+
+         // Delay for DAC channel voltage settling time from DAC channel startup.
+         // Compute number of CPU cycles to wait for, from delay in us.
+         //
+         // Note: Variable divided by 2 to compensate partially CPU processing cycles
+         //       (depends on compilation optimization).
+         // Note: If system core clock frequency is below 200kHz, wait time
+         //       is only a few CPU processing cycles.
+
+         auto wait_loop_index = (LL_DAC_DELAY_STARTUP_VOLTAGE_SETTLING_US
+               * (SystemCoreClock / (100000 * 2))) / 10;
+
+         while (wait_loop_index != 0)
+            wait_loop_index--;
+
+         LL_DAC_EnableTrigger(DAC1, dac_channel());
       }
 
       void stop()
       {
          // Stop the DAC
-         HAL_DAC_Stop(&h, dac_channel());
+         LL_DAC_Disable(DAC1, dac_channel());
       }
 
       void operator()(uint16_t val)
       {
          // Write a new value
          val = std::min<uint16_t>(val, 4095);
-         HAL_DAC_SetValue(&h, dac_channel(), DAC_ALIGN_12B_R, val);
+
+         // Set the data to be loaded in the data holding register
+         LL_DAC_ConvertData12RightAligned(DAC1, dac_channel(), val);
+
+         // Trig DAC conversion by software
+         LL_DAC_TrigSWConversion(DAC1, dac_channel());
       }
 
    private:
 
       static constexpr uint16_t dac_gpio()
       {
-         return (Channel == 0) ? GPIO_PIN_4 : GPIO_PIN_5;
+         return (Channel == 0) ? LL_GPIO_PIN_4 : LL_GPIO_PIN_5;
       }
 
       static constexpr uint32_t dac_channel()
       {
-         return (Channel == 0) ? DAC_CHANNEL_1 : DAC_CHANNEL_2;
+         return (Channel == 0) ? LL_DAC_CHANNEL_1 : LL_DAC_CHANNEL_2;
       }
-
-      DAC_HandleTypeDef h;
    };
 }}
 
