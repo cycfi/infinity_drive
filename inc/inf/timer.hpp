@@ -23,7 +23,7 @@ namespace cycfi { namespace infinity
       timer(uint32_t clock_frequency, uint32_t period)
       {
           // Enable the timer peripheral clock
-         LL_APB2_GRP1_EnableClock(get_periph_id());
+         periph_enable();
 
          // Set the pre-scaler value
          LL_TIM_SetPrescaler(get_timer(), __LL_TIM_CALC_PSC(SystemCoreClock, clock_frequency));
@@ -75,9 +75,9 @@ namespace cycfi { namespace infinity
          return IRQn_Type(detail::timer_irqn<N>());
       }
 
-      static constexpr uint32_t get_periph_id()
+      static void periph_enable()
       {
-         return detail::timer_periph_id<N>();
+         detail::timer_periph_enable<N>();
       }
    };
 }}

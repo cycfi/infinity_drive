@@ -13,7 +13,7 @@
 namespace inf = cycfi::infinity;
 using inf::portc;
 
-constexpr uint32_t tmr_freq = 84000000;
+constexpr uint32_t tmr_freq = 80000000;
 constexpr uint32_t tmr_resolution = 1024;
 constexpr uint32_t sps = tmr_freq / tmr_resolution;
 

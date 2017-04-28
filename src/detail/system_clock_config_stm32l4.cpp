@@ -3,7 +3,7 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =======================================================================================*/
-#include "stm32l4xx_it.h"
+#include "sys/stm32l4xx_it.h"
 
 namespace detail
 {

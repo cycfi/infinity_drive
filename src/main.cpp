@@ -5,7 +5,7 @@
 =======================================================================================*/
 #include <inf/support.hpp>
 #include <inf/app.hpp>
-#include "stm32l4xx_it.h"
+#include "sys/stm32l4xx_it.h"
 
 // The main start function entry point xxx
 void start();

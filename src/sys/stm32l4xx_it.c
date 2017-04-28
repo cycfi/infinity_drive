@@ -38,7 +38,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l4xx_it.h"
+#include "sys/stm32l4xx_it.h"
 
 /** @addtogroup STM32L4xx_LL_Examples
   * @{

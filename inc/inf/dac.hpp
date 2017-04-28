@@ -67,11 +67,11 @@ namespace cycfi { namespace infinity
          // Note: If system core clock frequency is below 200kHz, wait time
          //       is only a few CPU processing cycles.
 
-         auto wait_loop_index = (LL_DAC_DELAY_STARTUP_VOLTAGE_SETTLING_US
+         auto delay = (LL_DAC_DELAY_STARTUP_VOLTAGE_SETTLING_US
                * (SystemCoreClock / (100000 * 2))) / 10;
 
-         while (wait_loop_index != 0)
-            wait_loop_index--;
+         while (delay != 0)
+            delay--;
 
          LL_DAC_EnableTrigger(DAC1, dac_channel());
       }
