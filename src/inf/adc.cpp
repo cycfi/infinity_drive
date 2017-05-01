@@ -1,5 +1,5 @@
 /*=============================================================================
-   Copyright � 2015-2017 Cycfi Research. All rights reserved.
+   Copyright © 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
@@ -70,6 +70,9 @@ namespace cycfi { namespace infinity { namespace detail
       // Enable DMA transfer interruption: transfer complete
       LL_DMA_EnableIT_TC(dma, dma_channel);
 
+      // Enable DMA transfer interruption: half transfer
+      LL_DMA_EnableIT_HT(dma, dma_channel);
+
       // Enable DMA transfer interruption: transfer error
       LL_DMA_EnableIT_TE(dma, dma_channel);
 
@@ -78,39 +81,31 @@ namespace cycfi { namespace infinity { namespace detail
       LL_DMA_EnableChannel(dma, dma_channel);
    }
 
-   // adc_peripheral_id, e.g. LL_AHB2_GRP1_PERIPH_GPIOA
    // port, e.g. GPIOA
    // mask, e.g. LL_GPIO_PIN_4
-   // adc_irq_id, e.g. ADC1_2_IRQn
+   // timer_trigger_id, e.g. LL_ADC_REG_TRIG_EXT_TIM2_TRGO
 
    void adc_config(
       ADC_TypeDef* adc,
-      uint32_t adc_peripheral_id,
-      GPIO_TypeDef* port, uint32_t mask,
-      IRQn_Type adc_irq_id
+      uint32_t timer_trigger_id
    )
    {
-      // Enable GPIO Clock
-      LL_AHB2_GRP1_EnableClock(adc_peripheral_id);
-
-      // Configure GPIO in analog mode to be used as ADC input
-      LL_GPIO_SetPinMode(port, mask, LL_GPIO_MODE_ANALOG);
-
-      // Connect GPIO analog switch to ADC input
-      LL_GPIO_EnablePinAnalogControl(port, mask);
-
       // Configuration of NVIC
       // Configure NVIC to enable ADC1 interruptions
-      NVIC_SetPriority(adc_irq_id, 0); // ADC IRQ greater priority than DMA IRQ
-      NVIC_EnableIRQ(adc_irq_id);
+      NVIC_SetPriority(ADC1_2_IRQn, 0); // ADC IRQ greater priority than DMA IRQ
+      NVIC_EnableIRQ(ADC1_2_IRQn);
 
       // Enable ADC clock (core clock)
       LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC);
 
+      // ADC common instance must not be enabled at this point
+      if (__LL_ADC_IS_ENABLED_ALL_COMMON_INSTANCE() != 0)
+         error_handler();
+
       // Set ADC clock (conversion clock) common to several ADC instances
       LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV2);
 
-      // ADC must be disabled at this point
+      // ADC must not be enabled at this point
       if (LL_ADC_IsEnabled(adc) != 0)
          error_handler();
 
@@ -131,13 +126,13 @@ namespace cycfi { namespace infinity { namespace detail
          error_handler();
 
       // Set ADC group regular trigger source
-      LL_ADC_REG_SetTriggerSource(adc, LL_ADC_REG_TRIG_SOFTWARE);
+      LL_ADC_REG_SetTriggerSource(adc, timer_trigger_id);
 
       // Set ADC group regular trigger polarity
       // LL_ADC_REG_SetTriggerEdge(adc, LL_ADC_REG_TRIG_EXT_RISING);
 
       // Set ADC group regular continuous mode
-      LL_ADC_REG_SetContinuousMode(adc, LL_ADC_REG_CONV_CONTINUOUS);
+      LL_ADC_REG_SetContinuousMode(adc, LL_ADC_REG_CONV_SINGLE);
 
       // Set ADC group regular conversion data transfer */
       LL_ADC_REG_SetDMATransfer(adc, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
@@ -150,15 +145,6 @@ namespace cycfi { namespace infinity { namespace detail
 
       // Set ADC group regular sequencer discontinuous mode
       // LL_ADC_REG_SetSequencerDiscont(adc, LL_ADC_REG_SEQ_DISCONT_DISABLE);
-
-      // Set ADC group regular sequence: channel on the selected sequence rank.
-      LL_ADC_REG_SetSequencerRanks(adc, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_9);
-      LL_ADC_REG_SetSequencerRanks(adc, LL_ADC_REG_RANK_2, LL_ADC_CHANNEL_VREFINT);
-      LL_ADC_REG_SetSequencerRanks(adc, LL_ADC_REG_RANK_3, LL_ADC_CHANNEL_TEMPSENSOR);
-
-      LL_ADC_SetChannelSamplingTime(adc, LL_ADC_CHANNEL_9, LL_ADC_SAMPLINGTIME_47CYCLES_5);
-      LL_ADC_SetChannelSamplingTime(adc, LL_ADC_CHANNEL_VREFINT, LL_ADC_SAMPLINGTIME_247CYCLES_5);
-      LL_ADC_SetChannelSamplingTime(adc, LL_ADC_CHANNEL_TEMPSENSOR, LL_ADC_SAMPLINGTIME_247CYCLES_5);
 
       // Configuration of ADC interruptions
       // Enable interruption ADC group regular end of sequence conversions
