@@ -7,21 +7,80 @@
 #define CYCFI_INFINITY_IRQ_HPP_DECEMBER_22_2015
 
 #include <inf/timer.hpp>
+#include <type_traits>
+#include "stm32l4xx_ll_dma.h"
+#include "stm32l4xx_ll_adc.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Timer Interrupts
 ///////////////////////////////////////////////////////////////////////////////
 
+namespace cycfi { namespace infinity { namespace detail
+{
+   template <std::size_t N>
+   void handle_timer_interrupt()
+   {
+      // This if block will be optimized away if we don't
+      // have a handler for timer_task<N>
+      using r_type = decltype(irq(timer_task<N>{}));
+      if (std::is_same<r_type, void>::value)
+      {
+         auto& timer = cycfi::infinity::detail::get_timer<N>();
+
+         // Check whether update interrupt is pending
+         if (LL_TIM_IsActiveFlag_UPDATE(&timer) == 1)
+         {
+            // Clear the update interrupt flag
+            LL_TIM_ClearFlag_UPDATE(&timer);
+         }
+         // call timer_task
+         irq(timer_task<N>{});
+      }
+   }
+
+   template <std::size_t N>
+   void handle_adc_interrupt()
+   {
+      // Check whether DMA transfer complete caused the DMA interruption
+      if (LL_DMA_IsActiveFlag_TC1(DMA1) == 1)
+      {
+         // Clear flag DMA transfer complete
+         LL_DMA_ClearFlag_TC1(DMA1);
+
+         // call adc_conversion_complete
+         irq(adc_conversion_complete<N>{});
+      }
+
+      // Check whether DMA half transfer caused the DMA interruption
+      if (LL_DMA_IsActiveFlag_HT1(DMA1) == 1)
+      {
+         // Clear flag DMA half transfer
+         LL_DMA_ClearFlag_HT1(DMA1);
+
+         // call adc_conversion_half_complete
+         irq(adc_conversion_half_complete<N>{});
+      }
+
+      // Check whether DMA transfer error caused the DMA interruption
+      if (LL_DMA_IsActiveFlag_TE1(DMA1) == 1)
+      {
+         // Clear flag DMA transfer error
+         LL_DMA_ClearFlag_TE1(DMA1);
+
+         // Call interruption treatment function
+         irq(adc_dma_transfer_error<N>{});
+      }
+   }
+}}}
+
 extern "C"
 {
+
 #define TIMER_INTERRUPT_HANDLER(N, NAME)                                       \
    void NAME()                                                                 \
    {                                                                           \
-      if (LL_TIM_IsActiveFlag_UPDATE(TIM##N) == 1)                             \
-      {                                                                        \
-         LL_TIM_ClearFlag_UPDATE(TIM##N);                                      \
-      }                                                                        \
-      irq(timer_task<N>{});                                                    \
+      using cycfi::infinity::detail::handle_timer_interrupt;                   \
+      handle_timer_interrupt<N>();                                             \
    }                                                                           \
    /***/
 
@@ -53,6 +112,36 @@ extern "C"
  TIMER_INTERRUPT_HANDLER(8, TIM8_UP_IRQHandler)
 #endif
 
+   void DMA1_Channel1_IRQHandler(void)
+   {
+      using cycfi::infinity::detail::handle_adc_interrupt;
+      handle_adc_interrupt<1>();
+   }
+
+   void DMA1_Channel2_IRQHandler(void)
+   {
+      using cycfi::infinity::detail::handle_adc_interrupt;
+      handle_adc_interrupt<2>();
+   }
+
+   void DMA1_Channel3_IRQHandler(void)
+   {
+      using cycfi::infinity::detail::handle_adc_interrupt;
+      handle_adc_interrupt<3>();
+   }
+
+   void ADC1_2_IRQHandler(void)
+   {
+      // Check whether ADC group regular overrun caused the ADC interruption
+      if (LL_ADC_IsActiveFlag_OVR(ADC1) != 0)
+      {
+         // Clear flag ADC group regular overrun
+         LL_ADC_ClearFlag_OVR(ADC1);
+
+         // call error_handler
+         cycfi::infinity::error_handler();
+      }
+   }
 }
 
 #endif

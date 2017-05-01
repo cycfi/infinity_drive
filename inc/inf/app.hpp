@@ -21,9 +21,12 @@ namespace cycfi { namespace infinity
 // The interrupt handler. By default, this does nothing
 // Specialize this for specific interrupt handlers.
 ////////////////////////////////////////////////////////////////////////////
+struct irq_not_handled {};
+
 template <typename Key>
-inline void irq(Key)
+inline irq_not_handled irq(Key)
 {
+	return {};
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -35,7 +38,13 @@ template <std::size_t N>
 struct timer_task {};
 
 // ADC
+template <std::size_t N>
 struct adc_conversion_half_complete {};
+
+template <std::size_t N>
 struct adc_conversion_complete {};
+
+template <std::size_t N>
+struct adc_dma_transfer_error {};
 
 #endif
