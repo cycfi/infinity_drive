@@ -97,7 +97,6 @@ namespace cycfi { namespace infinity
       static constexpr uint16_t bit = N % 16;
       static constexpr uint16_t port = N / 16;
       static constexpr uint32_t mask = 1 << bit;
-      static constexpr uint32_t mask2 = 0x3 << (bit * 2);
 
       // there are only 9 ports
       static_assert(port < 9, "Invalid port");
@@ -210,7 +209,6 @@ namespace cycfi { namespace infinity
       static constexpr uint16_t bit = N % 16;
       static constexpr uint16_t port = N / 16;
       static constexpr uint32_t mask = 1 << bit;
-      static constexpr uint32_t mask2 = 0x3 << (bit * 2);
 
       // there are only 8 ports
       static_assert(port < 8, "Invalid port");
