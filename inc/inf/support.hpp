@@ -8,7 +8,7 @@
 
 #include <cstdint>
 #include "system_stm32l4xx.h"
-#include "sys/stm32l4xx_it.h"
+#include "stm32l4xx_ll_utils.h"
 
 extern "C"
 {

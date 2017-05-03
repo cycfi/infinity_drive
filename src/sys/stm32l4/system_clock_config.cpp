@@ -1,9 +1,11 @@
-/*=======================================================================================
+/*=============================================================================
    Copyright (c) 2016 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
-=======================================================================================*/
-#include "sys/stm32l4xx_it.h"
+=============================================================================*/
+#include "stm32l4xx_ll_system.h"
+#include "stm32l4xx_ll_rcc.h"
+#include "stm32l4xx_ll_utils.h"
 
 namespace detail
 {

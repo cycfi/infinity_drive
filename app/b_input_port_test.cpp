@@ -1,8 +1,8 @@
-/*=======================================================================================
+/*=============================================================================
    Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
-=======================================================================================*/
+=============================================================================*/
 #include <inf/support.hpp>
 #include <inf/pin.hpp>
 
@@ -28,7 +28,7 @@ void start()
    input_pin<portc + 13, pull_up> button; // portc, pin 13
    red_led = off;
 
-   // toggle LED
+   // toggle LED 1s or 100ms frequency depending on button state
    while (true)
    {
       if (button)
