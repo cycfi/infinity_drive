@@ -1,5 +1,5 @@
 /*=============================================================================
-   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
@@ -34,8 +34,8 @@ namespace cycfi { namespace infinity
 
    enum class port_output_type
    {
-      output_push_pull = LL_GPIO_OUTPUT_PUSHPULL,
-      output_open_drain = LL_GPIO_OUTPUT_OPENDRAIN
+      push_pull = LL_GPIO_OUTPUT_PUSHPULL,
+      open_drain = LL_GPIO_OUTPUT_OPENDRAIN
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ namespace cycfi { namespace infinity
    template <
       std::size_t N,
       port_output_speed speed = port_output_speed::high_speed,
-      port_output_type type = port_output_type::output_push_pull
+      port_output_type type = port_output_type::push_pull
    >
    struct output_pin
    {
@@ -198,12 +198,12 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    enum class port_input_type
    {
-      input_normal = LL_GPIO_PULL_NO,
-      input_pull_up = LL_GPIO_PULL_UP,
-      input_pull_down = LL_GPIO_PULL_DOWN
+      normal = LL_GPIO_PULL_NO,
+      pull_up = LL_GPIO_PULL_UP,
+      pull_down = LL_GPIO_PULL_DOWN
    };
 
-   template <std::size_t N, port_input_type type = port_input_type::input_normal>
+   template <std::size_t N, port_input_type type = port_input_type::normal>
    struct input_pin
    {
       static constexpr uint16_t bit = N % 16;
@@ -227,12 +227,12 @@ namespace cycfi { namespace infinity
          LL_GPIO_SetPinPull(&gpio(), mask, uint32_t(type));
       }
 
-      volatile GPIO_TypeDef& gpio() const
+      GPIO_TypeDef& gpio() const
       {
          return detail::get_port<port>();
       }
 
-      volatile uint16_t& ref() const
+      auto& ref() const
       {
          return gpio().IDR;
       }

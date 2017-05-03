@@ -1,15 +1,13 @@
 /*=============================================================================
-   Copyright � 2015-2017 Cycfi Research. All rights reserved.
+   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_ADC_HPP_DECEMBER_31_2015)
 #define CYCFI_INFINITY_ADC_HPP_DECEMBER_31_2015
 
-#include "stm32l4xx.h"
 #include <inf/detail/pin_impl.hpp>
 #include <inf/timer.hpp>
-//#include <inf/app.hpp>
 #include <inf/detail/adc_impl.hpp>
 #include <array>
 

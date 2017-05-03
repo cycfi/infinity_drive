@@ -1,5 +1,5 @@
 /*=============================================================================
-   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
@@ -43,8 +43,5 @@ struct adc_conversion_half_complete {};
 
 template <std::size_t N>
 struct adc_conversion_complete {};
-
-template <std::size_t N>
-struct adc_dma_transfer_error {};
 
 #endif

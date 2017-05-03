@@ -1,5 +1,5 @@
 /*=============================================================================
-   Copyright © 2015-2017 Cycfi Research. All rights reserved.
+   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
@@ -20,22 +20,16 @@ namespace cycfi { namespace infinity { namespace detail
    template <std::size_t N>
    void handle_timer_interrupt()
    {
-      // This if block will be optimized away if we don't
-      // have a handler for timer_task<N>
-      using r_type = decltype(irq(timer_task<N>{}));
-      if (std::is_same<r_type, void>::value)
-      {
-         auto& timer = cycfi::infinity::detail::get_timer<N>();
+      auto& timer = cycfi::infinity::detail::get_timer<N>();
 
-         // Check whether update interrupt is pending
-         if (LL_TIM_IsActiveFlag_UPDATE(&timer) == 1)
-         {
-            // Clear the update interrupt flag
-            LL_TIM_ClearFlag_UPDATE(&timer);
-         }
-         // call timer_task
-         irq(timer_task<N>{});
+      // Check whether update interrupt is pending
+      if (LL_TIM_IsActiveFlag_UPDATE(&timer) == 1)
+      {
+         // Clear the update interrupt flag
+         LL_TIM_ClearFlag_UPDATE(&timer);
       }
+      // call timer_task
+      irq(timer_task<N>{});
    }
 
    template <std::size_t N>
@@ -67,8 +61,8 @@ namespace cycfi { namespace infinity { namespace detail
          // Clear flag DMA transfer error
          LL_DMA_ClearFlag_TE1(DMA1);
 
-         // Call interruption treatment function
-         irq(adc_dma_transfer_error<N>{});
+         // call error_handler
+         cycfi::infinity::error_handler();
       }
    }
 }}}
@@ -133,10 +127,29 @@ extern "C"
    void ADC1_2_IRQHandler(void)
    {
       // Check whether ADC group regular overrun caused the ADC interruption
+
       if (LL_ADC_IsActiveFlag_OVR(ADC1) != 0)
       {
          // Clear flag ADC group regular overrun
          LL_ADC_ClearFlag_OVR(ADC1);
+
+         // call error_handler
+         cycfi::infinity::error_handler();
+      }
+
+      if (LL_ADC_IsActiveFlag_OVR(ADC2) != 0)
+      {
+         // Clear flag ADC group regular overrun
+         LL_ADC_ClearFlag_OVR(ADC2);
+
+         // call error_handler
+         cycfi::infinity::error_handler();
+      }
+
+      if (LL_ADC_IsActiveFlag_OVR(ADC3) != 0)
+      {
+         // Clear flag ADC group regular overrun
+         LL_ADC_ClearFlag_OVR(ADC3);
 
          // call error_handler
          cycfi::infinity::error_handler();
