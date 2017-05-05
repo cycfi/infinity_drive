@@ -14,7 +14,7 @@ namespace cycfi { namespace infinity
    // Generic LED indicator (used for signaling errors)
    // (Port and Pin is application specific)
    ////////////////////////////////////////////////////////////////////////////
-   using red_led_type = output_pin<portd + 14>;
+   using red_led_type = output_pin<porta + 5>;
 }}
 
 ////////////////////////////////////////////////////////////////////////////

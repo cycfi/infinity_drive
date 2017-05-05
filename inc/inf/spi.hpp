@@ -6,10 +6,7 @@
 #if !defined(CYCFI_INFINITY_SPI_HPP_MAY_4_2017)
 #define CYCFI_INFINITY_SPI_HPP_MAY_4_2017
 
-//#include <inf/detail/pin_impl.hpp>
-//#include <inf/timer.hpp>
 #include <inf/detail/spi_impl.hpp>
-//#include <array>
 
 namespace cycfi { namespace infinity
 {
@@ -58,40 +55,44 @@ namespace cycfi { namespace infinity
       }
    };
 
-   template <std::size_t id_>
+   template <std::size_t id_, std::size_t sck_pin, int mosi_pin = -1, int miso_pin = -1>
    struct spi_master : spi_base<id_>
    {
       static constexpr std::size_t id = id_;
 
-      template <std::size_t sck_pin, int mosi_pin, int miso_pin>
       spi_master()
       {
-         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin>();
+         bool const is_half_duplex = miso_pin == -1;
+         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin, false>();
+         detail::spi_enable_clock<id>();
 
          detail::spi_config(
+            id,
             detail::spi_id<id>(),
-            detail::spi_periph_id<id>(),
             detail::get_spi<id>(),
-            true              // master
+            true,             // master?
+            is_half_duplex    // half duplex?
          );
       }
    };
 
-   template <std::size_t id_>
+   template <std::size_t id_, std::size_t sck_pin, int mosi_pin = -1, int miso_pin = -1>
    struct spi_slave : spi_base<id_>
    {
       static constexpr std::size_t id = id_;
 
-      template <std::size_t sck_pin, int mosi_pin, int miso_pin>
       spi_slave()
       {
-         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin>();
+         bool const is_half_duplex = mosi_pin == -1;
+         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin, is_half_duplex>();
+         detail::spi_enable_clock<id>();
 
          detail::spi_config(
+            id,
             detail::spi_id<id>(),
-            detail::spi_periph_id<id>(),
             detail::get_spi<id>(),
-            false              // master
+            false,            // master?
+            is_half_duplex    // half duplex?
          );
       }
    };

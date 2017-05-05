@@ -30,9 +30,9 @@ namespace cycfi { namespace infinity { namespace detail
    void spi_config(
       std::size_t id,
       IRQn_Type spi_irqn,
-      uint32_t periph_id,
       SPI_TypeDef* spi,
-      bool master
+      bool master,
+      bool half_duplex
    )
    {
       // Check if the spi peripheral is already used
@@ -45,13 +45,21 @@ namespace cycfi { namespace infinity { namespace detail
       NVIC_SetPriority(spi_irqn, 0);
       NVIC_EnableIRQ(spi_irqn);
 
-      // Configure SPI functional parameters
-      // Enable the peripheral clock for spi
-      LL_APB2_GRP1_EnableClock(periph_id);
-
       // Configure SPI communication
       LL_SPI_SetBaudRatePrescaler(spi, LL_SPI_BAUDRATEPRESCALER_DIV256);
-      LL_SPI_SetTransferDirection(spi,LL_SPI_HALF_DUPLEX_TX);
+
+      if (half_duplex)
+      {
+         if (master)
+            LL_SPI_SetTransferDirection(spi, LL_SPI_HALF_DUPLEX_TX);
+         else
+            LL_SPI_SetTransferDirection(spi, LL_SPI_HALF_DUPLEX_RX);
+      }
+      else
+      {
+         LL_SPI_SetTransferDirection(spi, LL_SPI_FULL_DUPLEX);
+      }
+
       LL_SPI_SetClockPhase(spi, LL_SPI_PHASE_2EDGE);
       LL_SPI_SetClockPolarity(spi, LL_SPI_POLARITY_HIGH);
 
@@ -69,10 +77,13 @@ namespace cycfi { namespace infinity { namespace detail
 
    void spi_write(std::size_t id, std::uint8_t const* data, std::size_t len)
    {
+      auto iodata_p = &io_data[id-1];
+      auto spi = iodata_p->spi;
+
       io_data[id-1].write_data = data;
       io_data[id-1].write_len = len;
       io_data[id-1].write_index = 0;
-      LL_SPI_EnableIT_RXNE(io_data[id-1].spi);
+      LL_SPI_EnableIT_TXE(io_data[id-1].spi);
    }
 
    bool spi_is_writing(std::size_t id)
@@ -100,21 +111,24 @@ namespace cycfi { namespace infinity { namespace detail
       // Check TXE flag value in ISR register
       if (LL_SPI_IsActiveFlag_TXE(spi))
       {
-         iodata_p->read_data[iodata_p->read_index++] = LL_SPI_ReceiveData8(spi);
-         if (iodata_p->read_index == iodata_p->read_len)
-            LL_SPI_DisableIT_RXNE(spi);
-      }
-
-      // Check RXNE flag value in ISR register
-      if(LL_SPI_IsActiveFlag_RXNE(spi))
-      {
          LL_SPI_TransmitData8(iodata_p->spi, iodata_p->write_data[iodata_p->write_index++]);
          if (iodata_p->write_index == iodata_p->write_len)
             LL_SPI_DisableIT_TXE(spi);
       }
 
+      // Check RXNE flag value in ISR register
+      if (LL_SPI_IsActiveFlag_RXNE(spi))
+      {
+         auto val = LL_SPI_ReceiveData8(spi);
+
+
+         iodata_p->read_data[iodata_p->read_index++] = val; //LL_SPI_ReceiveData8(spi);
+         if (iodata_p->read_index == iodata_p->read_len)
+            LL_SPI_DisableIT_RXNE(spi);
+      }
+
       // Check STOP flag value in ISR register
-      else if(LL_SPI_IsActiveFlag_OVR(spi))
+      else if (LL_SPI_IsActiveFlag_OVR(spi))
       {
          LL_SPI_DisableIT_RXNE(spi);
          LL_SPI_DisableIT_TXE(spi);
@@ -127,7 +141,7 @@ namespace cycfi { namespace infinity { namespace detail
 extern "C"
 {
 #define SPI_CALLBACK(N)                                                        \
-   void SPI##N##_Tx_Callback()                                                 \
+   void SPI##N##_IRQHandler()                                                  \
    {                                                                           \
       cycfi::infinity::detail::spi_irq_handler(N, SPI##N);                     \
    }                                                                           \
