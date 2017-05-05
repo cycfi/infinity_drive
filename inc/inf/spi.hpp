@@ -63,7 +63,7 @@ namespace cycfi { namespace infinity
       spi_master()
       {
          bool const is_half_duplex = miso_pin == -1;
-         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin, false>();
+         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin>();
          detail::spi_enable_clock<id>();
 
          detail::spi_config(
@@ -84,7 +84,7 @@ namespace cycfi { namespace infinity
       spi_slave()
       {
          bool const is_half_duplex = mosi_pin == -1;
-         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin, is_half_duplex>();
+         detail::spi_pin_config<sck_pin, mosi_pin, miso_pin>();
          detail::spi_enable_clock<id>();
 
          detail::spi_config(

@@ -73,9 +73,10 @@ namespace cycfi { namespace infinity { namespace detail
       LL_GPIO_SetPinPull(gpio, mask, LL_GPIO_PULL_DOWN);
    }
 
-   template <std::size_t sck_pin, int mosi_pin, int miso_pin, bool is_half_duplex_slave>
+   template <std::size_t sck_pin, int mosi_pin, int miso_pin>
    void spi_pin_config()
    {
+      static constexpr bool is_half_duplex_slave = mosi_pin == -1;
       static constexpr uint16_t port = sck_pin / 16;
       auto* gpio = &detail::get_port<port>();
 

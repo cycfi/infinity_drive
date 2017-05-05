@@ -10,7 +10,6 @@
 
 namespace inf = cycfi::infinity;
 
-using inf::clock_speed;
 using inf::output_pin;
 using inf::input_pin;
 using inf::port_input_type;

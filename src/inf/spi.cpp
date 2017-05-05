@@ -119,10 +119,7 @@ namespace cycfi { namespace infinity { namespace detail
       // Check RXNE flag value in ISR register
       if (LL_SPI_IsActiveFlag_RXNE(spi))
       {
-         auto val = LL_SPI_ReceiveData8(spi);
-
-
-         iodata_p->read_data[iodata_p->read_index++] = val; //LL_SPI_ReceiveData8(spi);
+         iodata_p->read_data[iodata_p->read_index++] = LL_SPI_ReceiveData8(spi);
          if (iodata_p->read_index == iodata_p->read_len)
             LL_SPI_DisableIT_RXNE(spi);
       }
