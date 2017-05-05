@@ -34,14 +34,14 @@ inline irq_not_handled irq(Key)
 ////////////////////////////////////////////////////////////////////////////
 
 // Timers
-template <std::size_t N>
+template <std::size_t id>
 struct timer_task {};
 
 // ADC
-template <std::size_t N>
+template <std::size_t id>
 struct adc_conversion_half_complete {};
 
-template <std::size_t N>
+template <std::size_t id>
 struct adc_conversion_complete {};
 
 #endif

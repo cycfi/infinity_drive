@@ -11,41 +11,41 @@
 
 namespace cycfi { namespace infinity { namespace detail
 {
-   constexpr bool check_valid_timer(std::size_t N)
+   constexpr bool check_valid_timer(std::size_t id)
    {
-      return (N >= 1 && N <= 8) || (N >= 15 && N <= 17);
+      return (id >= 1 && id <= 8) || (id >= 15 && id <= 17);
    }
 
-   template <std::size_t N>
+   template <std::size_t id>
    TIM_TypeDef& get_timer();
 
-   template <std::size_t N>
+   template <std::size_t id>
    int timer_irqn();
 
-   template <std::size_t N>
+   template <std::size_t id>
    void timer_periph_enable();
 
-#define INFINITY_TIMER(N, TIMER_NAME)                                          \
+#define INFINITY_TIMER(ID, TIMER_NAME)                                         \
    template <>                                                                 \
-   constexpr inline TIM_TypeDef& get_timer<N>()                                \
+   constexpr inline TIM_TypeDef& get_timer<ID>()                               \
    {                                                                           \
       return *TIMER_NAME;                                                      \
    }                                                                           \
    /***/
 
-#define INFINITY_TIMER_IRQN(N, IRQN)                                           \
+#define INFINITY_TIMER_IRQN(ID, IRQN)                                          \
    template <>                                                                 \
-   constexpr inline int timer_irqn<N>()                                        \
+   constexpr inline int timer_irqn<ID>()                                       \
    {                                                                           \
       return IRQN;                                                             \
    }                                                                           \
    /***/
 
-#define INFINITY_TIMER_PERIPH_ENABLE(N, GROUP)                                 \
+#define INFINITY_TIMER_PERIPH_ENABLE(ID, GROUP)                                \
    template <>                                                                 \
-   inline void timer_periph_enable<N>()                                        \
+   inline void timer_periph_enable<ID>()                                       \
    {                                                                           \
-      LL_APB##GROUP##_GRP1_EnableClock(LL_APB##GROUP##_GRP1_PERIPH_TIM##N);    \
+      LL_APB##GROUP##_GRP1_EnableClock(LL_APB##GROUP##_GRP1_PERIPH_TIM##ID);   \
    }                                                                           \
    /***/
 

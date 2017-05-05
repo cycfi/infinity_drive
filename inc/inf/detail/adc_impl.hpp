@@ -61,7 +61,7 @@ namespace cycfi { namespace infinity { namespace detail
 #define INFINITY_ADC(N)                                                        \
                                                                                \
    template <>                                                                 \
-   inline ADC_TypeDef* get_adc<N-1>()                                          \
+   inline ADC_TypeDef* get_adc<N>()                                            \
    {                                                                           \
       return ADC##N;                                                           \
    }                                                                           \

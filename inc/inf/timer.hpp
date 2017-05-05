@@ -15,10 +15,11 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // timer
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t N>
+   template <std::size_t id_>
    struct timer
    {
-      static_assert(detail::check_valid_timer(N), "Invalid Timer N");
+      static constexpr std::size_t id = id_;
+      static_assert(detail::check_valid_timer(id), "Invalid Timer id");
 
       timer(uint32_t clock_frequency, uint32_t period)
       {
