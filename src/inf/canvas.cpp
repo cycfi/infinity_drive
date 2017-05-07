@@ -3,7 +3,8 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#include <inf/oled.hpp>
+#include <inf/canvas.hpp>
+#include <inf/detail/fonts.h>
 #include <cstdlib>
 
 namespace cycfi { namespace infinity { namespace detail
@@ -224,5 +225,82 @@ namespace cycfi { namespace infinity { namespace detail
             err += dx;
          }
       }
+   }
+
+   void draw_bitmap(
+      std::uint8_t* buffer, int width, int height,
+      int x, int y, bitmap const& bm, color color_
+   )
+   {
+      int const cols = bm.width;
+      int const rows = (bm.height + 7) / 8;
+      auto dest = buffer + ((y / 8) * width);
+      auto src = bm.data;
+      
+      auto draw = [color_](auto& out, auto pix)
+      {
+         switch (color_)
+         {
+            case color::white:   out |=  pix;  break;
+            case color::black:   out &= ~pix;  break;
+            case color::inverse: out ^=  pix;  break;
+         }
+      };
+      
+      for (int yi = 0; yi < rows; yi++)
+      {
+         for (int xi = 0; xi < cols; xi++)
+         {
+            if (xi + x < width)
+            {
+               auto yoffs = y % 8;
+               auto pix = src[xi];
+               auto out = dest + xi;
+               
+               draw(*out, pix << yoffs);              
+               if (yoffs && ((y + 8) < height))
+                  draw(*(out + width), pix >> (8 - yoffs));
+            }
+         }
+         dest += width; 
+         src += cols;
+      }
+   
+   
+   
+//       int const buffer_row_size = 8;
+//       int const rows = (bm.height / 8) + 1;
+//       int const cols = bm.width;
+//       bool const is_white = color_ == color::white;
+//    
+//       for (int yi = 0; yi < rows; yi++)
+//       {
+//          for (int xi = 0; xi < cols; xi++)
+//          {
+//             auto dest_x = xi + x;
+//             if (dest_x < width)
+//             {
+//                auto dest_row = yi + (y / 8);
+//                auto& src = bm.data[(yi * cols) + xi];
+//                auto ypos = y % 8;
+//       
+//                if (dest_row < buffer_row_size)
+//                {
+//                   if (is_white)
+//                      buffer[dest_x * dest_row] |= src << ypos;
+//                   else
+//                      buffer[dest_x * dest_row] ^= src << ypos;
+// 
+//                   if (ypos && (dest_row + 1) < buffer_row_size)
+//                   {
+//                      if (is_white)
+//                         buffer[dest_x * dest_row+1] |= src >> (8 - ypos);
+//                      else
+//                         buffer[dest_x * dest_row+1] ^= src >> (8 - ypos);        
+//                   }
+//                }
+//             }
+//          }
+//       }
    }
 }}}
