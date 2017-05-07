@@ -67,10 +67,20 @@ namespace cycfi { namespace infinity
          int x0, int y0, int x1, int y1, color color_
       );
       
-		void draw_bitmap(
-			std::uint8_t* buffer, int width, int height,
-			int x, int y, bitmap const& bm, color color_
-		);
+      void draw_bitmap(
+          std::uint8_t* buffer, int width, int height,
+          int x, int y, bitmap const& bm, color color_
+      );
+      
+      inline void draw_byte(auto& out, auto pix, color color_)
+      {
+         switch (color_)
+         {
+            case color::white:   out |=  pix;  break;
+            case color::black:   out &= ~pix;  break;
+            case color::inverse: out ^=  pix;  break;
+         }
+      };
 
       inline void draw_pixel(
          std::uint8_t* buffer, int width, int height,
@@ -80,22 +90,8 @@ namespace cycfi { namespace infinity
             return;
 
          auto mask = y&7;
-         auto* p = buffer + (x+(y/8)*width);
-
-         switch (color_)
-         {
-            case color::white:
-               *p |= 1 << mask;
-               break;
-
-            case color::black:
-               *p &= ~1 << mask;
-               break;
-
-            case color::inverse:
-               *p ^= 1 << mask;
-               break;
-         }
+         auto* p = buffer + (x + (y / 8) * width);
+         draw_byte(*p, 1 << mask, color_);
       }
    }
 
