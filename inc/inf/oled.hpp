@@ -2,6 +2,9 @@
    Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
+
+   Modern C++ OLED driver implementation based on HCuOLED OLED driver
+   https://github.com/HobbyComponents/HCuOLED
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_OLED_HPP_MAY_7_2015)
 #define CYCFI_INFINITY_OLED_HPP_MAY_7_2015
@@ -15,9 +18,10 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // drawing canvas
    ////////////////////////////////////////////////////////////////////////////
+   template <std::size_t width_, std::size_t height_>
    struct canvas
    {
-      enum { width  = 128, height = 64 };
+      enum { width  = width_, height = height_ };
 
       void clear();
 
@@ -35,7 +39,7 @@ namespace cycfi { namespace infinity
    {
    public:
 
-      oled_SH1106(canvas& canvas_)
+      oled_SH1106(canvas<128, 64>& canvas_)
        : _canvas(canvas_)
       {
          _spi.enable();
@@ -43,63 +47,69 @@ namespace cycfi { namespace infinity
       }
 
       void reset();
+      void on();
+      void off();
       void refresh();
+      void contrast(std::uint8_t val);
 
    private:
 
       void command(std::uint8_t cmd);
-      void print(std::uint8_t data);
+      void out(std::uint8_t data);
 
+      using canvas_ = canvas<128, 64>;
       using spi = spi_master<spi_id, sck_pin, mosi_pin>;
-      using pin = output_pin<rst_port>;
+      using rst_pin = output_pin<rst_port>;
+      using dc_pin = output_pin<dc_port>;
+      using cs_pin = output_pin<cs_port>;
 
-      canvas&  _canvas;
+      canvas_& _canvas;
       spi      _spi;
-      pin      _rst;
-      pin      _dc;
-      pin      _cs;
+      rst_pin  _rst;
+      dc_pin   _dc;
+      cs_pin   _cs;
    };
+
+   ////////////////////////////////////////////////////////////////////////////
+   // canvas implementation
+   ////////////////////////////////////////////////////////////////////////////
+   template <std::size_t width_, std::size_t height_>
+   inline void canvas<width_, height_>::clear()
+   {
+      for (auto& pixels : _buffer)
+         pixels = 0;
+   }
 
    ////////////////////////////////////////////////////////////////////////////
    // oled_SH1106 implementation
    ////////////////////////////////////////////////////////////////////////////
-   namespace
+   namespace oled_detail
    {
       enum display_commands : std::uint8_t
       {
-         set_col_low    = 0x00,
-         set_col_high   = 0x10,
-         memory_mode    = 0x20,
-         set_col_addr   = 0x21,
-         set_page_addr  = 0x22,
-         charge_pump    = 0x8D,
-         set_mux_ratio  = 0xA8,
-         display_on     = 0xAE,
-         display_off    = 0xAF,
-         page           = 0xB0,
-         set_start_line = 0x40,
-         scan_dir_incr  = 0xC0,
-         scan_dir_decr  = 0xC8,
-         segment_map    = 0xA0,
+         set_col_low       = 0x00,
+         set_col_high      = 0x10,
+         memory_mode       = 0x20,
+         set_col_addr      = 0x21,
+         set_page_addr     = 0x22,
+         charge_pump       = 0x8D,
+         set_mux_ratio     = 0xA8,
+         display_off       = 0xAE,
+         display_on        = 0xAF,
+         page              = 0xB0,
+         set_start_line    = 0x40,
+         scan_dir_incr     = 0xC0,
+         scan_dir_decr     = 0xC8,
+         segment_map       = 0xA0,
+         set_contrast      = 0x81,
       };
 
       enum register_parameters : std::uint8_t
       {
-         scan_dir_normal      = 0x00,
-         scan_dir_reverse     = 0x08,
-         scan_map_normal      = 0,
-         scan_map_reverse     = 1,
-         enable_charge_pump   = 0x14,
-         horizontal_addr_mode = 0x00
-      };
-
-      enum constants
-      {
-         col_start   = 0x02,
-         col_end     = 0x7F,
-         page_start  = 0,
-         page_end    = 7,
-         ram_pages   = page_end - page_start + 1
+         scan_dir_normal   = 0x00,
+         scan_dir_reverse  = 0x08,
+         scan_map_normal   = 0,
+         scan_map_reverse  = 1,
       };
    }
 
@@ -123,7 +133,7 @@ namespace cycfi { namespace infinity
       std::size_t rst_port, std::size_t dc_port, std::size_t cs_port
    >
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
-      ::print(std::uint8_t data)
+      ::out(std::uint8_t data)
    {
       _cs = 0;
       _spi.write(data);
@@ -139,9 +149,20 @@ namespace cycfi { namespace infinity
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
       ::reset()
    {
+      using namespace oled_detail;
+
+      enum
+      {
+         enable_charge_val   = 0x14,
+         horizontal_addr_mode = 0x00
+      };
+
       _rst = 0;
       delay_ms(1);
       _rst = 1;
+
+      // Turn display off
+      off();
 
       // Wait 100mS for DC-DC to stabilise. This can probably be reduced
       delay_ms(100);
@@ -152,11 +173,10 @@ namespace cycfi { namespace infinity
 
       // Enable charge pump
       command(charge_pump);
-      command(enable_charge_pump);
+      command(enable_charge_val);
 
-      // Set memory addressing mode to horizontal addressing
       command(memory_mode);
-      command(horizontal_addr_mode);
+      command(0x00);
 
       // Clear the canvas
       _canvas.clear();
@@ -164,8 +184,11 @@ namespace cycfi { namespace infinity
       // Print the canvas to clear the display RAM
       refresh();
 
+      // Set default contrast
+      contrast(0x8F);
+
       // Turn display on
-      command(display_on | 1);
+      on();
 
       // Wait 150ms for display to turn on
       delay_ms(150);
@@ -178,7 +201,18 @@ namespace cycfi { namespace infinity
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
       ::refresh()
    {
-      auto* p = this->_buffer;
+      using namespace oled_detail;
+
+      enum
+      {
+         col_start   = 0x02,
+         col_end     = 0x7F,
+         page_start  = 0,
+         page_end    = 7,
+         ram_pages   = page_end - page_start + 1
+      };
+
+      auto* p = _canvas._buffer;
       for (auto row = 0; row != ram_pages; ++row)
       {
          command(page | row);
@@ -188,9 +222,40 @@ namespace cycfi { namespace infinity
          _dc = 1;
          for (auto col = 0; col != _canvas.width; ++col)
          {
-            draw(*p++);
+            out(*p++);
          }
       }
+   }
+
+   template <
+      std::size_t spi_id, std::size_t sck_pin, std::size_t mosi_pin,
+      std::size_t rst_port, std::size_t dc_port, std::size_t cs_port
+   >
+   inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
+      ::contrast(std::uint8_t val)
+   {
+      command(oled_detail::set_contrast);
+      command(val);
+   }
+
+   template <
+      std::size_t spi_id, std::size_t sck_pin, std::size_t mosi_pin,
+      std::size_t rst_port, std::size_t dc_port, std::size_t cs_port
+   >
+   inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
+      ::on()
+   {
+      command(oled_detail::display_on);
+   }
+
+   template <
+      std::size_t spi_id, std::size_t sck_pin, std::size_t mosi_pin,
+      std::size_t rst_port, std::size_t dc_port, std::size_t cs_port
+   >
+   inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
+      ::off()
+   {
+      command(oled_detail::display_off);
    }
 }}
 

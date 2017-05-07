@@ -7,9 +7,5 @@
 
 namespace cycfi { namespace infinity
 {
-   void canvas::clear()
-   {
-      for (auto& pixels : _buffer)
-         pixels = 0;
-   }
+
 }}
