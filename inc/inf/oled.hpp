@@ -4,7 +4,10 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 
    Modern C++ OLED driver implementation based on HCuOLED OLED driver
+   and the Adafruit_SH1106 graphic library for SH1106 dirver lcds.
+
    https://github.com/HobbyComponents/HCuOLED
+   https://github.com/wonho-maker/Adafruit_SH1106
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_OLED_HPP_MAY_7_2015)
 #define CYCFI_INFINITY_OLED_HPP_MAY_7_2015
@@ -18,12 +21,24 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // drawing canvas
    ////////////////////////////////////////////////////////////////////////////
+   enum class color
+   {
+      white,
+      black,
+      inverse,
+   };
+
    template <std::size_t width_, std::size_t height_>
    struct canvas
    {
       enum { width  = width_, height = height_ };
 
       void clear();
+      void fill_rect(int x, int y, int w, int h, color color_);
+      void draw_rect(int x, int y, int w, int h, color color_);
+
+      void fast_hline(int x, int y, int w, color color_);
+      void fast_vline(int x, int y, int h, color color_);
 
       std::uint8_t _buffer[(width * height) / 8];
    };
@@ -73,19 +88,58 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // canvas implementation
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t width_, std::size_t height_>
-   inline void canvas<width_, height_>::clear()
+   namespace detail
+   {
+      void fast_hline_impl(
+         std::uint8_t* buffer, int width, int height,
+         int x, int y, int w, color color_);
+
+      void fast_vline_impl(
+         std::uint8_t* buffer, int width, int height,
+         int16_t x, int16_t y_, int16_t h_, color color_);
+   }
+
+   template <std::size_t width, std::size_t height>
+   inline void canvas<width, height>::clear()
    {
       for (auto& pixels : _buffer)
          pixels = 0;
    }
 
+   template <std::size_t width, std::size_t height>
+   inline void canvas<width, height>::fast_hline(int x, int y, int w, color color_)
+   {
+      detail::fast_hline_impl(_buffer, width, height, x, y, w, color_);
+   }
+
+   template <std::size_t width, std::size_t height>
+   inline void canvas<width, height>::fast_vline(int x, int y, int h, color color_)
+   {
+      detail::fast_vline_impl(_buffer, width, height, x, y, h, color_);
+   }
+
+   template <std::size_t width, std::size_t height>
+   inline void canvas<width, height>::fill_rect(int x, int y, int w, int h, color color_)
+   {
+      for (auto i=x; i<x+w; ++i)
+         fast_vline(i, y, h, color_);
+   }
+
+   template <std::size_t width, std::size_t height>
+   inline void canvas<width, height>::draw_rect(int x, int y, int w, int h, color color_)
+   {
+      fast_hline(x, y, w, color_);
+      fast_hline(x, y+h-1, w, color_);
+      fast_vline(x, y, h, color_);
+      fast_vline(x+w-1, y, h, color_);
+   }
+
    ////////////////////////////////////////////////////////////////////////////
    // oled_SH1106 implementation
    ////////////////////////////////////////////////////////////////////////////
-   namespace oled_detail
+   namespace display_commands
    {
-      enum display_commands : std::uint8_t
+      enum
       {
          set_col_low       = 0x00,
          set_col_high      = 0x10,
@@ -100,16 +154,9 @@ namespace cycfi { namespace infinity
          set_start_line    = 0x40,
          scan_dir_incr     = 0xC0,
          scan_dir_decr     = 0xC8,
-         segment_map       = 0xA0,
+         segment_map_incr  = 0xA0,
+         segment_map_decr  = 0xA1,
          set_contrast      = 0x81,
-      };
-
-      enum register_parameters : std::uint8_t
-      {
-         scan_dir_normal   = 0x00,
-         scan_dir_reverse  = 0x08,
-         scan_map_normal   = 0,
-         scan_map_reverse  = 1,
       };
    }
 
@@ -149,7 +196,7 @@ namespace cycfi { namespace infinity
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
       ::reset()
    {
-      using namespace oled_detail;
+      using namespace display_commands;
 
       enum
       {
@@ -187,6 +234,10 @@ namespace cycfi { namespace infinity
       // Set default contrast
       contrast(0x8F);
 
+      // Flip display horizontally and vertically
+      command(scan_dir_decr);
+      command(segment_map_decr);
+
       // Turn display on
       on();
 
@@ -201,7 +252,7 @@ namespace cycfi { namespace infinity
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
       ::refresh()
    {
-      using namespace oled_detail;
+      using namespace display_commands;
 
       enum
       {
@@ -234,7 +285,7 @@ namespace cycfi { namespace infinity
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
       ::contrast(std::uint8_t val)
    {
-      command(oled_detail::set_contrast);
+      command(display_commands::set_contrast);
       command(val);
    }
 
@@ -245,7 +296,7 @@ namespace cycfi { namespace infinity
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
       ::on()
    {
-      command(oled_detail::display_on);
+      command(display_commands::display_on);
    }
 
    template <
@@ -255,7 +306,7 @@ namespace cycfi { namespace infinity
    inline void oled_SH1106<spi_id, sck_pin, mosi_pin, rst_port, dc_port, cs_port>
       ::off()
    {
-      command(oled_detail::display_off);
+      command(display_commands::display_off);
    }
 }}
 

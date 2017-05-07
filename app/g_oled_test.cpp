@@ -32,22 +32,11 @@ void start()
 
    oled_SH1106 oled{cnv};
 
-   cnv._buffer[1] = 0xff;
-   cnv._buffer[3] = 0xff;
-   cnv._buffer[5] = 0xff;
-   cnv._buffer[7] = 0xff;
+   cnv.fill_rect(10, 10, 50, 50, inf::color::white);
+   cnv.draw_rect(8, 8, 54, 54, inf::color::white);
 
    oled.refresh();
-
-   //for (int i = 255; i > 0; --i)
-   //{
-   //   delay_ms(10);
-   //   oled.contrast(i);
-   //}
-   //oled.off();
 
    while (true)
       ;
 }
-
-
