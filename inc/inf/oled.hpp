@@ -15,6 +15,7 @@
 #include <inf/spi.hpp>
 #include <inf/pin.hpp>
 #include <inf/support.hpp>
+#include <utility>
 
 namespace cycfi { namespace infinity
 {
@@ -34,6 +35,9 @@ namespace cycfi { namespace infinity
       enum { width  = width_, height = height_ };
 
       void clear();
+
+      void draw_pixel(int x, int y, color color_);
+      void draw_line(int x0, int y0, int x1, int y1, color color_);
       void fill_rect(int x, int y, int w, int h, color color_);
       void draw_rect(int x, int y, int w, int h, color color_);
 
@@ -92,11 +96,62 @@ namespace cycfi { namespace infinity
    {
       void fast_hline_impl(
          std::uint8_t* buffer, int width, int height,
-         int x, int y, int w, color color_);
+         int x, int y, int w, color color_
+      );
 
       void fast_vline_impl(
          std::uint8_t* buffer, int width, int height,
-         int16_t x, int16_t y_, int16_t h_, color color_);
+         int16_t x, int16_t y_, int16_t h_, color color_
+      );
+
+      void line_impl(
+         std::uint8_t* buffer, int width, int height,
+         int x0, int y0, int x1, int y1, color color_
+      );
+
+      inline void draw_pixel(
+         std::uint8_t* buffer, int width, int height,
+         int16_t x, int16_t y, color color_)
+      {
+         if ((x < 0) || (x >= width) || (y < 0) || (y >= height))
+            return;
+
+         // x is which column
+         switch (color_)
+         {
+            case color::white:
+               buffer[x+(y/8)*width] |= 1 << (y&7);
+               break;
+
+            case color::black:
+               buffer[x+(y/8)*width] &= ~1 << (y&7);
+               break;
+
+            case color::inverse:
+               buffer[x+(y/8)*width] ^= 1 << (y&7);
+               break;
+           }
+
+
+         //if (buffer)
+         //{
+         //   if ((x < 0) || (y < 0) || (x >= width) || (y >= height))
+         //      return;
+         //
+         //   auto t = x;
+         //   x = width - 1 - y;
+         //   y = t;
+         //
+         //   if ((x < 0) || (y < 0) || (x >= width) || (y >= height))
+         //      return;
+         //
+         //   uint8_t* ptr = &buffer[(x / 8) + y * ((width + 7) / 8)];
+         //   if (color_ == color::white)
+         //      *ptr |=   0x80 >> (x & 7);
+         //   else
+         //      *ptr &= ~(0x80 >> (x & 7));
+         //}
+      }
    }
 
    template <std::size_t width, std::size_t height>
@@ -116,6 +171,33 @@ namespace cycfi { namespace infinity
    inline void canvas<width, height>::fast_vline(int x, int y, int h, color color_)
    {
       detail::fast_vline_impl(_buffer, width, height, x, y, h, color_);
+   }
+
+   template <std::size_t width, std::size_t height>
+   void canvas<width, height>::draw_pixel(int x, int y, color color_)
+   {
+      detail::draw_pixel(_buffer, width, height, x, y, color_);
+   }
+
+   template <std::size_t width, std::size_t height>
+   inline void canvas<width, height>::draw_line(int x0, int y0, int x1, int y1, color color_)
+   {
+      if (x0 == x1)
+      {
+         if (y0 > y1)
+            std::swap(y0, y1);
+         fast_vline(x0, y0, y1 - y0 + 1, color_);
+      }
+      else if (y0 == y1)
+      {
+         if(x0 > x1)
+            std::swap(x0, x1);
+         fast_hline(x0, y0, x1 - x0 + 1, color_);
+      }
+      else
+      {
+         detail::line_impl(_buffer, width, height, x0, y0, x1, y1, color_);
+      }
    }
 
    template <std::size_t width, std::size_t height>

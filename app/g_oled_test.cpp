@@ -6,7 +6,6 @@
 #include <inf/support.hpp>
 #include <inf/oled.hpp>
 #include <inf/app.hpp>
-#include <algorithm>
 
 namespace inf = cycfi::infinity;
 
@@ -34,6 +33,7 @@ void start()
 
    cnv.fill_rect(10, 10, 50, 50, inf::color::white);
    cnv.draw_rect(8, 8, 54, 54, inf::color::white);
+   cnv.draw_line(0, 0, 128, 64, inf::color::inverse);
 
    oled.refresh();
 

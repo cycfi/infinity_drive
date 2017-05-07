@@ -4,6 +4,7 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include <inf/oled.hpp>
+#include <cstdlib>
 
 namespace cycfi { namespace infinity { namespace detail
 {
@@ -179,5 +180,49 @@ namespace cycfi { namespace infinity { namespace detail
             case color::inverse: *p ^=  mask;  break;
          }
       }
-    }
+   }
+
+   void line_impl(
+      std::uint8_t* buffer, int width, int height,
+      int x0, int y0, int x1, int y1, color color_
+   )
+   {
+      auto steep = std::abs(y1 - y0) > abs(x1 - x0);
+      if (steep)
+      {
+         std::swap(x0, y0);
+         std::swap(x1, y1);
+      }
+
+      if (x0 > x1)
+      {
+         std::swap(x0, x1);
+         std::swap(y0, y1);
+      }
+
+      auto dx = x1 - x0;
+      auto dy = std::abs(y1 - y0);
+
+      auto err = dx / 2;
+      int ystep;
+
+      if (y0 < y1)
+         ystep = 1;
+      else
+         ystep = -1;
+
+      for (; x0<=x1; x0++)
+      {
+         if (steep)
+            draw_pixel(buffer, width, height, y0, x0, color_);
+         else
+            draw_pixel(buffer, width, height, x0, y0, color_);
+         err -= dy;
+         if (err < 0)
+         {
+            y0 += ystep;
+            err += dx;
+         }
+      }
+   }
 }}}
