@@ -88,7 +88,10 @@ namespace cycfi { namespace infinity { namespace detail
 
    bool spi_is_writing(std::size_t id)
    {
-      return io_data[id-1].write_index != io_data[id-1].write_len;
+      return LL_SPI_IsActiveFlag_BSY(io_data[id-1].spi);
+
+      //return (io_data[id-1].write_index != io_data[id-1].write_len)
+      //   && LL_SPI_IsActiveFlag_TXE(io_data[id-1].spi);
    }
 
    void spi_read(std::size_t id, std::uint8_t* data, std::size_t len)

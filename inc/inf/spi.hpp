@@ -28,6 +28,15 @@ namespace cycfi { namespace infinity
          LL_SPI_Disable(detail::get_spi<id>());
       }
 
+      bool write(std::uint8_t byte)
+      {
+         if (is_writing())
+            return false;
+         _write_byte = byte;
+         detail::spi_write(id, &_write_byte, 1);
+         return true;
+      }
+
       bool write(std::uint8_t const* data, std::size_t len)
       {
          if (is_writing())
@@ -53,6 +62,10 @@ namespace cycfi { namespace infinity
       {
          return detail::spi_is_reading(id);
       }
+
+   private:
+
+      std::uint8_t _write_byte;
    };
 
    template <std::size_t id_, std::size_t sck_pin, int mosi_pin = -1, int miso_pin = -1>
