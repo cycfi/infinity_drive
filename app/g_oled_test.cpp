@@ -36,7 +36,7 @@ void start()
 //   cnv.draw_line(0, 0, 128, 64, inf::color::black);
    cnv.draw_string("Hello, World!", 25, 0, inf::font::small);
    cnv.draw_string("Hello, World!", 10, 15, inf::font::medium);
-   cnv.draw_string("Cycfi", 10, 30, inf::font::large);
+   cnv.draw_string("Cycfi", 25, 30, inf::font::large);
 
    oled.refresh();
 
