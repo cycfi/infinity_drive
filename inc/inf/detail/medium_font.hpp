@@ -3,7 +3,7 @@
 // 
 
 // Character bitmaps for Verdana 12pt
-const byte verdana_12ptBitmaps[] = 
+constexpr byte mediumBitmaps[] = 
 {
 	// @0 ' ' (2 pixels wide)
 	//   
@@ -1812,8 +1812,8 @@ const byte verdana_12ptBitmaps[] =
 };
 
 // Character descriptors for Verdana 12pt
-// { [Char width in bits], [Offset into verdana_12ptCharBitmaps in bytes] }
-const unsigned int verdana_12ptDescriptors[][2] = 
+// { [Char width in bits], [Offset into mediumCharBitmaps in bytes] }
+constexpr unsigned int mediumDescriptors[][2] = 
 {
 	{2, 0}, 		//   
 	{2, 4}, 		// ! 
@@ -1913,11 +1913,11 @@ const unsigned int verdana_12ptDescriptors[][2] =
 };
 
 // Font information for Verdana 12pt
-const FONT_INFO verdana_12ptFontInfo =
+constexpr FONT_INFO mediumFontInfo =
 {
 	2, //  Character height
 	' ', //  Start character
 	'~', //  End character
-	verdana_12ptDescriptors[0], //  Character descriptor array
-	verdana_12ptBitmaps, //  Character bitmap array
+	mediumDescriptors[0], //  Character descriptor array
+	mediumBitmaps, //  Character bitmap array
 };

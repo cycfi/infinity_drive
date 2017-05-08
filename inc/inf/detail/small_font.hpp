@@ -3,7 +3,7 @@
 // 
 
 // Character bitmaps for Verdana 8pt
-const byte verdana_8ptBitmaps[] = 
+constexpr byte smallBitmaps[] = 
 {
 	// @0 ' ' (2 pixels wide)
 	//   
@@ -1432,8 +1432,8 @@ const byte verdana_8ptBitmaps[] =
 };
 
 // Character descriptors for Verdana 8pt
-// { [Char width in bits], [Offset into verdana_8ptCharBitmaps in bytes] }
-const unsigned int verdana_8ptDescriptors[][2] =
+// { [Char width in bits], [Offset into smallCharBitmaps in bytes] }
+constexpr unsigned int smallDescriptors[][2] =
 {
 	{2, 0}, 		//   
 	{2, 4}, 		// ! 
@@ -1533,11 +1533,11 @@ const unsigned int verdana_8ptDescriptors[][2] =
 };
 
 // Font information for Verdana 8pt
-const FONT_INFO verdana_8ptFontInfo =
+constexpr FONT_INFO smallFontInfo =
 {
 	2, //  Character height
 	' ', //  Start character
 	'~', //  End character
-	verdana_8ptDescriptors[0], //  Character descriptor array
-	verdana_8ptBitmaps, //  Character bitmap array
+	smallDescriptors[0], //  Character descriptor array
+	smallBitmaps, //  Character bitmap array
 };

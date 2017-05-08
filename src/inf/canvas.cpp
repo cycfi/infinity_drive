@@ -5,10 +5,20 @@
 =============================================================================*/
 #include <inf/canvas.hpp>
 #include <cstdlib>
-#include <inf/detail/fonts.h>
-#include <inf/detail/roboto8_font.h>
-#include <inf/detail/roboto12_font.h>
-#include <inf/detail/roboto20_font.h>
+
+typedef unsigned char byte;
+struct FONT_INFO 
+{ 
+   byte CharacterHeight; 
+   char StartCharacter; 
+   char EndCharacter; 
+   const unsigned int *Descriptors;
+   const byte *Bitmaps; 
+}; 
+
+#include <inf/detail/large_font.hpp>
+#include <inf/detail/medium_font.hpp>
+#include <inf/detail/small_font.hpp>
 
 namespace cycfi { namespace infinity { namespace detail
 {    
@@ -252,13 +262,13 @@ namespace cycfi { namespace infinity { namespace detail
       {
          default:
          case font::small:
-            font_info = &verdana_8ptFontInfo; /*&robotoBk_8ptFontInfo; /*/ //&Terminal_8ptFontInfo;
+            font_info = &smallFontInfo;
             break;
          case font::medium:
-            font_info = &verdana_12ptFontInfo; //&roboto_12ptFontInfo; // MedProp_11ptFontInfo;
+            font_info = &mediumFontInfo;
             break;
          case font::large:
-            font_info = &roboto_20ptFontInfo; // LCDLarge_24ptFontInfo;
+            font_info = &largeFontInfo;
             break;
       }
       
