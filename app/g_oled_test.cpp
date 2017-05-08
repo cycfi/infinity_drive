@@ -31,10 +31,12 @@ void start()
 
    oled_SH1106 oled{cnv};
 
-   cnv.fill_rect(10, 10, 50, 50);
-   cnv.draw_rect(8, 8, 54, 54);
-   cnv.draw_line(0, 0, 128, 64, inf::color::black);
-   cnv.draw_string("Joel!!!", 65, 8, inf::font::medium);
+//   cnv.fill_rect(10, 10, 50, 50);
+//   cnv.draw_rect(8, 8, 54, 54);
+//   cnv.draw_line(0, 0, 128, 64, inf::color::black);
+   cnv.draw_string("Hello, World!", 40, 0, inf::font::small);
+   cnv.draw_string("Hello, World!", 10, 15, inf::font::medium);
+   cnv.draw_string("Joel...", 10, 30, inf::font::large);
 
    oled.refresh();
 

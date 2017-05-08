@@ -6,6 +6,9 @@
 #include <inf/canvas.hpp>
 #include <cstdlib>
 #include <inf/detail/fonts.h>
+#include <inf/detail/roboto8_font.h>
+#include <inf/detail/roboto12_font.h>
+#include <inf/detail/roboto20_font.h>
 
 namespace cycfi { namespace infinity { namespace detail
 {    
@@ -249,13 +252,13 @@ namespace cycfi { namespace infinity { namespace detail
       {
          default:
          case font::small:
-            font_info = &Terminal_8ptFontInfo;
+            font_info = &verdana_8ptFontInfo; /*&robotoBk_8ptFontInfo; /*/ //&Terminal_8ptFontInfo;
             break;
          case font::medium:
-            font_info = &MedProp_11ptFontInfo;
+            font_info = &verdana_12ptFontInfo; //&roboto_12ptFontInfo; // MedProp_11ptFontInfo;
             break;
          case font::large:
-            font_info = &LCDLarge_24ptFontInfo;
+            font_info = &roboto_20ptFontInfo; // LCDLarge_24ptFontInfo;
             break;
       }
       
