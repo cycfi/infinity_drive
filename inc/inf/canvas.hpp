@@ -20,6 +20,13 @@ namespace cycfi { namespace infinity
       black,
       inverse,
    };
+   
+   enum class font
+   {
+      small,
+      medium,
+      large,
+   };
 
    struct bitmap
    {
@@ -31,20 +38,33 @@ namespace cycfi { namespace infinity
    template <std::size_t width_, std::size_t height_>
    struct canvas
    {
+   public:
+
       enum { width  = width_, height = height_ };
 
-      void clear();
+      void  clear();
 
-      void draw_pixel(int x, int y, color color_);
-      void draw_line(int x0, int y0, int x1, int y1, color color_);
-      void fill_rect(int x, int y, int w, int h, color color_);
-      void draw_rect(int x, int y, int w, int h, color color_);
-      void draw_bitmap(bitmap const& img, int x, int y, color color_);
+      void  draw_pixel(int x, int y, color color_ = color::white);
+      void  draw_line(int x0, int y0, int x1, int y1, color color_ = color::white);
+      void  fill_rect(int x, int y, int w, int h, color color_ = color::white);
+      void  draw_rect(int x, int y, int w, int h, color color_ = color::white);
+      void  draw_bitmap(bitmap const& img, int x, int y, color color_ = color::white);
+   
+      void  fast_hline(int x, int y, int w, color color_ = color::white);
+      void  fast_vline(int x, int y, int h, color color_ = color::white);
+         
+      int   draw_char(char ch, int x, int y, font font_, color color_ = color::white);
+      int   draw_string(char const* str, int x, int y, font font_, color color_ = color::white);
 
-      void fast_hline(int x, int y, int w, color color_);
-      void fast_vline(int x, int y, int h, color color_);
+      std::uint8_t*        begin()        { return _buffer; }
+      std::uint8_t const*  begin() const  { return _buffer; }
+      std::uint8_t*        end()          { return _buffer + buffer_size; }
+      std::uint8_t const*  end() const    { return _buffer + buffer_size; }
 
-      std::uint8_t _buffer[(width * height) / 8];
+   private:
+
+      static std::size_t const buffer_size = (width * height) / 8;
+      std::uint8_t _buffer[buffer_size];
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -93,6 +113,11 @@ namespace cycfi { namespace infinity
          auto* p = buffer + (x + (y / 8) * width);
          draw_byte(*p, 1 << mask, color_);
       }
+      
+      int draw_char(
+          std::uint8_t* buffer, int width, int height,
+          int x, int y, char ch, font font_, color color_
+      );
    }
 
    template <std::size_t width, std::size_t height>
@@ -155,6 +180,24 @@ namespace cycfi { namespace infinity
       fast_hline(x, y+h-1, w, color_);
       fast_vline(x, y, h, color_);
       fast_vline(x+w-1, y, h, color_);
+   }
+   
+   template <std::size_t width, std::size_t height>
+   inline int canvas<width, height>::draw_char(char ch, int x, int y, font font_, color color_)
+   {
+      return detail::draw_char(_buffer, width, height, x, y, ch, font_, color_);
+   }
+   
+   template <std::size_t width, std::size_t height>
+   inline int canvas<width, height>::draw_string(char const* str, int x, int y, font font_, color color_)
+   {
+      if (str)
+      {
+         while (*str)
+            x = draw_char(*str++, x, y, font_, color_);
+         return x;
+      }
+      return 0;
    }
 }}
 

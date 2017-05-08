@@ -31,13 +31,10 @@ void start()
 
    oled_SH1106 oled{cnv};
 
-   cnv.fill_rect(10, 10, 50, 50, inf::color::white);
-   cnv.draw_rect(8, 8, 54, 54, inf::color::white);
+   cnv.fill_rect(10, 10, 50, 50);
+   cnv.draw_rect(8, 8, 54, 54);
    cnv.draw_line(0, 0, 128, 64, inf::color::black);
-
-   std::uint8_t const data[] = { 0x4F, 0x4F };
-   inf::bitmap bm = { data, 2, 8 };
-   inf::detail::draw_bitmap(cnv._buffer, 128, 64, 80, 10, bm, inf::color::white);
+   cnv.draw_string("Joel!!!", 65, 8, inf::font::medium);
 
    oled.refresh();
 

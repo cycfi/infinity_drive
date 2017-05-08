@@ -4,8 +4,8 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include <inf/canvas.hpp>
-#include <inf/detail/fonts.h>
 #include <cstdlib>
+#include <inf/detail/fonts.h>
 
 namespace cycfi { namespace infinity { namespace detail
 {    
@@ -237,5 +237,45 @@ namespace cycfi { namespace infinity { namespace detail
          dest += width; 
          src += cols;
       }
+   }
+   
+   int draw_char(
+       std::uint8_t* buffer, int width, int height,
+       int x, int y, char ch, font font_, color color_
+   )
+   {
+      FONT_INFO const* font_info = nullptr;
+      switch (font_)
+      {
+         default:
+         case font::small:
+            font_info = &Terminal_8ptFontInfo;
+            break;
+         case font::medium:
+            font_info = &MedProp_11ptFontInfo;
+            break;
+         case font::large:
+            font_info = &LCDLarge_24ptFontInfo;
+            break;
+      }
+      
+      // See if we are not out of bounds:
+      if (ch < font_info->StartCharacter || ch > font_info->EndCharacter)
+         return 0;
+
+      // StartCharacter is the first glyph in the table
+      ch -= font_info->StartCharacter;
+
+      // The descriptors have 2 data: glyph width and offset to actual pixels
+      std::size_t glyph_index = ch * 2; 
+
+      unsigned int const* descr = font_info->Descriptors;
+      int const glyph_height = font_info->CharacterHeight * 8;
+      int const glyph_width = descr[glyph_index];
+      std::uint8_t const* address = font_info->Bitmaps + descr[glyph_index + 1];
+
+      bitmap const bm = { address, glyph_width, glyph_height };
+      draw_bitmap(buffer, width, height, x, y, bm, color_);
+      return x + glyph_width + 2;
    }
 }}}

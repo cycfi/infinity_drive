@@ -184,7 +184,7 @@ namespace cycfi { namespace infinity
          ram_pages   = page_end - page_start + 1
       };
 
-      auto* p = _canvas._buffer;
+      auto* p = _canvas.begin();
       for (auto row = 0; row != ram_pages; ++row)
       {
          command(page | row);
