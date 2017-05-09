@@ -384,12 +384,6 @@ void Activate_ADC(void)
       uint16_t size
    )
    {
-      //Configure_DMA(values, size);
-      //Configure_TIM_TimeBase_ADC_trigger();
-   
-   
-
-
       // Configuration of NVIC
       // Configure NVIC to enable DMA interruptions
       NVIC_SetPriority(dma_channel_irq, 1);  // DMA IRQ lower priority than ADC IRQ
@@ -462,7 +456,7 @@ void Activate_ADC(void)
       Configure_ADC();
    
    
-   
+//   
 //      // Configuration of NVIC
 //      // Configure NVIC to enable ADC1 interruptions
 //      NVIC_SetPriority(ADC1_2_IRQn, 0); // ADC IRQ greater priority than DMA IRQ
@@ -528,73 +522,69 @@ void Activate_ADC(void)
    }
 
    void activate_adc(ADC_TypeDef* adc)
-   {
-      Activate_ADC();
-      
-      
-//      
-//      // ADC must be disabled at this point
-//      if (LL_ADC_IsEnabled(adc) != 0)
-//         error_handler();
-//
-//      // Disable ADC deep power down (enabled by default after reset state)
-//      LL_ADC_DisableDeepPowerDown(adc);
-//
-//      // Enable ADC internal voltage regulator
-//      LL_ADC_EnableInternalRegulator(adc);
-//
-//      // Delay for ADC internal voltage regulator stabilization.
-//      // Compute number of CPU cycles to wait for, from delay in us.
-//      //
-//      // Note: Variable divided by 2 to compensate partially
-//      //       CPU processing cycles (depends on compilation optimization).
-//      //
-//      // Note: If system core clock frequency is below 200kHz, wait time
-//      //       is only a few CPU processing cycles.
-//
-//      auto wait_loop_index = ((LL_ADC_DELAY_INTERNAL_REGUL_STAB_US * (SystemCoreClock / (100000 * 2))) / 10);
-//      while (wait_loop_index != 0)
-//         wait_loop_index--;
-//
-//      // Run ADC self calibration
-//      uint32_t const adc_calibration_timout_ms = 1;
-//      auto timeout = adc_calibration_timout_ms;
-//
-//      LL_ADC_StartCalibration(adc, LL_ADC_SINGLE_ENDED);
-//      while (LL_ADC_IsCalibrationOnGoing(ADC1) != 0)
-//      {
-//         // Check Systick counter flag to decrement the time-out value
-//         if (LL_SYSTICK_IsActiveCounterFlag())
-//         {
-//            if (timeout-- == 0)
-//               error_handler();
-//         }
-//      }
-//
-//      // Delay between ADC end of calibration and ADC enable.
-//      // Note: Variable divided by 2 to compensate partially
-//      //       CPU processing cycles (depends on compilation optimization).
-//
-//      auto const adc_delay_calib_enable_cpu_cycles = LL_ADC_DELAY_CALIB_ENABLE_ADC_CYCLES * 32;
-//      wait_loop_index = adc_delay_calib_enable_cpu_cycles >> 1;
-//      while (wait_loop_index != 0)
-//         wait_loop_index--;
-//
-//      // Enable ADC
-//      LL_ADC_Enable(adc);
-//
-//      // Poll for ADC ready to convert
-//      uint32_t const adc_enable_timeout_ms = 1;
-//      timeout = adc_enable_timeout_ms;
-//
-//      while (LL_ADC_IsActiveFlag_ADRDY(adc) == 0)
-//      {
-//         // Check Systick counter flag to decrement the time-out value
-//         if (LL_SYSTICK_IsActiveCounterFlag())
-//         {
-//            if (timeout-- == 0)
-//               error_handler();
-//         }
-//      }
+   {      
+      // ADC must be disabled at this point
+      if (LL_ADC_IsEnabled(adc) != 0)
+         error_handler();
+
+      // Disable ADC deep power down (enabled by default after reset state)
+      LL_ADC_DisableDeepPowerDown(adc);
+
+      // Enable ADC internal voltage regulator
+      LL_ADC_EnableInternalRegulator(adc);
+
+      // Delay for ADC internal voltage regulator stabilization.
+      // Compute number of CPU cycles to wait for, from delay in us.
+      //
+      // Note: Variable divided by 2 to compensate partially
+      //       CPU processing cycles (depends on compilation optimization).
+      //
+      // Note: If system core clock frequency is below 200kHz, wait time
+      //       is only a few CPU processing cycles.
+
+      auto wait_loop_index = ((LL_ADC_DELAY_INTERNAL_REGUL_STAB_US * (SystemCoreClock / (100000 * 2))) / 10);
+      while (wait_loop_index != 0)
+         wait_loop_index--;
+
+      // Run ADC self calibration
+      uint32_t const adc_calibration_timout_ms = 1;
+      auto timeout = adc_calibration_timout_ms;
+
+      LL_ADC_StartCalibration(adc, LL_ADC_SINGLE_ENDED);
+      while (LL_ADC_IsCalibrationOnGoing(ADC1) != 0)
+      {
+         // Check Systick counter flag to decrement the time-out value
+         if (LL_SYSTICK_IsActiveCounterFlag())
+         {
+            if (timeout-- == 0)
+               error_handler();
+         }
+      }
+
+      // Delay between ADC end of calibration and ADC enable.
+      // Note: Variable divided by 2 to compensate partially
+      //       CPU processing cycles (depends on compilation optimization).
+
+      auto const adc_delay_calib_enable_cpu_cycles = LL_ADC_DELAY_CALIB_ENABLE_ADC_CYCLES * 32;
+      wait_loop_index = adc_delay_calib_enable_cpu_cycles >> 1;
+      while (wait_loop_index != 0)
+         wait_loop_index--;
+
+      // Enable ADC
+      LL_ADC_Enable(adc);
+
+      // Poll for ADC ready to convert
+      uint32_t const adc_enable_timeout_ms = 1;
+      timeout = adc_enable_timeout_ms;
+
+      while (LL_ADC_IsActiveFlag_ADRDY(adc) == 0)
+      {
+         // Check Systick counter flag to decrement the time-out value
+         if (LL_SYSTICK_IsActiveCounterFlag())
+         {
+            if (timeout-- == 0)
+               error_handler();
+         }
+      }
    }
 }}}
