@@ -12,14 +12,14 @@ using namespace inf::port;
 using inf::delay_ms;
 
 constexpr int sampling_rate = 16000;
-inf::timer<8> clock(2000000, 2000000/sampling_rate);
-inf::adc<1, 8> adc_conv(clock);
+inf::timer<2> clock(2000000, 2000000/sampling_rate);
+inf::adc<1, 2> adc_conv(clock);
 volatile int32_t adc_val = 0;
 
 void start()
 {
-   // channel 11, portc pin 1
-   adc_conv.enable_channel<11, portc + 1, 1>();
+   // channel 11, porta pin 4
+   adc_conv.enable_channel<11, porta + 4, 1>();
 
    adc_conv.start();
    clock.start();

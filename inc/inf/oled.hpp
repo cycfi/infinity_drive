@@ -193,9 +193,7 @@ namespace cycfi { namespace infinity
 
          _dc = 1;
          for (auto col = 0; col != _canvas.width; ++col)
-         {
             out(*p++);
-         }
       }
    }
 

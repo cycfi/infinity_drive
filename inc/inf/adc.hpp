@@ -44,36 +44,46 @@ namespace cycfi { namespace infinity
          );
 
          detail::adc_config(get_adc(), detail::adc_timer_trigger_id<N>());
+         
+        /* Set timer the trigger output (TRGO) */
+        LL_TIM_SetTriggerOutput(TIM2, LL_TIM_TRGO_UPDATE);
       }
 
       template <std::size_t channel, std::size_t pin, std::size_t rank>
       void enable_channel()
       {
-         static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
-
-         static constexpr uint16_t bit = pin % 16;
-         static constexpr uint16_t port = pin / 16;
-         static constexpr uint32_t mask = 1 << bit;
-         auto* gpio = &detail::get_port<port>();
-
-         // Enable GPIO peripheral clock
-         detail::enable_port_clock<port>();
-
-         // Configure GPIO in analog mode to be used as ADC input
-         LL_GPIO_SetPinMode(gpio, mask, LL_GPIO_MODE_ANALOG);
-
-         // Connect GPIO analog switch to ADC input
-         LL_GPIO_EnablePinAnalogControl(gpio, mask);
-
-         // Set ADC group regular sequence: channel on the selected sequence rank.
-         auto const adc_channel = detail::adc_channel<channel>();
-         LL_ADC_REG_SetSequencerRanks(get_adc(), detail::adc_rank<rank>(), adc_channel);
-         LL_ADC_SetChannelSamplingTime(get_adc(), adc_channel, LL_ADC_SAMPLINGTIME_2CYCLES_5);
+//         static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
+//
+//         static constexpr uint16_t bit = pin % 16;
+//         static constexpr uint16_t port = pin / 16;
+//         static constexpr uint32_t mask = 1 << bit;
+//         auto* gpio = &detail::get_port<port>();
+//
+//         // Enable GPIO peripheral clock
+//         detail::enable_port_clock<port>();
+//
+//         // Configure GPIO in analog mode to be used as ADC input
+//         LL_GPIO_SetPinMode(gpio, mask, LL_GPIO_MODE_ANALOG);
+//
+//         // Connect GPIO analog switch to ADC input
+//         LL_GPIO_EnablePinAnalogControl(gpio, mask);
+//
+//         // Set ADC group regular sequence: channel on the selected sequence rank.
+//         auto const adc_channel = detail::adc_channel<channel>();
+//         LL_ADC_REG_SetSequencerRanks(get_adc(), detail::adc_rank<rank>(), adc_channel);
+//         LL_ADC_SetChannelSamplingTime(get_adc(), adc_channel, LL_ADC_SAMPLINGTIME_2CYCLES_5);
       }
 
       void start()
       {
          detail::activate_adc(get_adc());
+         
+        if ((LL_ADC_IsEnabled(ADC1) == 1)               &&
+            (LL_ADC_IsDisableOngoing(ADC1) == 0)        &&
+            (LL_ADC_REG_IsConversionOngoing(ADC1) == 0)   )
+        {
+            LL_ADC_REG_StartConversion(ADC1);
+        }
       }
 
       //void enable_interrupt(std::size_t priority = 0)

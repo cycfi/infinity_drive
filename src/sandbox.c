@@ -1,13 +1,26 @@
+
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_ll_bus.h"
 #include "stm32l4xx_ll_rcc.h"
 #include "stm32l4xx_ll_system.h"
 #include "stm32l4xx_ll_utils.h"
+#include "stm32l4xx_ll_cortex.h"
 #include "stm32l4xx_ll_gpio.h"
 #include "stm32l4xx_ll_exti.h"
-#include "stm32l4xx_ll_spi.h"
-#include "stm32l4xx_ll_pwr.h"
+#include "stm32l4xx_ll_adc.h"
+#include "stm32l4xx_ll_dma.h"
+#include "stm32l4xx_ll_tim.h"
 
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
+
+/* Define used to enable time-out management*/
+#define USE_TIMEOUT       1
+
+/**
+  * @brief LED2
+  */
 #define LED2_PIN                           LL_GPIO_PIN_5
 #define LED2_GPIO_PORT                     GPIOA
 #define LED2_GPIO_CLK_ENABLE()             LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA)
@@ -19,255 +32,686 @@
 #define LED_BLINK_SLOW  500
 #define LED_BLINK_ERROR 1000
 
-
-/**
-  * @brief Key push-button
-  */
-#define USER_BUTTON_PIN                         LL_GPIO_PIN_13
-#define USER_BUTTON_GPIO_PORT                   GPIOC
-#define USER_BUTTON_GPIO_CLK_ENABLE()           LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC)
-#define USER_BUTTON_EXTI_LINE                   LL_EXTI_LINE_13
-#define USER_BUTTON_EXTI_IRQn                   EXTI15_10_IRQn
-#define USER_BUTTON_EXTI_LINE_ENABLE()          LL_EXTI_EnableIT_0_31(USER_BUTTON_EXTI_LINE)
-#define USER_BUTTON_EXTI_FALLING_TRIG_ENABLE()  LL_EXTI_EnableFallingTrig_0_31(USER_BUTTON_EXTI_LINE)
-#define USER_BUTTON_SYSCFG_SET_EXTI()           do {                                                                     \
-                                                  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);                  \
-                                                  LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);  \
-                                                } while(0)
-#define USER_BUTTON_IRQHANDLER                  EXTI15_10_IRQHandler
-
 /* Exported macro ------------------------------------------------------------*/
+
 /* Exported functions ------------------------------------------------------- */
-void SPI1_Tx_Callback(void);
-void SPI3_Rx_Callback(void);
-void SPI_TransferError_Callback(void);
-void UserButton_Callback(void);
+/* IRQ Handler treatment */
+void AdcDmaTransferComplete_Callback(void);
+void AdcDmaTransferHalf_Callback(void);
+void AdcDmaTransferError_Callback(void);
+void AdcGrpRegularOverrunError_Callback(void);
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
 
-void USER_BUTTON_IRQHANDLER(void);
-void SPI1_IRQHandler(void);
-void SPI3_IRQHandler(void);
+void ADC1_2_IRQHandler(void);
+void DMA1_Channel1_IRQHandler(void);
 
-#ifdef __cplusplus
-}
-#endif
 
-__IO uint8_t ubButtonPress = 0;
 
-/* Buffer used for transmission */
-uint8_t aTxBuffer[] = "**** SPI_OneBoard_HalfDuplex_IT communication **** SPI_OneBoard_HalfDuplex_IT communication **** SPI_OneBoard_HalfDuplex_IT communication ****";
-uint8_t ubNbDataToTransmit = sizeof(aTxBuffer);
-__IO uint8_t ubTransmitIndex = 0;
+  /* supply Vdda (unit: mV).                                                  */
+  #define VDDA_APPLI                       ((uint32_t)3300)
 
-/* Buffer used for reception */
-uint8_t aRxBuffer[sizeof(aTxBuffer)];
-uint8_t ubNbDataToReceive = sizeof(aTxBuffer);
-__IO uint8_t ubReceiveIndex = 0;
+/* Definitions of data related to this example */
+  /* Definition of ADCx conversions data table size */
+  #define ADC_CONVERTED_DATA_BUFFER_SIZE   ((uint32_t)  64)
+
+  /* Init variable out of expected ADC conversion data range */
+  #define VAR_CONVERTED_DATA_INIT_VALUE    (__LL_ADC_DIGITAL_SCALE(LL_ADC_RESOLUTION_12B) + 1)
+
+  /* Parameters of timer (used as ADC conversion trigger) */
+  /* Timer frequency (unit: Hz). With a timer 16 bits and time base           */
+  /* freq min 1Hz, range is min=1Hz, max=32kHz.                               */
+  #define TIMER_FREQUENCY                ((uint32_t) 1000)
+  /* Timer minimum frequency (unit: Hz), used to calculate frequency range.   */
+  /* With a timer 16 bits, maximum frequency will be 32000 times this value.  */
+  #define TIMER_FREQUENCY_RANGE_MIN      ((uint32_t)    1)
+  /* Timer prescaler maximum value (0xFFFF for a timer 16 bits)               */
+  #define TIMER_PRESCALER_MAX_VALUE      ((uint32_t)0xFFFF-1)
+
+
+/* Variables for ADC conversion data */
+__IO uint16_t aADCxConvertedData[ADC_CONVERTED_DATA_BUFFER_SIZE]; /* ADC group regular conversion data */
+
+/* Variables for ADC conversion data computation to physical values */
+__IO uint16_t aADCxConvertedData_Voltage_mVolt[ADC_CONVERTED_DATA_BUFFER_SIZE];  /* Value of voltage calculated from ADC conversion data (unit: mV) (array of data) */
+
+/* Variable to report status of DMA transfer of ADC group regular conversions */
+/*  0: DMA transfer is not completed                                          */
+/*  1: DMA transfer is completed                                              */
+/*  2: DMA transfer has not yet been started yet (initial state)              */
+__IO uint8_t ubDmaTransferStatus = 2; /* Variable set into DMA interruption callback */
 
 /* Private function prototypes -----------------------------------------------*/
 void     SystemClock_Config(void);
-void     Configure_SPI1(void);
-void     Configure_SPI3(void);
-void     Activate_SPI1(void);
-void     Activate_SPI3(void);
+void     Configure_DMA(void);
+void     Configure_TIM_TimeBase_ADC_trigger(void);
+void     Configure_ADC(void);
+void     Activate_ADC(void);
 void     LED_Init(void);
 void     LED_On(void);
-void     LED_Blinking(uint32_t Period);
 void     LED_Off(void);
-void     UserButton_Init(void);
-void     WaitForUserButtonPress(void);
-void     WaitAndCheckEndOfTransfer(void);
-uint8_t  Buffercmp8(uint8_t* pBuffer1, uint8_t* pBuffer2, uint8_t BufferLength);
+void     LED_Blinking(uint32_t Period);
 
-/* Private functions ---------------------------------------------------------*/
-
-/**
-  * @brief  Main program
-  * @param  None
-  * @retval None
-  */
 int main(void)
 {
+  uint32_t tmp_index_adc_converted_data = 0;
+
   /* Configure the system clock to 80 MHz */
   SystemClock_Config();
+
+  /* Init variable containing ADC conversion data */
+  for (tmp_index_adc_converted_data = 0; tmp_index_adc_converted_data < ADC_CONVERTED_DATA_BUFFER_SIZE; tmp_index_adc_converted_data++)
+  {
+    aADCxConvertedData[tmp_index_adc_converted_data] = VAR_CONVERTED_DATA_INIT_VALUE;
+  }
 
   /* Initialize LED2 */
   LED_Init();
 
-  /* Configure the SPI1 parameters */
-  Configure_SPI1();
+  /* Configure DMA for data transfer from ADC */
+  Configure_DMA();
 
-  /* Configure the SPI3 parameters */
-  Configure_SPI3();
+  /* Configure timer as a time base used to trig ADC conversion start */
+  Configure_TIM_TimeBase_ADC_trigger();
 
-  /* Initialize User push-button in EXTI mode */
-  UserButton_Init();
+  /* Configure ADC */
+  /* Note: This function configures the ADC but does not enable it.           */
+  /*       To enable it, use function "Activate_ADC()".                       */
+  /*       This is intended to optimize power consumption:                    */
+  /*       1. ADC configuration can be done once at the beginning             */
+  /*          (ADC disabled, minimal power consumption)                       */
+  /*       2. ADC enable (higher power consumption) can be done just before   */
+  /*          ADC conversions needed.                                         */
+  /*          Then, possible to perform successive "Activate_ADC()",          */
+  /*          "Deactivate_ADC()", ..., without having to set again            */
+  /*          ADC configuration.                                              */
+  Configure_ADC();
 
-  /* Enable the SPI3 peripheral */
-  Activate_SPI3();
+  /* Activate ADC */
+  /* Perform ADC activation procedure to make it ready to convert. */
+  Activate_ADC();
 
-  /* Wait for User push-button press to start transfer */
-  WaitForUserButtonPress();
 
-  /* Enable the SPI1 peripheral */
-  Activate_SPI1();
-
-  /* Wait for the end of the transfer and check received data */
-  /* LED blinking FAST during waiting time */
-  WaitAndCheckEndOfTransfer();
+  if ((LL_ADC_IsEnabled(ADC1) == 1)               &&
+      (LL_ADC_IsDisableOngoing(ADC1) == 0)        &&
+      (LL_ADC_REG_IsConversionOngoing(ADC1) == 0)   )
+  {
+    LL_ADC_REG_StartConversion(ADC1);
+  }
+  else
+  {
+    /* Error: ADC conversion start could not be performed */
+    LED_Blinking(LED_BLINK_ERROR);
+  }
 
   /* Infinite loop */
   while (1)
   {
+    /* Note: LED state depending on DMA transfer status is set into DMA       */
+    /*       IRQ handler,                                                     */
+    /*       refer to functions "AdcDmaTransferComplete_Callback()"           */
+    /*       and "AdcDmaTransferHalf_Callback()".                             */
+
+    /* Note: ADC conversions data are stored into array                       */
+    /*       "aADCxConvertedData"                                             */
+    /*       (for debug: see variable content into watch window).             */
+
+    /* Note: ADC conversion data are computed to physical values              */
+    /*       into array "aADCxConvertedData_Voltage_mVolt"                    */
+    /*       using ADC LL driver helper macro "__LL_ADC_CALC_DATA_TO_VOLTAGE()". */
+    /*       (for debug: see variable content into watch window).             */
+
   }
 }
 
 /**
-  * @brief  This function configures SPI1.
-  * @note  This function is used to :
-  *        -1- Enables GPIO clock and configures the SPI1 pins.
-  *        -2- Configure NVIC for SPI1.
-  *        -3- Configure SPI1 functional parameters.
+  * @brief  This function configures DMA for transfer of data from ADC
+  * @param  None
+  * @retval None
+  */
+void Configure_DMA(void)
+{
+  /*## Configuration of NVIC #################################################*/
+  /* Configure NVIC to enable DMA interruptions */
+  NVIC_SetPriority(DMA1_Channel1_IRQn, 1); /* DMA IRQ lower priority than ADC IRQ */
+  NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+  /*## Configuration of DMA ##################################################*/
+  /* Enable the peripheral clock of DMA */
+  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+  /* Configure the DMA transfer */
+  /*  - DMA transfer in circular mode to match with ADC configuration:        */
+  /*    DMA unlimited requests.                                               */
+  /*  - DMA transfer from ADC without address increment.                      */
+  /*  - DMA transfer to memory with address increment.                        */
+  /*  - DMA transfer from ADC by half-word to match with ADC configuration:   */
+  /*    ADC resolution 12 bits.                                               */
+  /*  - DMA transfer to memory by half-word to match with ADC conversion data */
+  /*    buffer variable type: half-word.                                      */
+  LL_DMA_ConfigTransfer(DMA1,
+                        LL_DMA_CHANNEL_1,
+                        LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
+                        LL_DMA_MODE_CIRCULAR              |
+                        LL_DMA_PERIPH_NOINCREMENT         |
+                        LL_DMA_MEMORY_INCREMENT           |
+                        LL_DMA_PDATAALIGN_HALFWORD        |
+                        LL_DMA_MDATAALIGN_HALFWORD        |
+                        LL_DMA_PRIORITY_HIGH               );
+
+  /* Select ADC as DMA transfer request */
+  LL_DMA_SetPeriphRequest(DMA1,
+                          LL_DMA_CHANNEL_1,
+                          LL_DMA_REQUEST_0);
+
+  /* Set DMA transfer addresses of source and destination */
+  LL_DMA_ConfigAddresses(DMA1,
+                         LL_DMA_CHANNEL_1,
+                         LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA),
+                         (uint32_t)&aADCxConvertedData,
+                         LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+
+  /* Set DMA transfer size */
+  LL_DMA_SetDataLength(DMA1,
+                       LL_DMA_CHANNEL_1,
+                       ADC_CONVERTED_DATA_BUFFER_SIZE);
+
+  /* Enable DMA transfer interruption: transfer complete */
+  LL_DMA_EnableIT_TC(DMA1,
+                     LL_DMA_CHANNEL_1);
+
+  /* Enable DMA transfer interruption: half transfer */
+  LL_DMA_EnableIT_HT(DMA1,
+                     LL_DMA_CHANNEL_1);
+
+  /* Enable DMA transfer interruption: transfer error */
+  LL_DMA_EnableIT_TE(DMA1,
+                     LL_DMA_CHANNEL_1);
+
+  /*## Activation of DMA #####################################################*/
+  /* Enable the DMA transfer */
+  LL_DMA_EnableChannel(DMA1,
+                       LL_DMA_CHANNEL_1);
+}
+
+/**
+  * @brief  Configure timer as a time base (timer instance: TIM2)
+  *         used to trig ADC conversion start.
+  * @note   In this ADC example, timer instance must be on APB1 (clocked by PCLK1)
+  *         to be compliant with frequency calculation used in this function.
+  * @param  None
+  * @retval None
+  */
+void Configure_TIM_TimeBase_ADC_trigger(void)
+{
+  uint32_t timer_clock_frequency = 0;             /* Timer clock frequency */
+  uint32_t timer_prescaler = 0;                   /* Time base prescaler to have timebase aligned on minimum frequency possible */
+  uint32_t timer_reload = 0;                      /* Timer reload value in function of timer prescaler to achieve time base period */
+
+  /*## Configuration of NVIC #################################################*/
+  /* Note: In this example, timer interrupts are not activated.               */
+  /*       If needed, timer interruption at each time base period is          */
+  /*       possible.                                                          */
+  /*       Refer to timer examples.                                           */
+
+  /* Configuration of timer as time base:                                     */
+  /* Caution: Computation of frequency is done for a timer instance on APB1   */
+  /*          (clocked by PCLK1)                                              */
+  /* Timer frequency is configured from the following constants:              */
+  /* - TIMER_FREQUENCY: timer frequency (unit: Hz).                           */
+  /* - TIMER_FREQUENCY_RANGE_MIN: timer minimum frequency possible            */
+  /*   (unit: Hz).                                                            */
+  /* Note: Refer to comments at these literals definition for more details.   */
+
+  /* Retrieve timer clock source frequency */
+  /* If APB1 prescaler is different of 1, timers have a factor x2 on their    */
+  /* clock source.                                                            */
+  if (LL_RCC_GetAPB1Prescaler() == LL_RCC_APB1_DIV_1)
+  {
+    timer_clock_frequency = __LL_RCC_CALC_PCLK1_FREQ(SystemCoreClock, LL_RCC_GetAPB1Prescaler());
+  }
+  else
+  {
+    timer_clock_frequency = (__LL_RCC_CALC_PCLK1_FREQ(SystemCoreClock, LL_RCC_GetAPB1Prescaler()) * 2);
+  }
+
+  /* Timer prescaler calculation */
+  /* (computation for timer 16 bits, additional + 1 to round the prescaler up) */
+  timer_prescaler = ((timer_clock_frequency / (TIMER_PRESCALER_MAX_VALUE * TIMER_FREQUENCY_RANGE_MIN)) +1);
+  /* Timer reload calculation */
+  timer_reload = (timer_clock_frequency / (timer_prescaler * TIMER_FREQUENCY));
+
+  /* Enable the timer peripheral clock */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
+
+  /* Set timer pre-scaler value */
+  LL_TIM_SetPrescaler(TIM2, (timer_prescaler - 1));
+
+  /* Set timer auto-reload value */
+  LL_TIM_SetAutoReload(TIM2, (timer_reload - 1));
+
+  /* Counter mode: select up-counting mode */
+  LL_TIM_SetCounterMode(TIM2, LL_TIM_COUNTERMODE_UP);
+
+  /* Set the repetition counter */
+  LL_TIM_SetRepetitionCounter(TIM2, 0);
+
+  /* Note: In this example, timer interrupts are not activated.               */
+  /*       If needed, timer interruption at each time base period is          */
+  /*       possible.                                                          */
+  /*       Refer to timer examples.                                           */
+
+  /* Set timer the trigger output (TRGO) */
+  LL_TIM_SetTriggerOutput(TIM2, LL_TIM_TRGO_UPDATE);
+
+  /* Enable counter */
+  LL_TIM_EnableCounter(TIM2);
+}
+
+
+/**
+  * @brief  Configure ADC (ADC instance: ADC1) and GPIO used by ADC channels.
+  * @note   In case re-use of this function outside of this example:
+  *         This function includes checks of ADC hardware constraints before
+  *         executing some configuration functions.
+  *         - In this example, all these checks are not necessary but are
+  *           implemented anyway to show the best practice usages
+  *           corresponding to reference manual procedure.
+  *           (On some STM32 series, setting of ADC features are not
+  *           conditioned to ADC state. However, in order to be compliant with
+  *           other STM32 series and to show the best practice usages,
+  *           ADC state is checked anyway with same constraints).
+  *           Software can be optimized by removing some of these checks,
+  *           if they are not relevant considering previous settings and actions
+  *           in user application.
+  *         - If ADC is not in the appropriate state to modify some parameters,
+  *           the setting of these parameters is bypassed without error
+  *           reporting:
+  *           it can be the expected behavior in case of recall of this
+  *           function to update only a few parameters (which update fullfills
+  *           the ADC state).
+  *           Otherwise, it is up to the user to set the appropriate error
+  *           reporting in user application.
   * @note   Peripheral configuration is minimal configuration from reset values.
   *         Thus, some useless LL unitary functions calls below are provided as
   *         commented examples - setting is default configuration from reset.
   * @param  None
   * @retval None
   */
-void Configure_SPI1(void)
+void Configure_ADC(void)
 {
-  /* (1) Enables GPIO clock and configures the SPI1 pins ********************/
-  /* Enable the peripheral clock of GPIOB */
-  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+  /*## Configuration of GPIO used by ADC channels ############################*/
 
-  /* Configure SCK Pin connected to pin 31 of CN10 connector */
-  LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_3, LL_GPIO_MODE_ALTERNATE);
-  LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_3, LL_GPIO_AF_5);
-  LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_3, LL_GPIO_SPEED_FREQ_HIGH);
-  LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_3, LL_GPIO_PULL_DOWN);
+  /* Note: On this STM32 device, ADC1 channel 9 is mapped on GPIO pin PA.04 */
 
-  /* Configure MOSI Pin connected to pin 29 of CN10 connector */
-  LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_5, LL_GPIO_MODE_ALTERNATE);
-  LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_5, LL_GPIO_AF_5);
-  LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_5, LL_GPIO_SPEED_FREQ_HIGH);
-  LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_5, LL_GPIO_PULL_DOWN);
+  /* Enable GPIO Clock */
+  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
 
-  /* (2) Configure NVIC for SPI1 transfer complete/error interrupts **********/
-  /* Set priority for SPI1_IRQn */
-  NVIC_SetPriority(SPI1_IRQn, 0);
-  /* Enable SPI1_IRQn           */
-  NVIC_EnableIRQ(SPI1_IRQn);
+  /* Configure GPIO in analog mode to be used as ADC input */
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_4, LL_GPIO_MODE_ANALOG);
 
-  /* (3) Configure SPI1 functional parameters ********************************/
-  /* Enable the peripheral clock of GPIOB */
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
+  /* Connect GPIO analog switch to ADC input */
+  LL_GPIO_EnablePinAnalogControl(GPIOA, LL_GPIO_PIN_4);
 
-  /* Configure SPI1 communication */
-  LL_SPI_SetBaudRatePrescaler(SPI1, LL_SPI_BAUDRATEPRESCALER_DIV256);
-  LL_SPI_SetTransferDirection(SPI1,LL_SPI_HALF_DUPLEX_TX);
-  LL_SPI_SetClockPhase(SPI1, LL_SPI_PHASE_2EDGE);
-  LL_SPI_SetClockPolarity(SPI1, LL_SPI_POLARITY_HIGH);
-  /* Reset value is LL_SPI_MSB_FIRST */
-  //LL_SPI_SetTransferBitOrder(SPI1, LL_SPI_MSB_FIRST);
-  LL_SPI_SetDataWidth(SPI1, LL_SPI_DATAWIDTH_8BIT);
-  LL_SPI_SetNSSMode(SPI1, LL_SPI_NSS_SOFT);
-  LL_SPI_SetRxFIFOThreshold(SPI1, LL_SPI_RX_FIFO_TH_QUARTER);
-  LL_SPI_SetMode(SPI1, LL_SPI_MODE_MASTER);
+  /*## Configuration of NVIC #################################################*/
+  /* Configure NVIC to enable ADC1 interruptions */
+  NVIC_SetPriority(ADC1_2_IRQn, 0); /* ADC IRQ greater priority than DMA IRQ */
+  NVIC_EnableIRQ(ADC1_2_IRQn);
 
-  /* Configure SPI1 transfer interrupts */
-  /* Enable TXE   Interrupt */
-  LL_SPI_EnableIT_TXE(SPI1);
-  /* Enable SPI1 Error Interrupt */
-  LL_SPI_EnableIT_ERR(SPI1);
+  /*## Configuration of ADC ##################################################*/
+
+  /*## Configuration of ADC hierarchical scope: common to several ADC ########*/
+
+  /* Enable ADC clock (core clock) */
+  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC);
+
+  /* Note: Hardware constraint (refer to description of the functions         */
+  /*       below):                                                            */
+  /*       On this STM32 serie, setting of these features is conditioned to   */
+  /*       ADC state:                                                         */
+  /*       All ADC instances of the ADC common group must be disabled.        */
+  /* Note: In this example, all these checks are not necessary but are        */
+  /*       implemented anyway to show the best practice usages                */
+  /*       corresponding to reference manual procedure.                       */
+  /*       Software can be optimized by removing some of these checks, if     */
+  /*       they are not relevant considering previous settings and actions    */
+  /*       in user application.                                               */
+  if(__LL_ADC_IS_ENABLED_ALL_COMMON_INSTANCE() == 0)
+  {
+    /* Note: Call of the functions below are commented because they are       */
+    /*       useless in this example:                                         */
+    /*       setting corresponding to default configuration from reset state. */
+
+    /* Set ADC clock (conversion clock) common to several ADC instances */
+    LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+
+    /* Set ADC measurement path to internal channels */
+    // LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_PATH_INTERNAL_NONE);
+
+
+  /*## Configuration of ADC hierarchical scope: multimode ####################*/
+
+    /* Set ADC multimode configuration */
+    // LL_ADC_SetMultimode(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_MULTI_INDEPENDENT);
+
+    /* Set ADC multimode DMA transfer */
+    // LL_ADC_SetMultiDMATransfer(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_MULTI_REG_DMA_EACH_ADC);
+
+    /* Set ADC multimode: delay between 2 sampling phases */
+    // LL_ADC_SetMultiTwoSamplingDelay(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_MULTI_TWOSMP_DELAY_1CYCLE);
+
+  }
+
+
+  /*## Configuration of ADC hierarchical scope: ADC instance #################*/
+
+  /* Note: Hardware constraint (refer to description of the functions         */
+  /*       below):                                                            */
+  /*       On this STM32 serie, setting of these features is conditioned to   */
+  /*       ADC state:                                                         */
+  /*       ADC must be disabled.                                              */
+  if (LL_ADC_IsEnabled(ADC1) == 0)
+  {
+    /* Note: Call of the functions below are commented because they are       */
+    /*       useless in this example:                                         */
+    /*       setting corresponding to default configuration from reset state. */
+
+    /* Set ADC data resolution */
+    // LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
+
+    /* Set ADC conversion data alignment */
+    // LL_ADC_SetResolution(ADC1, LL_ADC_DATA_ALIGN_RIGHT);
+
+    /* Set ADC low power mode */
+    // LL_ADC_SetLowPowerMode(ADC1, LL_ADC_LP_MODE_NONE);
+
+    /* Set ADC selected offset number: channel and offset level */
+    // LL_ADC_SetOffset(ADC1, LL_ADC_OFFSET_1, LL_ADC_CHANNEL_9, 0x000);
+
+  }
+
+
+  /*## Configuration of ADC hierarchical scope: ADC group regular ############*/
+
+  /* Note: Hardware constraint (refer to description of the functions         */
+  /*       below):                                                            */
+  /*       On this STM32 serie, setting of these features is conditioned to   */
+  /*       ADC state:                                                         */
+  /*       ADC must be disabled or enabled without conversion on going        */
+  /*       on group regular.                                                  */
+  if ((LL_ADC_IsEnabled(ADC1) == 0)               ||
+      (LL_ADC_REG_IsConversionOngoing(ADC1) == 0)   )
+  {
+    /* Set ADC group regular trigger source */
+    LL_ADC_REG_SetTriggerSource(ADC1, LL_ADC_REG_TRIG_EXT_TIM2_TRGO);
+
+    /* Set ADC group regular trigger polarity */
+    // LL_ADC_REG_SetTriggerEdge(ADC1, LL_ADC_REG_TRIG_EXT_RISING);
+
+    /* Set ADC group regular continuous mode */
+    LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_SINGLE);
+
+    /* Set ADC group regular conversion data transfer */
+    LL_ADC_REG_SetDMATransfer(ADC1, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
+
+    /* Set ADC group regular overrun behavior */
+    LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
+
+    /* Set ADC group regular sequencer */
+    /* Note: On this STM32 serie, ADC group regular sequencer is              */
+    /*       fully configurable: sequencer length and each rank               */
+    /*       affectation to a channel are configurable.                       */
+    /*       Refer to description of function                                 */
+    /*       "LL_ADC_REG_SetSequencerLength()".                               */
+
+    /* Set ADC group regular sequencer length and scan direction */
+    LL_ADC_REG_SetSequencerLength(ADC1, LL_ADC_REG_SEQ_SCAN_DISABLE);
+
+    /* Set ADC group regular sequencer discontinuous mode */
+    // LL_ADC_REG_SetSequencerDiscont(ADC1, LL_ADC_REG_SEQ_DISCONT_DISABLE);
+
+    /* Set ADC group regular sequence: channel on the selected sequence rank. */
+    LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_9);
+  }
+
+
+  /*## Configuration of ADC hierarchical scope: ADC group injected ###########*/
+
+  /* Note: Hardware constraint (refer to description of the functions         */
+  /*       below):                                                            */
+  /*       On this STM32 serie, setting of these features is conditioned to   */
+  /*       ADC state:                                                         */
+  /*       ADC must be disabled or enabled without conversion on going        */
+  /*       on group injected.                                                 */
+  if ((LL_ADC_IsEnabled(ADC1) == 0)               ||
+      (LL_ADC_INJ_IsConversionOngoing(ADC1) == 0)   )
+  {
+    /* Note: Call of the functions below are commented because they are       */
+    /*       useless in this example:                                         */
+    /*       setting corresponding to default configuration from reset state. */
+
+    /* Set ADC group injected trigger source */
+    // LL_ADC_INJ_SetTriggerSource(ADC1, LL_ADC_INJ_TRIG_SOFTWARE);
+
+    /* Set ADC group injected trigger polarity */
+    // LL_ADC_INJ_SetTriggerEdge(ADC1, LL_ADC_INJ_TRIG_EXT_RISING);
+
+    /* Set ADC group injected conversion trigger  */
+    // LL_ADC_INJ_SetTrigAuto(ADC1, LL_ADC_INJ_TRIG_INDEPENDENT);
+
+    /* Set ADC group injected contexts queue mode */
+    /* Note: If ADC group injected contexts queue are enabled, configure      */
+    /*       contexts using function "LL_ADC_INJ_ConfigQueueContext()".       */
+    // LL_ADC_INJ_SetQueueMode(ADC1, LL_ADC_INJ_QUEUE_DISABLE);
+
+    /* Set ADC group injected sequencer */
+    /* Note: On this STM32 serie, ADC group injected sequencer is             */
+    /*       fully configurable: sequencer length and each rank               */
+    /*       affectation to a channel are configurable.                       */
+    /*       Refer to description of function                                 */
+    /*       "LL_ADC_INJ_SetSequencerLength()".                               */
+
+    /* Set ADC group injected sequencer length and scan direction */
+    // LL_ADC_INJ_SetSequencerLength(ADC1, LL_ADC_INJ_SEQ_SCAN_DISABLE);
+
+    /* Set ADC group injected sequencer discontinuous mode */
+    // LL_ADC_INJ_SetSequencerDiscont(ADC1, LL_ADC_INJ_SEQ_DISCONT_DISABLE);
+
+    /* Set ADC group injected sequence: channel on the selected sequence rank. */
+    // LL_ADC_INJ_SetSequencerRanks(ADC1, LL_ADC_INJ_RANK_1, LL_ADC_CHANNEL_9);
+  }
+
+
+  /*## Configuration of ADC hierarchical scope: channels #####################*/
+
+  /* Note: Hardware constraint (refer to description of the functions         */
+  /*       below):                                                            */
+  /*       On this STM32 serie, setting of these features is conditioned to   */
+  /*       ADC state:                                                         */
+  /*       ADC must be disabled or enabled without conversion on going        */
+  /*       on either groups regular or injected.                              */
+  if ((LL_ADC_IsEnabled(ADC1) == 0)                    ||
+      ((LL_ADC_REG_IsConversionOngoing(ADC1) == 0) &&
+       (LL_ADC_INJ_IsConversionOngoing(ADC1) == 0)   )   )
+  {
+    /* Set ADC channels sampling time */
+    /* Note: Considering interruption occurring after each number of          */
+    /*       "ADC_CONVERTED_DATA_BUFFER_SIZE" ADC conversions                 */
+    /*       (IT from DMA transfer complete),                                 */
+    /*       select sampling time and ADC clock with sufficient               */
+    /*       duration to not create an overhead situation in IRQHandler.      */
+    LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_9, LL_ADC_SAMPLINGTIME_47CYCLES_5);
+
+    /* Set mode single-ended or differential input of the selected            */
+    /* ADC channel.                                                           */
+    // LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_9, LL_ADC_SINGLE_ENDED);
+  }
+
+
+  /*## Configuration of ADC transversal scope: analog watchdog ###############*/
+
+  /* Set ADC analog watchdog channels to be monitored */
+  // LL_ADC_SetAnalogWDMonitChannels(ADC1, LL_ADC_AWD1, LL_ADC_AWD_DISABLE);
+
+  /* Set ADC analog watchdog thresholds */
+  // LL_ADC_ConfigAnalogWDThresholds(ADC1, LL_ADC_AWD1, 0xFFF, 0x000);
+
+
+  /*## Configuration of ADC transversal scope: oversampling ##################*/
+
+  /* Set ADC oversampling scope */
+  // LL_ADC_SetOverSamplingScope(ADC1, LL_ADC_OVS_DISABLE);
+
+  /* Set ADC oversampling parameters */
+  // LL_ADC_ConfigOverSamplingRatioShift(ADC1, LL_ADC_OVS_RATIO_2, LL_ADC_OVS_SHIFT_NONE);
+
+
+  /*## Configuration of ADC interruptions ####################################*/
+  /* Enable interruption ADC group regular overrun */
+  LL_ADC_EnableIT_OVR(ADC1);
+
+  /* Note: in this example, ADC group regular end of conversions              */
+  /*       (number of ADC conversions defined by DMA buffer size)             */
+  /*       are notified by DMA transfer interruptions).                       */
+
 }
 
 /**
-  * @brief  This function configures SPI3.
-  * @note  This function is used to :
-  *        -1- Enables GPIO clock and configures the SPI3 pins.
-  *        -2- Configure NVIC for SPI3.
-  *        -3- Configure SPI3 functional parameters.
+  * @brief  Perform ADC activation procedure to make it ready to convert
+  *         (ADC instance: ADC1).
+  * @note   Operations:
+  *         - ADC instance
+  *           - Disable deep power down
+  *           - Enable internal voltage regulator
+  *           - Run ADC self calibration
+  *           - Enable ADC
+  *         - ADC group regular
+  *           none: ADC conversion start-stop to be performed
+  *                 after this function
+  *         - ADC group injected
+  *           none: ADC conversion start-stop to be performed
+  *                 after this function
   * @param  None
   * @retval None
   */
-void Configure_SPI3(void)
+void Activate_ADC(void)
 {
-  /* (1) Enables GPIO clock and configures the SPI3 pins ********************/
+  #define ADC_CALIBRATION_TIMEOUT_MS       ((uint32_t)   1)
+  #define ADC_ENABLE_TIMEOUT_MS            ((uint32_t)   1)
+  #define ADC_DELAY_CALIB_ENABLE_CPU_CYCLES  (LL_ADC_DELAY_CALIB_ENABLE_ADC_CYCLES * 32)
 
-  /* Enable the peripheral clock of GPIOC */
-  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC);
+  __IO uint32_t wait_loop_index = 0;
+  #if (USE_TIMEOUT == 1)
+  uint32_t Timeout = 0; /* Variable used for timeout management */
+  #endif /* USE_TIMEOUT */
 
-  /* Configure SCK Pin connected to pin 1 of CN7 connector */
-  LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_10, LL_GPIO_MODE_ALTERNATE);
-  LL_GPIO_SetAFPin_8_15(GPIOC, LL_GPIO_PIN_10, LL_GPIO_AF_6);
-  LL_GPIO_SetPinSpeed(GPIOC, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
-  LL_GPIO_SetPinPull(GPIOC, LL_GPIO_PIN_10, LL_GPIO_PULL_DOWN);
+  /*## Operation on ADC hierarchical scope: ADC instance #####################*/
 
-  /* Configure MISO Pin connected to pin 2 of CN7 connector */
-  LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_11, LL_GPIO_MODE_ALTERNATE);
-  LL_GPIO_SetAFPin_8_15(GPIOC, LL_GPIO_PIN_11, LL_GPIO_AF_6);
-  LL_GPIO_SetPinSpeed(GPIOC, LL_GPIO_PIN_11, LL_GPIO_SPEED_FREQ_HIGH);
-  LL_GPIO_SetPinPull(GPIOC, LL_GPIO_PIN_11, LL_GPIO_PULL_DOWN);
+  /* Note: Hardware constraint (refer to description of the functions         */
+  /*       below):                                                            */
+  /*       On this STM32 serie, setting of these features is conditioned to   */
+  /*       ADC state:                                                         */
+  /*       ADC must be disabled.                                              */
+  /* Note: In this example, all these checks are not necessary but are        */
+  /*       implemented anyway to show the best practice usages                */
+  /*       corresponding to reference manual procedure.                       */
+  /*       Software can be optimized by removing some of these checks, if     */
+  /*       they are not relevant considering previous settings and actions    */
+  /*       in user application.                                               */
+  if (LL_ADC_IsEnabled(ADC1) == 0)
+  {
+    /* Disable ADC deep power down (enabled by default after reset state) */
+    LL_ADC_DisableDeepPowerDown(ADC1);
 
-  /* (2) Configure NVIC for SPI3 transfer complete/error interrupts **********/
-  /* Set priority for SPI3_IRQn */
-  NVIC_SetPriority(SPI3_IRQn, 0);
-  /* Enable SPI3_IRQn           */
-  NVIC_EnableIRQ(SPI3_IRQn);
+    /* Enable ADC internal voltage regulator */
+    LL_ADC_EnableInternalRegulator(ADC1);
 
-  /* (3) Configure SPI3 functional parameters ********************************/
-  /* Enable the peripheral clock of GPIOC */
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI3);
+    /* Delay for ADC internal voltage regulator stabilization.                */
+    /* Compute number of CPU cycles to wait for, from delay in us.            */
+    /* Note: Variable divided by 2 to compensate partially                    */
+    /*       CPU processing cycles (depends on compilation optimization).     */
+    /* Note: If system core clock frequency is below 200kHz, wait time        */
+    /*       is only a few CPU processing cycles.                             */
+    wait_loop_index = ((LL_ADC_DELAY_INTERNAL_REGUL_STAB_US * (SystemCoreClock / (100000 * 2))) / 10);
+    while(wait_loop_index != 0)
+    {
+      wait_loop_index--;
+    }
 
-  /* Configure SPI3 communication */
-  LL_SPI_SetBaudRatePrescaler(SPI3, LL_SPI_BAUDRATEPRESCALER_DIV256);
-  LL_SPI_SetTransferDirection(SPI3,LL_SPI_HALF_DUPLEX_RX);
-  LL_SPI_SetClockPhase(SPI3, LL_SPI_PHASE_2EDGE);
-  LL_SPI_SetClockPolarity(SPI3, LL_SPI_POLARITY_HIGH);
-  /* Reset value is LL_SPI_MSB_FIRST */
-  //LL_SPI_SetTransferBitOrder(SPI3, LL_SPI_MSB_FIRST);
-  LL_SPI_SetDataWidth(SPI3, LL_SPI_DATAWIDTH_8BIT);
-  LL_SPI_SetNSSMode(SPI3, LL_SPI_NSS_SOFT);
-  LL_SPI_SetRxFIFOThreshold(SPI3, LL_SPI_RX_FIFO_TH_QUARTER);
-  /* Reset value is LL_SPI_MODE_SLAVE */
-  //LL_SPI_SetMode(SPI3, LL_SPI_MODE_SLAVE);
+    /* Run ADC self calibration */
+    LL_ADC_StartCalibration(ADC1, LL_ADC_SINGLE_ENDED);
 
-  /* Configure SPI3 transfer interrupts */
-  /* Enable RXNE  Interrupt */
-  LL_SPI_EnableIT_RXNE(SPI3);
-  /* Enable SPI3 Error Interrupt */
-  LL_SPI_EnableIT_ERR(SPI3);
-}
+    /* Poll for ADC effectively calibrated */
+    #if (USE_TIMEOUT == 1)
+    Timeout = ADC_CALIBRATION_TIMEOUT_MS;
+    #endif /* USE_TIMEOUT */
 
-/**
-  * @brief  This function Activate SPI1
-  * @param  None
-  * @retval None
-  */
-void Activate_SPI1(void)
-{
-  /* Enable SPI1 */
-  LL_SPI_Enable(SPI1);
-}
+    while (LL_ADC_IsCalibrationOnGoing(ADC1) != 0)
+    {
+    #if (USE_TIMEOUT == 1)
+      /* Check Systick counter flag to decrement the time-out value */
+      if (LL_SYSTICK_IsActiveCounterFlag())
+      {
+        if(Timeout-- == 0)
+        {
+        /* Time-out occurred. Set LED to blinking mode */
+        LED_Blinking(LED_BLINK_ERROR);
+        }
+      }
+    #endif /* USE_TIMEOUT */
+    }
 
-/**
-  * @brief  This function Activate SPI3
-  * @param  None
-  * @retval None
-  */
-void Activate_SPI3(void)
-{
-  /* Enable SPI3 */
-  LL_SPI_Enable(SPI3);
+    /* Delay between ADC end of calibration and ADC enable.                   */
+    /* Note: Variable divided by 2 to compensate partially                    */
+    /*       CPU processing cycles (depends on compilation optimization).     */
+    wait_loop_index = (ADC_DELAY_CALIB_ENABLE_CPU_CYCLES >> 1);
+    while(wait_loop_index != 0)
+    {
+      wait_loop_index--;
+    }
+
+    /* Enable ADC */
+    LL_ADC_Enable(ADC1);
+
+    /* Poll for ADC ready to convert */
+    #if (USE_TIMEOUT == 1)
+    Timeout = ADC_ENABLE_TIMEOUT_MS;
+    #endif /* USE_TIMEOUT */
+
+    while (LL_ADC_IsActiveFlag_ADRDY(ADC1) == 0)
+    {
+    #if (USE_TIMEOUT == 1)
+      /* Check Systick counter flag to decrement the time-out value */
+      if (LL_SYSTICK_IsActiveCounterFlag())
+      {
+        if(Timeout-- == 0)
+        {
+        /* Time-out occurred. Set LED to blinking mode */
+        LED_Blinking(LED_BLINK_ERROR);
+        }
+      }
+    #endif /* USE_TIMEOUT */
+    }
+
+    /* Note: ADC flag ADRDY is not cleared here to be able to check ADC       */
+    /*       status afterwards.                                               */
+    /*       This flag should be cleared at ADC Deactivation, before a new    */
+    /*       ADC activation, using function "LL_ADC_ClearFlag_ADRDY()".       */
+  }
+
+  /*## Operation on ADC hierarchical scope: ADC group regular ################*/
+  /* Note: No operation on ADC group regular performed here.                  */
+  /*       ADC group regular conversions to be performed after this function  */
+  /*       using function:                                                    */
+  /*       "LL_ADC_REG_StartConversion();"                                    */
+
+  /*## Operation on ADC hierarchical scope: ADC group injected ###############*/
+  /* Note: No operation on ADC group injected performed here.                 */
+  /*       ADC group injected conversions to be performed after this function */
+  /*       using function:                                                    */
+  /*       "LL_ADC_INJ_StartConversion();"                                    */
+
 }
 
 /**
@@ -323,113 +767,15 @@ void LED_Off(void)
   */
 void LED_Blinking(uint32_t Period)
 {
-  /* Toggle LED2 in an infinite loop */
+  /* Turn LED2 on */
+  LL_GPIO_SetOutputPin(LED2_GPIO_PORT, LED2_PIN);
+
+  /* Toggle IO in an infinite loop */
   while (1)
   {
     LL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
     LL_mDelay(Period);
   }
-}
-
-/**
-  * @brief  Configures User push-button in GPIO or EXTI Line Mode.
-  * @param  None
-  * @retval None
-  */
-void UserButton_Init(void)
-{
-  /* Enable the BUTTON Clock */
-  USER_BUTTON_GPIO_CLK_ENABLE();
-
-  /* Configure GPIO for BUTTON */
-  LL_GPIO_SetPinMode(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, LL_GPIO_MODE_INPUT);
-  LL_GPIO_SetPinPull(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, LL_GPIO_PULL_NO);
-
-  /* Connect External Line to the GPIO*/
-  USER_BUTTON_SYSCFG_SET_EXTI();
-
-  /* Enable a rising trigger External line 13 Interrupt */
-  USER_BUTTON_EXTI_LINE_ENABLE();
-  USER_BUTTON_EXTI_FALLING_TRIG_ENABLE();
-
-  /* Configure NVIC for USER_BUTTON_EXTI_IRQn */
-  NVIC_EnableIRQ(USER_BUTTON_EXTI_IRQn);
-  NVIC_SetPriority(USER_BUTTON_EXTI_IRQn, 0x03);
-}
-
-/**
-  * @brief  Wait for User push-button press to start transfer.
-  * @param  None
-  * @retval None
-  */
-  /*  */
-void WaitForUserButtonPress(void)
-{
-  while (ubButtonPress == 0)
-  {
-    LL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
-    LL_mDelay(LED_BLINK_FAST);
-  }
-  /* Ensure that LED2 is turned Off */
-  LED_Off();
-}
-
-/**
-  * @brief  Wait end of transfer and check if received Data are well.
-  * @param  None
-  * @retval None
-  */
-void WaitAndCheckEndOfTransfer(void)
-{
-  /* 1 - Wait end of transmission */
-  while (ubTransmitIndex != ubNbDataToTransmit)
-  {
-  }
-  /* Disable TXE Interrupt */
-  LL_SPI_DisableIT_TXE(SPI1);
-
-  /* 2 - Wait end of reception */
-  while (ubNbDataToReceive > ubReceiveIndex)
-  {
-  }
-  /* Disable RXNE Interrupt */
-  LL_SPI_DisableIT_RXNE(SPI3);
-
-  /* 3 - Compare Transmit data to receive data */
-  if(Buffercmp8((uint8_t*)aTxBuffer, (uint8_t*)aRxBuffer, ubNbDataToTransmit))
-  {
-    /* Processing Error */
-    LED_Blinking(LED_BLINK_ERROR);
-  }
-  else
-  {
-    /* Turn On Led if data are well received */
-    LED_On();
-  }
-}
-
-/**
-* @brief Compares two 8-bit buffers and returns the comparison result.
-* @param pBuffer1: pointer to the source buffer to be compared to.
-* @param pBuffer2: pointer to the second source buffer to be compared to the first.
-* @param BufferLength: buffer's length.
-* @retval   0: Comparison is OK (the two Buffers are identical)
-*           Value different from 0: Comparison is NOK (Buffers are different)
-*/
-uint8_t Buffercmp8(uint8_t* pBuffer1, uint8_t* pBuffer2, uint8_t BufferLength)
-{
-  while (BufferLength--)
-  {
-    if (*pBuffer1 != *pBuffer2)
-    {
-      return 1;
-    }
-
-    pBuffer1++;
-    pBuffer2++;
-  }
-
-  return 0;
 }
 
 /**
@@ -488,149 +834,152 @@ void SystemClock_Config(void)
 }
 
 /******************************************************************************/
-/*   USER IRQ HANDLER TREATMENT Functions                                     */
+/*   USER IRQ HANDLER TREATMENT                                               */
 /******************************************************************************/
+
 /**
-  * @brief  Function to manage User push-button
-  * @param  None
+  * @brief  DMA transfer complete callback
+  * @note   This function is executed when the transfer complete interrupt
+  *         is generated
   * @retval None
   */
-void UserButton_Callback(void)
+void AdcDmaTransferComplete_Callback()
 {
-  /* Update User push-button variable : to be checked in waiting loop in main program */
-  ubButtonPress = 1;
+  uint32_t tmp_index = 0;
+
+  /* Computation of ADC conversions raw data to physical values               */
+  /* using LL ADC driver helper macro.                                        */
+  /* Management of the 2nd half of the buffer */
+  for (tmp_index = (ADC_CONVERTED_DATA_BUFFER_SIZE/2); tmp_index < ADC_CONVERTED_DATA_BUFFER_SIZE; tmp_index++)
+  {
+    aADCxConvertedData_Voltage_mVolt[tmp_index] = __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, aADCxConvertedData[tmp_index], LL_ADC_RESOLUTION_12B);
+  }
+
+  /* Update status variable of DMA transfer */
+  ubDmaTransferStatus = 1;
+
+  /* Set LED depending on DMA transfer status */
+  /* - Turn-on if DMA transfer is completed */
+  /* - Turn-off if DMA transfer is not completed */
+  LED_On();
+
 }
 
 /**
-  * @brief  Function called from SPI1 IRQ Handler when TXE flag is set
-  *         Function is in charge  to transmit byte on SPI lines.
-  * @param  None
+  * @brief  DMA half transfer callback
+  * @note   This function is executed when the half transfer interrupt
+  *         is generated
   * @retval None
   */
-void  SPI1_Tx_Callback(void)
+void AdcDmaTransferHalf_Callback()
 {
-  /* Write character in Data register.
-  TXE flag is cleared by reading data in DR register */
-  LL_SPI_TransmitData8(SPI1, aTxBuffer[ubTransmitIndex++]);
+  uint32_t tmp_index = 0;
+
+  /* Computation of ADC conversions raw data to physical values               */
+  /* using LL ADC driver helper macro.                                        */
+  /* Management of the 1st half of the buffer */
+  for (tmp_index = 0; tmp_index < (ADC_CONVERTED_DATA_BUFFER_SIZE/2); tmp_index++)
+  {
+    aADCxConvertedData_Voltage_mVolt[tmp_index] = __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, aADCxConvertedData[tmp_index], LL_ADC_RESOLUTION_12B);
+  }
+
+  /* Update status variable of DMA transfer */
+  ubDmaTransferStatus = 0;
+
+  /* Set LED depending on DMA transfer status */
+  /* - Turn-on if DMA transfer is completed */
+  /* - Turn-off if DMA transfer is not completed */
+  LED_Off();
+
 }
 
 /**
-  * @brief  Function called from SPI3 IRQ Handler when RXNE flag is set
-  *         Function is in charge of retrieving received byte from SPI lines.
-  * @param  None
+  * @brief  DMA transfer error callback
+  * @note   This function is executed when the transfer error interrupt
+  *         is generated during DMA transfer
   * @retval None
   */
-void  SPI3_Rx_Callback(void)
+void AdcDmaTransferError_Callback()
 {
-  /* Read character in Data register.
-  RXNE flag is cleared by reading data in DR register */
-  aRxBuffer[ubReceiveIndex++] = LL_SPI_ReceiveData8(SPI3);
-}
-
-/**
-  * @brief  Function called in case of error detected in SPI IT Handler
-  * @param  None
-  * @retval None
-  */
-void SPI_TransferError_Callback(void)
-{
-  /* Disable TXE   Interrupt             */
-  LL_SPI_DisableIT_TXE(SPI1);
-
-  /* Disable RXNE  Interrupt             */
-  LL_SPI_DisableIT_RXNE(SPI3);
-
-  /* Set LED2 to Blinking mode to indicate error occurs */
+  /* Error detected during DMA transfer */
   LED_Blinking(LED_BLINK_ERROR);
 }
 
-#ifdef  USE_FULL_ASSERT
-
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
+  * @brief  ADC group regular overrun interruption callback
+  * @note   This function is executed when ADC group regular
+  *         overrun error occurs.
   * @retval None
   */
-void assert_failed(uint8_t *file, uint32_t line)
+void AdcGrpRegularOverrunError_Callback(void)
 {
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d", file, line) */
+  /* Note: Disable ADC interruption that caused this error before entering in */
+  /*       infinite loop below.                                               */
 
-  /* Infinite loop */
-  while (1)
-  {
-  }
+  /* Disable ADC group regular overrun interruption */
+  LL_ADC_DisableIT_OVR(ADC1);
+
+  /* Error from ADC */
+  LED_Blinking(LED_BLINK_ERROR);
 }
-#endif
 
 /**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/******************************************************************************/
-/*                 STM32L4xx Peripherals Interrupt Handlers                   */
-/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
-/*  available peripheral interrupt handler's name please refer to the startup */
-/*  file (startup_stm32l4xx.s).                                               */
-/******************************************************************************/
-
-/**
-  * @brief  This function handles external lines 10 to 15 interrupt request.
+  * @brief  This function handles ADC1 interrupt request.
   * @param  None
   * @retval None
   */
-void USER_BUTTON_IRQHANDLER(void)
+void ADC1_2_IRQHandler(void)
 {
-  /* Manage Flags */
-  if(LL_EXTI_IsActiveFlag_0_31(USER_BUTTON_EXTI_LINE) != RESET)
+  /* Check whether ADC group regular overrun caused the ADC interruption */
+  if(LL_ADC_IsActiveFlag_OVR(ADC1) != 0)
   {
-    LL_EXTI_ClearFlag_0_31(USER_BUTTON_EXTI_LINE);
+    /* Clear flag ADC group regular overrun */
+    LL_ADC_ClearFlag_OVR(ADC1);
 
-    /* Manage code in main.c */
-    UserButton_Callback();
+    /* Call interruption treatment function */
+    AdcGrpRegularOverrunError_Callback();
   }
 }
 
 /**
-  * @brief  This function handles SPI1 interrupt request.
+  * @brief  This function handles DMA1 interrupt request.
   * @param  None
   * @retval None
   */
-void SPI1_IRQHandler(void)
+void DMA1_Channel1_IRQHandler(void)
 {
-  /* Check RXNE flag value in ISR register */
-  if(LL_SPI_IsActiveFlag_TXE(SPI1))
+  /* Check whether DMA transfer complete caused the DMA interruption */
+  if(LL_DMA_IsActiveFlag_TC1(DMA1) == 1)
   {
-    /* Call function Slave Reception Callback */
-    SPI1_Tx_Callback();
+    /* Clear flag DMA transfer complete */
+    LL_DMA_ClearFlag_TC1(DMA1);
+
+    /* Call interruption treatment function */
+    AdcDmaTransferComplete_Callback();
+  }
+
+  /* Check whether DMA half transfer caused the DMA interruption */
+  if(LL_DMA_IsActiveFlag_HT1(DMA1) == 1)
+  {
+    /* Clear flag DMA half transfer */
+    LL_DMA_ClearFlag_HT1(DMA1);
+
+    /* Call interruption treatment function */
+    AdcDmaTransferHalf_Callback();
+  }
+
+  /* Check whether DMA transfer error caused the DMA interruption */
+  if(LL_DMA_IsActiveFlag_TE1(DMA1) == 1)
+  {
+    /* Clear flag DMA transfer error */
+    LL_DMA_ClearFlag_TE1(DMA1);
+
+    /* Call interruption treatment function */
+    AdcDmaTransferError_Callback();
   }
 }
 
-/**
-  * @brief  This function handles SPI3 interrupt request.
-  * @param  None
-  * @retval None
-  */
-void SPI3_IRQHandler(void)
-{
-  /* Check RXNE flag value in ISR register */
-  if(LL_SPI_IsActiveFlag_RXNE(SPI3))
-  {
-    /* Call function Slave Reception Callback */
-    SPI3_Rx_Callback();
-  }
-  /* Check STOP flag value in ISR register */
-  else if(LL_SPI_IsActiveFlag_OVR(SPI3))
-  {
-    /* Call Error function */
-    SPI_TransferError_Callback();
-  }
-}
+
+
 
 
