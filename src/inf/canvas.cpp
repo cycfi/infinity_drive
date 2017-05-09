@@ -148,7 +148,6 @@ namespace cycfi { namespace infinity { namespace detail
 
             do
             {
-               
                *p = val;      // Write our value in
                p += width;    // adjust the buffer forward 8 rows worth of data
                h -= 8;        // adjust h & y (there's got to be a faster way 

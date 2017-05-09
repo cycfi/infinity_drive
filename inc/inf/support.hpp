@@ -7,8 +7,8 @@
 #define CYCFI_INFINITY_SUPPORT_HPP_DECEMBER_20_2015
 
 #include <cstdint>
-#include "system_stm32l4xx.h"
-#include "stm32l4xx_ll_utils.h"
+#include <system_stm32l4xx.h>
+#include <stm32l4xx_ll_utils.h>
 
 extern "C"
 {

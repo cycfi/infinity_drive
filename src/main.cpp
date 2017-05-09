@@ -30,6 +30,7 @@ namespace cycfi { namespace infinity
    // Our error handler
    void error_handler()
    {
+      using namespace port;
       red_led_type red_led;
       red_led = on;
       while (true)

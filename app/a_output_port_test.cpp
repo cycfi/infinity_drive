@@ -5,16 +5,18 @@
 =============================================================================*/
 #include <inf/support.hpp>
 #include <inf/pin.hpp>
-
 #include <inf/app.hpp>
 
+///////////////////////////////////////////////////////////////////////////////
+// Simplest toggle the led test. This test uses simple delay to toggle
+// the led at a rate of 1 per second. No setup required.
+///////////////////////////////////////////////////////////////////////////////
+
 namespace inf = cycfi::infinity;
+using namespace inf::port;
 
 using inf::output_pin;
 using inf::delay_ms;
-using inf::porta;
-using inf::on;
-using inf::off;
 
 void start()
 {

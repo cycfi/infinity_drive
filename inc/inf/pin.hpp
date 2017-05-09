@@ -14,15 +14,18 @@ namespace cycfi { namespace infinity
    // Constants
    ////////////////////////////////////////////////////////////////////////////
 
-   constexpr uint16_t porta = 0 * 16;
-   constexpr uint16_t portb = 1 * 16;
-   constexpr uint16_t portc = 2 * 16;
-   constexpr uint16_t portd = 3 * 16;
-   constexpr uint16_t porte = 4 * 16;
-   constexpr uint16_t portf = 5 * 16;
-   constexpr uint16_t portg = 6 * 16;
-   constexpr uint16_t porth = 7 * 16;
-   constexpr uint16_t porti = 8 * 16;
+   namespace port
+   {
+      constexpr uint16_t porta = 0 * 16;
+      constexpr uint16_t portb = 1 * 16;
+      constexpr uint16_t portc = 2 * 16;
+      constexpr uint16_t portd = 3 * 16;
+      constexpr uint16_t porte = 4 * 16;
+      constexpr uint16_t portf = 5 * 16;
+      constexpr uint16_t portg = 6 * 16;
+      constexpr uint16_t porth = 7 * 16;
+      constexpr uint16_t porti = 8 * 16;
+   }
 
    enum class port_output_speed
    {
@@ -37,6 +40,17 @@ namespace cycfi { namespace infinity
       push_pull = LL_GPIO_OUTPUT_PUSHPULL,
       open_drain = LL_GPIO_OUTPUT_OPENDRAIN
    };
+   
+   namespace port
+   {
+      auto constexpr low_speed = port_output_speed::low_speed;
+      auto constexpr mid_speed = port_output_speed::mid_speed;
+      auto constexpr high_speed = port_output_speed::high_speed;
+      auto constexpr very_high_speed = port_output_speed::very_high_speed;
+      
+      auto constexpr push_pull = port_output_type::push_pull;
+      auto constexpr open_drain = port_output_type::open_drain;
+   }
 
    ////////////////////////////////////////////////////////////////////////////
    template <typename T>
@@ -81,16 +95,19 @@ namespace cycfi { namespace infinity
       }
    };
 
-   static on_type const on = {};
-   static off_type const off = {};
+   namespace port
+   {
+      constexpr on_type on = {};
+      constexpr off_type off = {};
+   }
 
    ////////////////////////////////////////////////////////////////////////////
    // output_pin
    ////////////////////////////////////////////////////////////////////////////
    template <
       std::size_t N,
-      port_output_speed speed = port_output_speed::high_speed,
-      port_output_type type = port_output_type::push_pull
+      port_output_speed speed = port::high_speed,
+      port_output_type type = port::push_pull
    >
    struct output_pin
    {
@@ -202,6 +219,12 @@ namespace cycfi { namespace infinity
       pull_up = LL_GPIO_PULL_UP,
       pull_down = LL_GPIO_PULL_DOWN
    };
+   
+   namespace port
+   {
+      auto constexpr pull_up = port_input_type::pull_up;
+      auto constexpr pull_down = port_input_type::pull_down;
+   }
 
    template <std::size_t N, port_input_type type = port_input_type::normal>
    struct input_pin

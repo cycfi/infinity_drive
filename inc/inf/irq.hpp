@@ -8,8 +8,8 @@
 
 #include <inf/timer.hpp>
 #include <type_traits>
-#include "stm32l4xx_ll_dma.h"
-#include "stm32l4xx_ll_adc.h"
+#include <stm32l4xx_ll_dma.h>
+#include <stm32l4xx_ll_adc.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Timer Interrupts

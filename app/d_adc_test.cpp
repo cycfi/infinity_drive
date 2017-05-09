@@ -7,8 +7,8 @@
 #include <inf/app.hpp>
 
 namespace inf = cycfi::infinity;
+using namespace inf::port;
 
-using inf::portc;
 using inf::delay_ms;
 
 constexpr int sampling_rate = 16000;
@@ -30,7 +30,7 @@ void start()
    }
 }
 
-inline void irq(adc_conversion_complete)
+inline void irq(adc_conversion_complete<1>)
 {
    int val = 0;
    for (int i = 0; i < 8; ++i)

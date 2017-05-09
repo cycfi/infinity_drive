@@ -8,22 +8,30 @@
 #include <inf/app.hpp>
 #include <algorithm>
 
+///////////////////////////////////////////////////////////////////////////////
+// SPI half-duplex master/slave test:
+//
+//	1. Setup a slave SPI to listen to incoming data
+//	2. Wait for a button press (using the dev-board button)
+//	3. Get the master SPI to send some data
+//	5. Make sure that the slave SPI received the data. Compare what was
+//	   with what was sent and call the main error handler if they are
+//	   not the same.
+//
+//	Setup: Connect SPI master: SCK: PB3 and MOSI: PB5 to
+//		   SPI slave: SCK: PC10 and MISO: PC5
+///////////////////////////////////////////////////////////////////////////////
+
 namespace inf = cycfi::infinity;
+using namespace inf::port;
 
 using inf::output_pin;
 using inf::input_pin;
 using inf::port_input_type;
 using inf::delay_ms;
-using inf::porta;
-using inf::portb;
-using inf::portc;
-using inf::on;
-using inf::off;
 using inf::spi_master;
 using inf::spi_slave;
 using inf::error_handler;
-
-auto const pull_up = port_input_type::pull_up;
 
 void start()
 {

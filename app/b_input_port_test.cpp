@@ -5,21 +5,21 @@
 =============================================================================*/
 #include <inf/support.hpp>
 #include <inf/pin.hpp>
-
 #include <inf/app.hpp>
 
+///////////////////////////////////////////////////////////////////////////////
+// Input pin test. The speed of the blinking led depends on state of the
+// dev-board button. Normally the button is on due to the pullup, hence
+// the led blinks at 1hz. When the button is pressed, the led blinks at
+// 10hz. No setup required.
+///////////////////////////////////////////////////////////////////////////////
+
 namespace inf = cycfi::infinity;
+using namespace inf::port;
 
 using inf::output_pin;
 using inf::input_pin;
-using inf::port_input_type;
 using inf::delay_ms;
-using inf::porta;
-using inf::portc;
-using inf::on;
-using inf::off;
-
-auto const pull_up = port_input_type::pull_up;
 
 void start()
 {

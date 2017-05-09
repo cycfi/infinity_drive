@@ -78,8 +78,6 @@ namespace cycfi { namespace infinity { namespace detail
    void spi_write(std::size_t id, std::uint8_t const* data, std::size_t len)
    {
       auto iodata_p = &io_data[id-1];
-      auto spi = iodata_p->spi;
-
       io_data[id-1].write_data = data;
       io_data[id-1].write_len = len;
       io_data[id-1].write_index = 0;

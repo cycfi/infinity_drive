@@ -7,10 +7,13 @@
 #include <inf/pin.hpp>
 #include <inf/app.hpp>
 
+///////////////////////////////////////////////////////////////////////////////
+// Toggle led test using timers and interrupts. This test uses a timer to
+// toggle the led at a rate of 1 per second. No setup required.
+///////////////////////////////////////////////////////////////////////////////
+
 namespace inf = cycfi::infinity;
-using inf::on;
-using inf::off;
-using inf::porta;
+using namespace inf::port;
 using inf::output_pin;
 
 output_pin<porta + 5> red_led; // porta, pin 5

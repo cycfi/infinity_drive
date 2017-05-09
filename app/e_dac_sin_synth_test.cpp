@@ -10,8 +10,16 @@
 #include <inf/app.hpp>
 #include <inf/dac.hpp>
 
+///////////////////////////////////////////////////////////////////////////////
+// This test generates a 1kHz sine wave and outputs the signal using
+// the dac. This is done using a timer interrupt set to trigger at
+// 78125 kHz (80000000 / 2014).
+//
+// Setup: connect pin PA4 to an oscilloscope to see the generated sine wave.
+///////////////////////////////////////////////////////////////////////////////
+
 namespace inf = cycfi::infinity;
-using inf::portc;
+using namespace inf::port;
 
 constexpr uint32_t tmr_freq = 80000000;
 constexpr uint32_t tmr_resolution = 1024;

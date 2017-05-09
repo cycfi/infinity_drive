@@ -9,6 +9,7 @@
 #include <inf/pin.hpp>
 #include <inf/support.hpp>
 #include <inf/detail/timer_impl.hpp>
+#include <stm32l4xx_ll_tim.h>
 
 namespace cycfi { namespace infinity
 {
@@ -40,7 +41,7 @@ namespace cycfi { namespace infinity
 
       void enable_interrupt(std::size_t priority = 0)
       {
-         static_assert(detail::timer_irqn<N>() != -1, "Timer has no interrupt capability.");
+         static_assert(detail::timer_irqn<id>() != -1, "Timer has no interrupt capability.");
 
          // Enable the update interrupt
          LL_TIM_EnableIT_UPDATE(get_timer());
@@ -68,17 +69,17 @@ namespace cycfi { namespace infinity
 
       static constexpr TIM_TypeDef* get_timer()
       {
-         return &detail::get_timer<N>();
+         return &detail::get_timer<id>();
       }
 
       static constexpr IRQn_Type get_irqn()
       {
-         return IRQn_Type(detail::timer_irqn<N>());
+         return IRQn_Type(detail::timer_irqn<id>());
       }
 
       static void periph_enable()
       {
-         detail::timer_periph_enable<N>();
+         detail::timer_periph_enable<id>();
       }
    };
 }}
