@@ -44,9 +44,10 @@ namespace cycfi { namespace infinity
          );
 
          detail::adc_config(get_adc(), detail::adc_timer_trigger_id<N>());
-         
-        /* Set timer the trigger output (TRGO) */
-        LL_TIM_SetTriggerOutput(TIM2, LL_TIM_TRGO_UPDATE);
+         detail::activate_adc(get_adc());
+
+        // Set timer the trigger output (TRGO)
+        LL_TIM_SetTriggerOutput(&detail::get_timer<N>(), LL_TIM_TRGO_UPDATE);
       }
 
       template <std::size_t channel, std::size_t pin, std::size_t rank>
@@ -68,27 +69,31 @@ namespace cycfi { namespace infinity
          // Connect GPIO analog switch to ADC input
          LL_GPIO_EnablePinAnalogControl(gpio, mask);
 
-//         // Set ADC group regular sequence: channel on the selected sequence rank.
-//         auto const adc_channel = detail::adc_channel<channel>();
-//         LL_ADC_REG_SetSequencerRanks(get_adc(), detail::adc_rank<rank>(), adc_channel);
-//         LL_ADC_SetChannelSamplingTime(get_adc(), adc_channel, LL_ADC_SAMPLINGTIME_2CYCLES_5);
+         // Set ADC group regular sequence: channel on the selected sequence rank.
+         auto const adc_channel = detail::adc_channel<channel>();
+         LL_ADC_REG_SetSequencerRanks(get_adc(), detail::adc_rank<rank>(), adc_channel);
+         LL_ADC_SetChannelSamplingTime(get_adc(), adc_channel, LL_ADC_SAMPLINGTIME_2CYCLES_5);
       }
 
       void start()
       {
-         detail::activate_adc(get_adc());
-         
-        if ((LL_ADC_IsEnabled(ADC1) == 1)               &&
-            (LL_ADC_IsDisableOngoing(ADC1) == 0)        &&
-            (LL_ADC_REG_IsConversionOngoing(ADC1) == 0)   )
-        {
-            LL_ADC_REG_StartConversion(ADC1);
-        }
+         auto* adc_ = get_adc();
+         if ((LL_ADC_IsEnabled(adc_) == 1) &&
+             (LL_ADC_IsDisableOngoing(adc_) == 0) &&
+             (LL_ADC_REG_IsConversionOngoing(adc_) == 0))
+         {
+            LL_ADC_REG_StartConversion(adc_);
+         }
       }
-
-      //void enable_interrupt(std::size_t priority = 0)
-      //{
-      //}
+      
+      void stop()
+      {
+         auto* adc_ = get_adc();
+         if (LL_ADC_IsEnabled(adc_))
+         {
+            LL_ADC_REG_StopConversion(adc_);
+         }
+      }
 
       constexpr std::size_t size() { return buffer_size; }
       constexpr std::size_t num_channels() { return channels; }
