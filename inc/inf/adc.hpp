@@ -31,10 +31,10 @@ namespace cycfi { namespace infinity
       typedef std::array<sample_group_type, buffer_size> buffer_type;
       typedef typename buffer_type::const_iterator buffer_iterator_type;
 
-      template <std::size_t N>
-      adc(timer<N>)
+      template <std::size_t tid>
+      adc(timer<tid>)
       {
-         static_assert(detail::valid_adc_timer(N), "Invalid Timer for ADC");
+         static_assert(detail::valid_adc_timer(tid), "Invalid Timer for ADC");
 
          detail::adc_dma_config(
             get_adc(),
@@ -43,17 +43,18 @@ namespace cycfi { namespace infinity
             &data[0][0], capacity
          );
 
-         detail::adc_config(get_adc(), detail::adc_timer_trigger_id<N>());
+         detail::adc_config(get_adc(), detail::adc_timer_trigger_id<tid>());
          detail::activate_adc(get_adc());
 
         // Set timer the trigger output (TRGO)
-        LL_TIM_SetTriggerOutput(&detail::get_timer<N>(), LL_TIM_TRGO_UPDATE);
+        LL_TIM_SetTriggerOutput(&detail::get_timer<tid>(), LL_TIM_TRGO_UPDATE);
       }
 
       template <std::size_t channel, std::size_t pin, std::size_t rank>
       void enable_channel()
       {
          static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
+         static_assert(detail::valid_adc_pin<channel>(id, pin), "Invalid ADC Pin");
 
          static constexpr uint16_t bit = pin % 16;
          static constexpr uint16_t port = pin / 16;

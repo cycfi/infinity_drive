@@ -6,6 +6,15 @@
 #include <inf/pin.hpp>
 #include <inf/app.hpp>
 
+///////////////////////////////////////////////////////////////////////////////
+// Test the adc. 
+// 
+// Setup: Connect a 3.3v voltage divider using a potentiometer to pin   
+//        PA4. Set a breakpoint at the adc_val = val; statement in the 
+//        irq(adc_conversion_complete<1>) function. See the value change 
+//        when you move the pot.
+///////////////////////////////////////////////////////////////////////////////
+
 namespace inf = cycfi::infinity;
 using namespace inf::port;
 
@@ -18,7 +27,7 @@ volatile int32_t adc_val = 0;
 
 void start()
 {
-   // channel 11, porta pin 4
+   // channel 9, porta pin 4
    adc_conv.enable_channel<9, porta + 4, 1>();
 
    adc_conv.start();

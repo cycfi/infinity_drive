@@ -6,11 +6,14 @@
 #if !defined(CYCFI_INFINITY_ADC_HPP_MAY_1_2017)
 #define CYCFI_INFINITY_ADC_HPP_MAY_1_2017
 
-#include "stm32l4xx_ll_cortex.h"
-#include "stm32l4xx_ll_bus.h"
-#include "stm32l4xx_ll_adc.h"
-#include "stm32l4xx_ll_dma.h"
-#include "stm32l4xx_ll_gpio.h"
+#include <stm32l4xx_ll_cortex.h>
+#include <stm32l4xx_ll_bus.h>
+#include <stm32l4xx_ll_adc.h>
+#include <stm32l4xx_ll_dma.h>
+#include <stm32l4xx_ll_gpio.h>
+
+#include <inf/pin.hpp>
+#include <type_traits>
 
 namespace cycfi { namespace infinity { namespace detail
 {
@@ -29,72 +32,178 @@ namespace cycfi { namespace infinity { namespace detail
 
    void activate_adc(ADC_TypeDef* adc);
 
-   constexpr bool valid_adc_timer(int N)
+   // Check if id is a valid timer for the adc.
+   constexpr bool valid_adc_timer(std::size_t id)
    {
-      return N == 1 || N == 2 || N == 3 || N == 4 || N == 6 || N == 8 || N == 15;
+      return id == 1 || id == 2 || id == 3 || id == 4 || id == 6 || id == 8 || id == 15;
    }
 
-   constexpr bool valid_adc_channel(int N)
+   // Check if channel is a valid adc channel.
+   constexpr bool valid_adc_channel(std::size_t channel)
    {
-      return N >= 1 && N <= 18;
+      return channel >= 1 && channel <= 18;
+   }
+   
+   // Check if pin is a valid input port for adc, given id and channel.
+   // Defaults to returning false, with specializations for each valid
+   // configuration.
+   template <std::size_t channel>
+   constexpr bool valid_adc_pin(std::size_t id, std::size_t pin)
+   {
+      return false;
    }
 
+   template <>
+   constexpr bool valid_adc_pin<1>(std::size_t id, std::size_t pin)
+   {
+      return pin == port::portc + 0;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<2>(std::size_t id, std::size_t pin)
+   {
+      return pin == port::portc + 1;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<3>(std::size_t id, std::size_t pin)
+   {
+      return pin == port::portc + 2;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<4>(std::size_t id, std::size_t pin)
+   {
+      return pin == port::portc + 3;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<5>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 0;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<6>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 1;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<7>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 2;
+   }
+      
+   template <>
+   constexpr bool valid_adc_pin<8>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 3;
+   }
+      
+   template <>
+   constexpr bool valid_adc_pin<9>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 4;
+   }
+      
+   template <>
+   constexpr bool valid_adc_pin<10>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 5;
+   }      
+   
+   template <>
+   constexpr bool valid_adc_pin<11>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 6;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<12>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::porta + 7;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<13>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::portc + 4;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<14>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::portc + 5;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<15>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::portb + 0;
+   }
+   
+   template <>
+   constexpr bool valid_adc_pin<16>(std::size_t id, std::size_t pin)
+   {
+      return (id == 1 || id == 2) && pin == port::portb + 1;
+   }
    ////////////////////////////////////////////////////////////////////////////
    // The ADCs: We provide template functions for getting the memory mapped
-	//	adcs given a constant N. That way, we can use generic programming.
+   // adcs given a constant id. That way, we can use generic programming.
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t N>
+   template <std::size_t id>
    ADC_TypeDef* get_adc();
 
-   template <std::size_t N>
+   template <std::size_t id>
    struct adc_info;
 
-   template <std::size_t N>
+   template <std::size_t id>
    uint32_t adc_timer_trigger_id();
 
-   template <std::size_t N>
+   template <std::size_t id>
    uint32_t adc_rank();
 
-   template <std::size_t N>
+   template <std::size_t id>
    uint32_t adc_channel();
 
-#define INFINITY_ADC(N)                                                        \
+#define INFINITY_ADC(id)                                                       \
                                                                                \
    template <>                                                                 \
-   inline ADC_TypeDef* get_adc<N>()                                            \
+   inline ADC_TypeDef* get_adc<id>()                                           \
    {                                                                           \
-      return ADC##N;                                                           \
+      return ADC##id;                                                          \
    }                                                                           \
                                                                                \
    template <>                                                                 \
-   struct adc_info<N>                                                          \
+   struct adc_info<id>                                                         \
    {                                                                           \
-      static constexpr IRQn_Type dma_irq_id = DMA1_Channel##N##_IRQn;          \
-      static constexpr uint32_t dma_channel = LL_DMA_CHANNEL_##N;              \
+      static constexpr IRQn_Type dma_irq_id = DMA1_Channel##id##_IRQn;         \
+      static constexpr uint32_t dma_channel = LL_DMA_CHANNEL_##id;             \
    };                                                                          \
    /***/
 
-#define INFINITY_ADC_TIMER_TRIGGER(N)                                          \
+#define INFINITY_ADC_TIMER_TRIGGER(id)                                         \
    template <>                                                                 \
-   inline uint32_t adc_timer_trigger_id<N>()                                   \
+   inline uint32_t adc_timer_trigger_id<id>()                                  \
    {                                                                           \
-      return LL_ADC_REG_TRIG_EXT_TIM##N##_TRGO;                                \
+      return LL_ADC_REG_TRIG_EXT_TIM##id##_TRGO;                               \
    }                                                                           \
    /***/
 
-#define INFINITY_ADC_RANK(N)                                                   \
+#define INFINITY_ADC_RANK(id)                                                  \
    template <>                                                                 \
-   inline uint32_t adc_rank<N>()                                               \
+   inline uint32_t adc_rank<id>()                                              \
    {                                                                           \
-      return LL_ADC_REG_RANK_##N;                                              \
+      return LL_ADC_REG_RANK_##id;                                             \
    }                                                                           \
    /***/
 
-#define INFINITY_ADC_CHANNEL(N)                                                \
+#define INFINITY_ADC_CHANNEL(id)                                               \
    template <>                                                                 \
-   inline uint32_t adc_channel<N>()                                            \
+   inline uint32_t adc_channel<id>()                                           \
    {                                                                           \
-      return LL_ADC_CHANNEL_##N;                                               \
+      return LL_ADC_CHANNEL_##id;                                              \
    }                                                                           \
    /***/
 
