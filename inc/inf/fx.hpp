@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <cmath>
+#include <algorithm>
 #include <inf/support.hpp>
 
 namespace cycfi { namespace infinity
@@ -17,6 +18,9 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct leaky_integrator
    {
+      // y: current value
+      // a: coeefficient
+      
       leaky_integrator(float a)
        : y(0)
        , a(a)
@@ -36,6 +40,9 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct low_pass
    {
+      // y: current value
+      // a: coeefficient
+
       low_pass(float a)
        : y(0)
        , a(a)
@@ -67,6 +74,9 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct peak_detector
    {
+      // y: current value
+      // d: decay
+      
       peak_detector(float d = 0.001f)
        : y(0)
        , d(d)
@@ -80,6 +90,11 @@ namespace cycfi { namespace infinity
             y -= (y-s) * d;
          return y;
       }
+      
+      float operator()() const
+      {
+         return y;
+      }
 
       float y;
       float d;
@@ -90,28 +105,33 @@ namespace cycfi { namespace infinity
    // is high (1.0) if the positive input (spos) is greater than the negative
    // input (sneg). Otherwise, the output is low (-1.0).
    //
-   // The schmitt trigger adds some hysteresis to improve noise immunity and
-   // minimize multiple triggering by adding and subtracting a certain fraction
-   // of the previous output (state) back to the positive input (spos).
-   // hysteresis is the fraction (should be less than < 1.0) that determines
-   // how much is added or subtracted. By doing so, the comparator "bar" is
+   // The schmitt trigger adds some hysteresis (h) to improve noise immunity 
+   // and minimize multiple triggering by adding and subtracting a certain 
+   // fraction of the previous output (y) back to the positive input (spos). 
+   // hysteresis is the fraction (should be less than < 1.0) that determines 
+   // how much is added or subtracted. By doing so, the comparator "bar" is 
    // raised or lowered depending on the previous state.
+   //
+   // The result is a bool.
    ////////////////////////////////////////////////////////////////////////////
    struct schmitt_trigger
    {
-      schmitt_trigger(float hysteresis)
-       : state(-1.0f)
-       , hysteresis(hysteresis)
+      // y: current value
+      // h: hysteresis
+
+      schmitt_trigger(float h)
+       : y(-1.0f)
+       , h(h)
       {}
 
-      float operator()(float spos, float sneg)
+      bool operator()(float spos, float sneg)
       {
-         auto delta = (state - spos) * hysteresis;
-         return state = (spos + delta) > sneg ? 1.0f : -1.0f;
+         auto delta = (y - spos) * h;
+         return (y = (spos + delta) > sneg);
       }
 
-      float state;
-      float hysteresis;
+      float y;
+      float h;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -119,6 +139,8 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct gain
    {
+      // a: gain
+
       constexpr gain(float a)
        : a(a)
       {}
@@ -136,15 +158,17 @@ namespace cycfi { namespace infinity
    // waveform. This is accomplished by sending the signal through a peak-
    // detector and comparing the result with the original signal (slightly
    // attenuated) using a schmitt_trigger.
+   //
+   // The result is a bool corresponding to the peaks.
    ////////////////////////////////////////////////////////////////////////////
    struct peak_trigger
-   {
+   {      
       peak_trigger(float d = 0.001f)
        : pk(d)
        , cmp(0.002f)
       {}
 
-      float operator()(float s)
+      bool operator()(float s)
       {
          constexpr gain g{0.9f};
          return cmp(s, g(pk(s)));
@@ -155,25 +179,29 @@ namespace cycfi { namespace infinity
    };
 
    ////////////////////////////////////////////////////////////////////////////
-   // clip a signal to range -max...+max
+   // clip a signal to range -m...+m
    ////////////////////////////////////////////////////////////////////////////
    struct clip
    {
-      constexpr clip(float max = 1.0f)
-       : max(max)
+      // m: maximum value
+
+      constexpr clip(float m = 1.0f)
+       : m(m)
       {}
 
       constexpr float operator()(float s)
       {
-         return (s > max) ? max : (s < -max) ? -max : s;
+         return (s > m) ? m : (s < -m) ? -m : s;
       }
 
-      float max;
+      float m;
    };
 
    ////////////////////////////////////////////////////////////////////////////
    struct differentiator
    {
+      // x: delayed input sample
+
       differentiator()
        : x(0) {}
 
@@ -190,6 +218,8 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct integrator
    {
+      // y: current value
+
       integrator()
        : y(0) {}
 
@@ -206,21 +236,25 @@ namespace cycfi { namespace infinity
    // downsampling a signal by a factor of two with a useful amount of
    // antialiasing. Each source sample is convolved with { 0.25, 0.5, 0.25 }
    // before downsampling. (from http://www.musicdsp.org/)
+   //
+   // This class is templated on the native integer sample type 
+   // (e.g. uint16_t).
    ////////////////////////////////////////////////////////////////////////////
+   template <typename T>
    struct downsample
    {
       downsample()
-       : state(0)
+       : x(0)
       {}
 
-      uint16_t operator()(uint16_t s1, uint16_t s2)
+      T operator()(T s1, T s2)
       {
-         auto out = state + (s1 >> 1);
-         state = s2 >> 2;
-         return out + state;
+         auto out = x + (s1 >> 1);
+         x = s2 >> 2;
+         return out + x;
       }
 
-      uint16_t state;
+      T x;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -228,24 +262,27 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct window_comparator
    {
-      window_comparator(float low = -0.5f, float high = 0.5f)
-       : low(low)
-       , high(high)
-       , state(1.0)
+      // l: low threshold
+      // h: high threshold
+
+      window_comparator(float l = -0.5f, float h = 0.5f)
+       : l(l)
+       , h(h)
+       , y(1.0)
       {}
 
       float operator()(float s)
       {
-         if (s < low)
-            state = -1.0f;
-         else if (s > high)
-            state = 1.0f;
-         return state;
+         if (s < l)
+            y = -1.0f;
+         else if (s > h)
+            y = 1.0f;
+         return y;
       }
 
-      float low;
-      float high;
-      float state;
+      float l;
+      float h;
+      float y;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -253,21 +290,38 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct agc
    {
-      agc(float threshold = 0.001f, float decay = 0.001f)
-       : peak(decay)
-       , threshold(threshold)
+      // a: maximum gain
+      // l: low threshold
+      // h: high threshold
+      // d: decay
+
+      agc(float a, float l, float h, float d = 0.001f)
+       : pk(d)
+       , a(a)
+       , l(l)
+       , h(h)
       {}
 
       float operator()(float s)
       {
-         auto env = peak(std::fabs(s));
-         if (env > threshold)
-            return s / env;
-         return 0.0f;
+         // get previous value of the peak detector
+         auto env = pk();        
+         
+         // if env < l: noise gate closes; gain is 0 
+         // env == h:   gain is 1.0         
+         // env > h:    gain is < 1.0
+         // env < h:    gain = h / env, limited to maximum gain (a)
+         auto val = (env < l) ? 0.0f : s * std::min<float>(a, h / env);
+         
+         // track the peak using the output
+         pk(val);                
+         return val;
       }
 
-      peak_detector peak;
-      float threshold;
+      peak_detector pk;
+      float a;
+      float l;
+      float h;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -275,7 +329,14 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct dc_block
    {
-      dc_block(float r)
+      // y: current value
+      // x: delayed input sample
+      // r: pole 
+      
+      // A smaller r value allows faster tracking of "wandering dc levels", 
+      // but at the cost of greater low-frequency attenuation.
+
+      dc_block(float r = 0.995)
        : r(r)
        , x(0.0f)
        , y(0.0f)
