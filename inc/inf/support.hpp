@@ -167,7 +167,8 @@ namespace cycfi { namespace infinity
    // fast exp approximation (from http://www.musicdsp.org/)
    constexpr float exp(float x)
    {
-      return (362880+x*(362880+x*(181440+x*(60480+x*(15120+x*(3024+x*(504+x*(72+x*(9+x)))))))))*2.75573192e-6;
+      return (362880+x*(362880+x*(181440+x*(60480+x*(15120+x*(
+         3024+x*(504+x*(72+x*(9+x)))))))))*2.75573192e-6;
    }
 
    // pi
