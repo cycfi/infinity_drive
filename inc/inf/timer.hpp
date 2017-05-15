@@ -22,19 +22,19 @@ namespace cycfi { namespace infinity
       static constexpr std::size_t id = id_;
       static_assert(detail::check_valid_timer(id), "Invalid Timer id");
 
-      timer(uint32_t clock_frequency, uint32_t period)
+      timer(uint32_t clock_frequency, uint32_t frequency)
       {
-          // Enable the timer peripheral clock
+         detail::system_clock_config();
+         
+         // Enable the timer peripheral clock
          periph_enable();
 
          // Set the pre-scaler value
          LL_TIM_SetPrescaler(get_timer(), __LL_TIM_CALC_PSC(SystemCoreClock, clock_frequency));
 
          // Set the auto-reload value to have an initial update event frequency
-         // of clock_frequency/period
-         auto freq = clock_frequency/period;
          auto autoreload = __LL_TIM_CALC_ARR(
-            SystemCoreClock, LL_TIM_GetPrescaler(get_timer()), freq);
+            SystemCoreClock, LL_TIM_GetPrescaler(get_timer()), frequency);
 
          LL_TIM_SetAutoReload(get_timer(), autoreload);
       }

@@ -101,7 +101,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="d_adc_test.cpp|g_oled_test.cpp|f_spi_test.cpp|c_timer_interrupt_test.cpp|b_input_port_test.cpp|a_output_port_test.cpp|f_spi_test_1.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
+						<entry excluding="d_adc_test1.cpp|c_timer_interrupt_test2.cpp|c_timer_interrupt_test1.cpp|e_dac_sin_synth_test.cpp|g_oled_test.cpp|f_spi_test.cpp|b_input_port_test.cpp|a_output_port_test.cpp|f_spi_test_1.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="inc"/>
 						<entry excluding="sandbox.c|sys/sandbox.c|sys/main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup"/>
@@ -218,7 +218,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="d_adc_test.cpp|g_oled_test.cpp|f_spi_test.cpp|c_timer_interrupt_test.cpp|b_input_port_test.cpp|a_output_port_test.cpp|f_spi_test_1.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
+						<entry excluding="d_adc_test1.cpp|c_timer_interrupt_test2.cpp|c_timer_interrupt_test1.cpp|e_dac_sin_synth_test.cpp|g_oled_test.cpp|f_spi_test.cpp|b_input_port_test.cpp|a_output_port_test.cpp|f_spi_test_1.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="inc"/>
 						<entry excluding="sandbox.c|sys/sandbox.c|sys/main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup"/>

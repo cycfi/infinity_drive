@@ -8,26 +8,28 @@
 #include <inf/app.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Toggle led test using timers and interrupts. This test uses a timer to
-// toggle the led at a rate of 1 per second. No setup required.
+// Toggle led port using timers and interrupts. This test uses a timer to
+// toggle pin PC3 at a rate of 100kHz. The clock frequency is set to 200kHz,
+// but since the toggling of the pin happens to halve this frequency, you'll
+// see a frequency of 100kHz.
+//
+// Setup connect an oscilloscope probe to pin PC3 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
 using namespace inf::port;
 using inf::output_pin;
 
-output_pin<porta + 5> red_led; // porta, pin 5
+output_pin<portc + 3> pin; // portc, pin 3
 
-constexpr uint32_t base_freq = 10000;
-constexpr uint32_t period = 10000;
+constexpr uint32_t base_freq = 1000000;
+constexpr uint32_t frequency = 200000;
+inf::timer<1> tmr(base_freq, frequency);
 
 void start()
 {
-   inf::timer<1> tmr(base_freq, period); // one second period
    tmr.enable_interrupt();
    tmr.start();
-
-   red_led = on;
 
    while (true)
       ;
@@ -35,7 +37,7 @@ void start()
 
 void irq(timer_task<1>)
 {
-   red_led = !red_led;
+   pin = !pin;
 }
 
 // The actual "C" interrupt handlers are defined here:

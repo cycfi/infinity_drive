@@ -25,6 +25,8 @@ namespace cycfi { namespace infinity
 
       dac(uint16_t init_val = 2048)
       {
+         detail::system_clock_config();
+
          // Enable GPIO Clock
          LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
 

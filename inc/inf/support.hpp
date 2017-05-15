@@ -18,6 +18,14 @@ extern "C"
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
+   // Clock initialization
+   ////////////////////////////////////////////////////////////////////////////
+   namespace detail
+   {
+      void system_clock_config();
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    // The MCU clock speed
    ////////////////////////////////////////////////////////////////////////////
    uint32_t const clock_speed = SystemCoreClock;
@@ -178,7 +186,8 @@ namespace cycfi { namespace infinity
    // linear interpolation
    constexpr float linear_interpolate(float y1, float y2, float mu)
    {
-      return (1.0f-mu)*y1 + mu*y2;
+      return y1 + mu * (y2 - y1);
+      //return (1.0f-mu)*y1 + mu*y2;
    }
 }}
 

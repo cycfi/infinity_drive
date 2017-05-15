@@ -21,7 +21,7 @@ using namespace inf::port;
 using inf::delay_ms;
 
 constexpr int sampling_rate = 16000;
-inf::timer<2> clock(2000000, 2000000/sampling_rate);
+inf::timer<2> clock(2000000, sampling_rate);
 inf::adc<1, 2> adc_conv(clock);
 volatile int32_t adc_val = 0;
 

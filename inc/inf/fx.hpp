@@ -267,9 +267,9 @@ namespace cycfi { namespace infinity
       float operator()(float s)
       {
          // get current value of the peak detector
-         auto env = ef(s);        
+         auto env = ef(std::fabs(s));        
          
-         // env < l:    noise gate closes; gain is 0 
+         // if env < l: noise gate closes; gain is 0 
          // otherwise:  gain = h / env, limited to maximum gain (a)
          return (env < l) ? 0.0f : s * std::min<float>(a, h / env);
       }
@@ -299,7 +299,7 @@ namespace cycfi { namespace infinity
       {}
 
       dc_block(float cutoff, uint32_t sps)
-       : r(1.0f -(_2pi * cutoff/sps))
+       : r(1.0f - (_2pi * cutoff/sps))
        , x(0.0f)
        , y(0.0f)
       {}

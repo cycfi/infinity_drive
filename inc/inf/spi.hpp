@@ -17,6 +17,11 @@ namespace cycfi { namespace infinity
    struct spi_base
    {
       static constexpr std::size_t id = id_;
+      
+      spi_base()
+      {
+         detail::system_clock_config();
+      }
 
       void enable()
       {

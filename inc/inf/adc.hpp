@@ -8,6 +8,7 @@
 
 #include <inf/detail/pin_impl.hpp>
 #include <inf/timer.hpp>
+#include <inf/support.hpp>
 #include <inf/detail/adc_impl.hpp>
 #include <array>
 
@@ -35,6 +36,8 @@ namespace cycfi { namespace infinity
       adc(timer<tid>)
       {
          static_assert(detail::valid_adc_timer(tid), "Invalid Timer for ADC");
+         
+         detail::system_clock_config();
 
          detail::adc_dma_config(
             get_adc(),

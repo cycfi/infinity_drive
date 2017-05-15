@@ -11,15 +11,10 @@ void start();
 
 namespace inf = cycfi::infinity;
 
-namespace detail
-{
-   void system_clock_config();
-}
-
 int main()
 {
    // Configure the system clock
-   detail::system_clock_config();
+   inf::detail::system_clock_config();
 
    start();
    return 0;
