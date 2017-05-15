@@ -31,6 +31,12 @@ namespace cycfi { namespace infinity { namespace detail
    );
 
    void activate_adc(ADC_TypeDef* adc);
+   
+   // Check if id is a valid adc.
+   constexpr bool valid_adc(std::size_t id)
+   {
+      return id >=1 && id <= 3;
+   }
 
    // Check if id is a valid timer for the adc.
    constexpr bool valid_adc_timer(std::size_t id)

@@ -33,7 +33,7 @@ inf::timer<1> clock(adc_clock_rate, sampling_rate);
 
 // The ADC
 adc_type adc(clock);
-adc_type::buffer_iterator_type out = 0;
+adc_type::buffer_iterator_type out = adc.begin();
 
 // The DAC
 inf::dac<0> dac;
@@ -65,11 +65,7 @@ inline void irq(adc_conversion_complete<1>)
 
 void irq(timer_task<1>)
 {
-   if (out)
-   {
-      // We generate a 12 bit signal
-      dac((*out++)[0]);
-   }
+   dac((*out++)[0]);
 }
 
 // The actual "C" interrupt handlers are defined here:

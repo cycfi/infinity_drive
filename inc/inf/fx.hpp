@@ -22,13 +22,11 @@ namespace cycfi { namespace infinity
       // a: coeefficient
 
       one_pole_lp(float a)
-       : y(0)
-       , a(a)
+       : y(0), a(a)
       {}
 
       one_pole_lp(float freq, uint32_t sps)
-       : y(0)
-       , a(1.0f - exp(-_2pi * freq/sps))
+       : y(0), a(1.0f - exp(-_2pi * freq/sps))
       {}
 
       float operator()(float s)
@@ -36,8 +34,7 @@ namespace cycfi { namespace infinity
          return y += a * (s - y);
       }
 
-      float y;
-      float a;
+      float y, a;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -51,8 +48,7 @@ namespace cycfi { namespace infinity
       // d: decay
       
       envelope_follower(float d = 0.001f)
-       : y(0)
-       , d(d)
+       : y(0), d(d)
       {}
 
       float operator()(float s)
@@ -69,8 +65,7 @@ namespace cycfi { namespace infinity
          return y;
       }
 
-      float y;
-      float d;
+      float y, d;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -93,17 +88,17 @@ namespace cycfi { namespace infinity
       // h: hysteresis
 
       schmitt_trigger(float h)
-       : y(-1.0f)
-       , h(h)
+       : y(0), h(h)
       {}
 
       bool operator()(float spos, float sneg)
       {
          auto delta = (y - spos) * h;
-         return (y = (spos + delta) > sneg);
+         y = (spos + delta) > sneg;
+         return y;
       }
 
-      float y;
+      bool y;
       float h;
    };
 
@@ -137,8 +132,7 @@ namespace cycfi { namespace infinity
    struct peak_trigger
    {      
       peak_trigger(float d = 0.001f)
-       : ef(d)
-       , cmp(0.002f)
+       : ef(d), cmp(0.002f)
       {}
 
       bool operator()(float s)
@@ -233,6 +227,35 @@ namespace cycfi { namespace infinity
 
       T x;
    };
+   
+   ////////////////////////////////////////////////////////////////////////////
+   // window_comparator. If input (s) exceeds a high threshold (h), the
+   // current state (y) becomes 1. Else, if input (s) is below a low
+   // threshold (l), the current state (y) becomes 0. If the state (s) 
+   // is in between the low and high thresholds, the previous state is kept.
+   ////////////////////////////////////////////////////////////////////////////
+   struct window_comparator
+   {
+      // l: low threshold
+      // h: high threshold
+      // y: current state
+
+      window_comparator(float l = -0.5f, float high = 0.5f)
+       : l(l), h(h), y(1)
+      {}
+
+      bool operator()(float s)
+      {
+         if (s < l)
+            y = 0;
+         else if (s > h)
+            y = 1;
+         return y;
+      }
+
+      float l, h;
+      bool y;
+   };
 
    ////////////////////////////////////////////////////////////////////////////
    // Automatic gain control (agc) uses an envelope follower to dynamically 
@@ -258,10 +281,7 @@ namespace cycfi { namespace infinity
       // d: decay
 
       agc(float a, float l, float h = 1.0f, float d = 0.001f)
-       : ef(d)
-       , a(a)
-       , l(l)
-       , h(h)
+       : ef(d), a(a), l(l), h(h)
       {}
 
       float operator()(float s)
@@ -275,9 +295,7 @@ namespace cycfi { namespace infinity
       }
 
       envelope_follower ef;
-      float a;
-      float l;
-      float h;
+      float a, l, h;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -293,15 +311,11 @@ namespace cycfi { namespace infinity
       // but at the cost of greater low-frequency attenuation.
 
       dc_block(float r = 0.995)
-       : r(r)
-       , x(0.0f)
-       , y(0.0f)
+       : r(r), x(0.0f), y(0.0f)
       {}
 
       dc_block(float cutoff, uint32_t sps)
-       : r(1.0f - (_2pi * cutoff/sps))
-       , x(0.0f)
-       , y(0.0f)
+       : r(1.0f - (_2pi * cutoff/sps)), x(0.0f), y(0.0f)
       {}
 
       float operator()(float s)
@@ -311,9 +325,7 @@ namespace cycfi { namespace infinity
          return y;
       }
 
-      float r;
-      float x;
-      float y;
+      float r, x, y;
    };
 
 }}

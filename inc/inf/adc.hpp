@@ -10,6 +10,7 @@
 #include <inf/timer.hpp>
 #include <inf/support.hpp>
 #include <inf/detail/adc_impl.hpp>
+#include <algorithm>
 #include <array>
 
 namespace cycfi { namespace infinity
@@ -17,20 +18,26 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // adc
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t id_, std::size_t channels_, std::size_t buffer_size_ = 8>
-   struct adc
+   template <
+      std::size_t id_
+    , std::size_t channels_
+    , std::size_t buffer_size_ = 8
+   >
+   class adc
    {
+      using sample_group_type = std::array<uint16_t, channels_>;
+      using buffer_type = std::array<sample_group_type, buffer_size_> ;
+
+   public:
+      
+      static_assert(detail::valid_adc(id_), "Invalid ADC id");
+
+      using adc_type = adc;
+      using buffer_iterator_type = typename buffer_type::const_iterator;
+
       static constexpr std::size_t id = id_;
       static constexpr std::size_t channels = channels_;
       static constexpr std::size_t buffer_size = buffer_size_;
-      static constexpr std::size_t capacity = buffer_size * channels;
-      using adc_type = adc;
-
-      static_assert(id >=1 && id <= 3, "Invalid ADC id");
-
-      typedef uint16_t sample_group_type[channels];
-      typedef std::array<sample_group_type, buffer_size> buffer_type;
-      typedef typename buffer_type::const_iterator buffer_iterator_type;
 
       template <std::size_t tid>
       adc(timer<tid>)
@@ -43,14 +50,23 @@ namespace cycfi { namespace infinity
             get_adc(),
             detail::adc_info<id>::dma_channel,
             detail::adc_info<id>::dma_irq_id,
-            &data[0][0], capacity
+            &_data[0][0], buffer_size * channels
          );
 
          detail::adc_config(get_adc(), detail::adc_timer_trigger_id<tid>());
          detail::activate_adc(get_adc());
 
-        // Set timer the trigger output (TRGO)
-        LL_TIM_SetTriggerOutput(&detail::get_timer<tid>(), LL_TIM_TRGO_UPDATE);
+         // Set timer the trigger output (TRGO)
+         LL_TIM_SetTriggerOutput(&detail::get_timer<tid>(), LL_TIM_TRGO_UPDATE);  
+         
+         // Clear the ADC buffer
+         clear();
+      }
+         
+      void clear()
+      {
+         for (auto& buff : _data)
+            buff.fill(0);
       }
 
       template <std::size_t channel, std::size_t pin, std::size_t rank>
@@ -102,19 +118,21 @@ namespace cycfi { namespace infinity
       constexpr std::size_t size() { return buffer_size; }
       constexpr std::size_t num_channels() { return channels; }
 
-      buffer_iterator_type begin() const { return data.begin(); }
-      buffer_iterator_type middle() const { return data.begin() + (buffer_size / 2); }
-      buffer_iterator_type end() const { return data.end(); }
+      buffer_iterator_type begin() const { return _data.begin(); }
+      buffer_iterator_type middle() const { return _data.begin() + (buffer_size / 2); }
+      buffer_iterator_type end() const { return _data.end(); }
 
-      sample_group_type& operator[](std::size_t i) { return data[i]; }
-      sample_group_type const& operator[](std::size_t i) const { return data[i]; }
+      sample_group_type& operator[](std::size_t i) { return _data[i]; }
+      sample_group_type const& operator[](std::size_t i) const { return _data[i]; }
+
+   private:
 
       ADC_TypeDef* get_adc() const
       {
          return detail::get_adc<id>();
       }
-
-      buffer_type data;
+      
+      buffer_type _data;
    };
 }}
 

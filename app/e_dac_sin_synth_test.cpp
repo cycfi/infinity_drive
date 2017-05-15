@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // This test generates a 1kHz sine wave and outputs the signal using
 // the dac. This is done using a timer interrupt set to trigger at
-// 78125 kHz (80000000 / 2014).
+// 78125 kHz (80000000 / 1024).
 //
 // Setup: connect pin PA4 to an oscilloscope to see the generated sine wave.
 ///////////////////////////////////////////////////////////////////////////////
