@@ -1,8 +1,10 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include "processor_test.hpp"
-#include <inf/fx.hpp>
+#include <inf/period_trigger.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC test. Tests the AGC (automatic gain control).
@@ -16,15 +18,15 @@ namespace inf = cycfi::infinity;
 struct my_processor
 {
    my_processor()
-    : _agc(1000, 0.01f, 1.0f, 0.0001f)
+    : _pt()
    {}
    
    float process(float val)
    {
-      return _agc(val);
+      return _pt(val);
    }
    
-   inf::agc _agc;
+   inf::period_trigger<32000> _pt;
 };
 
 inf::mono_processor<my_processor> proc;

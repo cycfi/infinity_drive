@@ -280,7 +280,7 @@ namespace cycfi { namespace infinity
       // h: high threshold
       // d: decay
 
-      agc(float a, float l, float h = 1.0f, float d = 0.001f)
+      agc(float a, float l, float h = 1.0f, float d = 0.0001f)
        : ef(d), a(a), l(l), h(h)
       {}
 
@@ -292,6 +292,11 @@ namespace cycfi { namespace infinity
          // if env < l: noise gate closes; gain is 0 
          // otherwise:  gain = h / env, limited to maximum gain (a)
          return (env < l) ? 0.0f : s * std::min<float>(a, h / env);
+      }
+   
+      bool gated() const
+      {
+         return ef() < l;
       }
 
       envelope_follower ef;
