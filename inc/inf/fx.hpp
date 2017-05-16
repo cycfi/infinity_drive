@@ -296,7 +296,12 @@ namespace cycfi { namespace infinity
    
       bool gated() const
       {
-         return ef() < l;
+         return peak() < l;
+      }
+      
+      float peak() const
+      {
+         return ef();
       }
 
       envelope_follower ef;

@@ -30,6 +30,7 @@ struct my_processor
 };
 
 inf::mono_processor<my_processor> proc;
+inf::output_pin<inf::port::portc + 3> pin; // portc, pin 3
 
 void start()
 {
@@ -40,12 +41,16 @@ void start()
 
 inline void irq(adc_conversion_half_complete<1>)
 {
+   pin = 1;
    proc.irq_conversion_half_complete();
+   pin = 0;
 }
 
 inline void irq(adc_conversion_complete<1>)
 {
+   pin = 1;
    proc.irq_conversion_complete();
+   pin = 0;
 }
 
 void irq(timer_task<1>)
