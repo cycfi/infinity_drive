@@ -16,7 +16,7 @@ namespace cycfi { namespace infinity
    //
    // This implementation is for the STM32F429I-Discovery dev board.
    ////////////////////////////////////////////////////////////////////////////
-   using board_led_type = output_pin<port::portg + 13>;
+   using main_led_type = output_pin<port::portg + 13>;
 }}
 
 #endif
