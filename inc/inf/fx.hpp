@@ -240,7 +240,7 @@ namespace cycfi { namespace infinity
       // h: high threshold
       // y: current state
 
-      window_comparator(float l = -0.5f, float high = 0.5f)
+      window_comparator(float l = -0.5f, float h = 0.5f)
        : l(l), h(h), y(1)
       {}
 
