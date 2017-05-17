@@ -7,8 +7,8 @@
 #define CYCFI_INFINITY_SUPPORT_HPP_DECEMBER_20_2015
 
 #include <cstdint>
-#include <system_stm32l4xx.h>
-#include <stm32l4xx_ll_utils.h>
+#include <system_stm32f4xx.h>
+#include <stm32f4xx_ll_utils.h>
 
 extern "C"
 {
@@ -187,7 +187,6 @@ namespace cycfi { namespace infinity
    constexpr float linear_interpolate(float y1, float y2, float mu)
    {
       return y1 + mu * (y2 - y1);
-      //return (1.0f-mu)*y1 + mu*y2;
    }
 }}
 
