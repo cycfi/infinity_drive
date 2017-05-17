@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>infinity_drive</name>
+	<name>infinity_drive_l4</name>
 	<comment></comment>
 	<projects>
 		<project>nucleo-l476rg_hal_lib</project>
