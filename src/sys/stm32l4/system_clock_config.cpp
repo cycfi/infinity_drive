@@ -36,6 +36,11 @@ namespace cycfi { namespace infinity { namespace detail
 
          // MSI configuration and activation
          LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
+
+         LL_FLASH_EnableInstCache();
+         LL_FLASH_EnableDataCache();
+         LL_FLASH_EnablePrefetch();
+
          LL_RCC_MSI_Enable();
          while (LL_RCC_MSI_IsReady() != 1)
          {
