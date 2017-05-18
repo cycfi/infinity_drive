@@ -15,12 +15,12 @@
 namespace inf = cycfi::infinity;
 using namespace inf::port;
 
-using inf::board_led_type;
+using inf::main_led_type;
 using inf::delay_ms;
 
 void start()
 {
-   board_led_type main_led;
+   main_led_type main_led;
    main_led = off;
 
    // toggle LED
