@@ -34,8 +34,16 @@ namespace cycfi { namespace infinity { namespace detail
       uint32_t timer_trigger_id,
       uint32_t adc_periph_id
    );
+   
+   inline void activate_adc(ADC_TypeDef* adc)
+   {      
+      // ADC must be disabled at this point
+      if (LL_ADC_IsEnabled(adc) != 0)
+         error_handler();
 
-   void activate_adc(ADC_TypeDef* adc);
+      // Enable ADC
+      LL_ADC_Enable(adc);
+   }
    
    inline void enable_adc_channel(
       ADC_TypeDef* adc, std::size_t channel, std::size_t rank)
@@ -70,7 +78,7 @@ namespace cycfi { namespace infinity { namespace detail
    // Check if id is a valid timer for the adc.
    constexpr bool valid_adc_timer(std::size_t id)
    {
-      return id == 1 || id == 2 || id == 3 || id == 4 || id == 6 || id == 8 || id == 15;
+      return id == 2 || id == 3 || id == 8;
    }
 
    // Check if channel is a valid adc channel.

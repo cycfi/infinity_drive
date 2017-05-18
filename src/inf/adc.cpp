@@ -127,14 +127,4 @@ namespace cycfi { namespace infinity { namespace detail
       // Enable interruption ADC group regular overrun
       LL_ADC_EnableIT_OVR(adc);
    }
-
-   void activate_adc(ADC_TypeDef* adc)
-   {      
-      // ADC must be disabled at this point
-      if (LL_ADC_IsEnabled(adc) != 0)
-         error_handler();
-
-      // Enable ADC
-      LL_ADC_Enable(adc);
-   }
 }}}
