@@ -41,30 +41,30 @@ namespace cycfi { namespace infinity { namespace detail
    void handle_adc_interrupt()
    {
       // Check whether DMA transfer complete caused the DMA interruption
-      if (LL_DMA_IsActiveFlag_TC1(DMA1) == 1)
+      if (LL_DMA_IsActiveFlag_TC0(DMA2) == 1)
       {
          // Clear flag DMA transfer complete
-         LL_DMA_ClearFlag_TC1(DMA1);
+         LL_DMA_ClearFlag_TC0(DMA2);
 
          // call adc_conversion_complete
          irq(adc_conversion_complete<N>{});
       }
 
       // Check whether DMA half transfer caused the DMA interruption
-      if (LL_DMA_IsActiveFlag_HT1(DMA1) == 1)
+      if (LL_DMA_IsActiveFlag_HT0(DMA2) == 1)
       {
          // Clear flag DMA half transfer
-         LL_DMA_ClearFlag_HT1(DMA1);
+         LL_DMA_ClearFlag_HT0(DMA2);
 
          // call adc_conversion_half_complete
          irq(adc_conversion_half_complete<N>{});
       }
 
       // Check whether DMA transfer error caused the DMA interruption
-      if (LL_DMA_IsActiveFlag_TE1(DMA1) == 1)
+      if (LL_DMA_IsActiveFlag_TE0(DMA2) == 1)
       {
          // Clear flag DMA transfer error
-         LL_DMA_ClearFlag_TE1(DMA1);
+         LL_DMA_ClearFlag_TE0(DMA2);
 
          // call error_handler
          cycfi::infinity::error_handler();
@@ -111,25 +111,31 @@ extern "C"
  TIMER_INTERRUPT_HANDLER(8, TIM8_UP_IRQHandler)
 #endif
 
-   void DMA1_Channel1_IRQHandler(void)
+   void DMA2_Stream0_IRQHandler(void)
    {
       using cycfi::infinity::detail::handle_adc_interrupt;
       handle_adc_interrupt<1>();
    }
 
-   void DMA1_Channel2_IRQHandler(void)
+   void DMA2_Stream1_IRQHandler(void)
+   {
+      using cycfi::infinity::detail::handle_adc_interrupt;
+      handle_adc_interrupt<1>();
+   }
+
+   void DMA2_Stream2_IRQHandler(void)
    {
       using cycfi::infinity::detail::handle_adc_interrupt;
       handle_adc_interrupt<2>();
    }
 
-   void DMA1_Channel3_IRQHandler(void)
+   void DMA2_Stream3_IRQHandler(void)
    {
       using cycfi::infinity::detail::handle_adc_interrupt;
       handle_adc_interrupt<3>();
    }
 
-   void ADC1_2_IRQHandler(void)
+   void ADC_IRQHandler(void)
    {
       // Check whether ADC group regular overrun caused the ADC interruption
 
@@ -139,6 +145,8 @@ extern "C"
          LL_ADC_ClearFlag_OVR(ADC1);
 
          // call error_handler
+         using cycfi::infinity::detail::handle_adc_interrupt;
+         handle_adc_interrupt<1>();
          cycfi::infinity::error_handler();
       }
 
