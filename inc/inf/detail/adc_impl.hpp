@@ -6,6 +6,10 @@
 #if !defined(CYCFI_INFINITY_ADC_HPP_MAY_1_2017)
 #define CYCFI_INFINITY_ADC_HPP_MAY_1_2017
 
+///////////////////////////////////////////////////////////////////////////////
+// This implementation is for the STM32F4 series.
+///////////////////////////////////////////////////////////////////////////////
+
 #include <stm32f4xx_ll_cortex.h>
 #include <stm32f4xx_ll_bus.h>
 #include <stm32f4xx_ll_adc.h>
@@ -32,6 +36,30 @@ namespace cycfi { namespace infinity { namespace detail
    );
 
    void activate_adc(ADC_TypeDef* adc);
+   
+   inline void enable_adc_channel(
+      ADC_TypeDef* adc, std::size_t channel, std::size_t rank)
+   {
+      // Set ADC group regular sequence: channel on the selected sequence rank.
+      LL_ADC_REG_SetSequencerRanks(adc, rank, channel);
+      LL_ADC_SetChannelSamplingTime(adc, channel, LL_ADC_SAMPLINGTIME_3CYCLES);
+   }
+   
+   inline void start_adc(ADC_TypeDef* adc)
+   {
+      if (LL_ADC_IsEnabled(adc))
+      {
+          LL_ADC_REG_StartConversionExtTrig(adc, LL_ADC_REG_TRIG_EXT_RISING);
+      }
+   }
+
+   inline void stop_adc(ADC_TypeDef* adc)
+   {
+      if (LL_ADC_IsEnabled(adc))
+      {
+         LL_ADC_REG_StopConversionExtTrig(adc);
+      }
+   }
    
    // Check if id is a valid adc.
    constexpr bool valid_adc(std::size_t id)

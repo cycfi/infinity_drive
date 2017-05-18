@@ -90,29 +90,20 @@ namespace cycfi { namespace infinity
 
          // Configure GPIO in analog mode to be used as ADC input
          LL_GPIO_SetPinMode(gpio, mask, LL_GPIO_MODE_ANALOG);
-
-         // Set ADC group regular sequence: channel on the selected sequence rank.
-         auto const adc_channel = detail::adc_channel<channel>();
-         LL_ADC_REG_SetSequencerRanks(get_adc(), detail::adc_rank<rank>(), adc_channel);
-         LL_ADC_SetChannelSamplingTime(get_adc(), adc_channel, LL_ADC_SAMPLINGTIME_3CYCLES);
+         
+         // Enable the ADC channel on the selected sequence rank.
+         detail::enable_adc_channel(
+            get_adc(), detail::adc_channel<channel>(), detail::adc_rank<rank>());
       }
 
       void start()
       {
-         auto* adc_ = get_adc();
-         if (LL_ADC_IsEnabled(adc_))
-         {
-        	 LL_ADC_REG_StartConversionExtTrig(adc_, LL_ADC_REG_TRIG_EXT_RISING);
-         }
+         detail::start_adc(get_adc());
       }
       
       void stop()
       {
-         auto* adc_ = get_adc();
-         if (LL_ADC_IsEnabled(adc_))
-         {
-            LL_ADC_REG_StopConversion(adc_);
-         }
+         detail::stop_adc(get_adc());
       }
 
       constexpr std::size_t size() { return buffer_size; }
