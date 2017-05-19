@@ -13,42 +13,44 @@ namespace cycfi { namespace infinity
    {
       static constexpr float threshold = 0.03;
 
-      period_trigger(float cutoff = 1500.0f)
-       : _lp(cutoff, sps)
-       , _agc(1000, threshold, 1.0f, 0.0001f)
+      period_trigger(float cutoff = 2000.0f)
+       : _agc(1000, threshold, 0.5f, 0.0001f)
        , _dc_blk(20.0f, sps)
-       , _state(0)
+       , _state(0.0f)
       {}
 
-      bool operator()(float s)
-      {
-         // low-pass filter
-         auto val = _lp(s);
-
+      float operator()(float s)
+      {                  
          // dc-block
-         val = _dc_blk(val);
-
+         s = _dc_blk(s);
+         
          // agc
-         val = _agc(val);
-
-         // peak triggers
-         auto valp = _peak_pos(val);   // positive peaks
-         auto valn = _peak_neg(-val);  // negative peaks
-                                    
-         if (valp)
-            _state = 1;
-         else if (valn || _agc.gated())
-            _state = 0;
-
+         s = _agc(s);
+      
+         // detect the peaks
+         auto pos = _pos_peak(s);
+         auto neg = _neg_peak(-s);
+         
+         // A positive peak sets the state to 1 while the negative peak 
+         // sets the state to 0. A complete cycle starts from the rising 
+         // edge until the next rising of the state. This makes the detector
+         // immune from multiple triggers, from multiple peaks, in both
+         // the positive and negative peak detectors, since multiple positive
+         // or negative triggers will not change the state.
+         // 
+         if (pos)
+            _state = 1.0f;
+         else if (neg || _agc.gated())
+            _state = 0.0f;
+         
          return _state;
       }
 
-      one_pole_lp    _lp;
-      peak_trigger   _peak_pos;
-      peak_trigger   _peak_neg;
+      peak_trigger   _pos_peak;
+      peak_trigger   _neg_peak;
       agc            _agc;
       dc_block       _dc_blk;
-      bool           _state;
+      float          _state;
    };
 }}
 

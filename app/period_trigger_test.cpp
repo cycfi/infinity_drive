@@ -12,31 +12,40 @@
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PC0. Connect
 // pin PA4 to an oscilloscope to see the waveform. 
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////4////
 
 namespace inf = cycfi::infinity;
 
 struct my_processor
 {
+   static constexpr auto sps_div = 4;
+   
    my_processor()
     : _pt()
     , _index(0)
     , _val(0.0f)
+    , _state(0.0f)
    {}
    
    float process(float val)
    {
-//      if (++_index & 0x3)
-//         _val += val;
-//      else
-//         return _pt(_val / 4.0f);
+      if (_index++ & (sps_div-1))
+      {
+         _val += val;
+      }
+      else
+      {
+         _state = _pt(_val / float(sps_div));
+         _val = 0.0f; // reset
+      }
       
-      return _pt(val);
+      return _state;
    }
    
    int _index;
    float _val;
-   inf::period_trigger<32000> _pt;
+   float _state;
+   inf::period_trigger<32000 / sps_div> _pt;
 };
 
 inf::mono_processor<my_processor> proc;

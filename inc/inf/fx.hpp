@@ -137,7 +137,7 @@ namespace cycfi { namespace infinity
 
       bool operator()(float s)
       {
-         constexpr gain g{0.9f};
+         constexpr gain g{0.70f};
          return cmp(s, g(ef(s)));
       }
 
