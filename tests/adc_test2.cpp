@@ -22,7 +22,8 @@
 //
 //    adc_conversion_half_complete
 //
-// and then again when it concludes the entire conversion for the enire buffer:
+// and then again when it concludes the entire conversion for the entire 
+// buffer:
 //
 //    adc_conversion_complete
 //
