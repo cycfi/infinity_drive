@@ -1,5 +1,5 @@
 /*=============================================================================
-   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
+   Copyright (c) 2014-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
@@ -25,14 +25,13 @@ namespace cycfi { namespace infinity
    >
    class adc
    {
-      using sample_group_type = std::array<uint16_t, channels_>;
-      using buffer_type = std::array<sample_group_type, buffer_size_> ;
-
    public:
       
       static_assert(detail::valid_adc(id_), "Invalid ADC id");
 
       using adc_type = adc;
+      using sample_group_type = std::array<uint16_t, channels_>;
+      using buffer_type = std::array<sample_group_type, buffer_size_> ;
       using buffer_iterator_type = typename buffer_type::const_iterator;
 
       static constexpr std::size_t id = id_;

@@ -34,7 +34,7 @@ namespace cycfi { namespace infinity
          // peak triggers
          auto valp = _peak_pos(val);   // positive peaks
          auto valn = _peak_neg(-val);  // negative peaks
-            
+                                    
          if (valp)
             _state = 1;
          else if (valn || _agc.gated())

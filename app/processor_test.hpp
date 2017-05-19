@@ -1,5 +1,5 @@
 /*=============================================================================
-   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
+   Copyright (c) 2014-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
@@ -19,10 +19,10 @@ namespace cycfi { namespace infinity
    // A monophonic processor for DSP testing purposes
    //
    // We read the signal from ADC channel 1 using pin PC0, process it and
-   // send the result output through the DAC pin PA4. The ADC is buffered. 
-   // The DAC output, after processing will be delayed by a number of samples 
-   // (the buffer size). With a sampling 
-   // rate of 32kHz, the delay will be 16ms. This delay is computed as:
+   // send the result output through the DAC1 pin PA4. The ADC is buffered. 
+   // The DAC1 output, after processing will be delayed by a number of samples 
+   // (the buffer size). With a sampling rate of 32kHz, the delay will be 
+   // 16ms. This delay is computed as:
    //
    //    ((1/32000) * 1024) / 2
    //
@@ -36,8 +36,13 @@ namespace cycfi { namespace infinity
    //
    //    adc_conversion_complete
    //
+   // To compensate for this delay, for the sake of testing, we use another
+   // buffer to delay the input and then sending the delayed input to DAC2
+   // pin PA5.
+   //
    // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-   // pin PA4 to an oscilloscope to see the waveform. 
+   // pin PA4 to an oscilloscope probe to see the processed waveform. Connect 
+   // pin PA5 to another oscilloscope probe to see input the waveform. 
    ////////////////////////////////////////////////////////////////////////////
    template <
       typename Processor
@@ -49,7 +54,6 @@ namespace cycfi { namespace infinity
       static constexpr auto sampling_rate = sampling_rate_;
       static constexpr auto adc_clock_rate = 2000000;
       static constexpr auto buffer_size = buffer_size_;
-      static constexpr auto capacity = buffer_size * 2;
       
       mono_processor()
        : _clock(adc_clock_rate, sampling_rate)
@@ -78,7 +82,14 @@ namespace cycfi { namespace infinity
       inline void process(I1 first, I1 last, I2 src)
       {
          for (auto i = first; i != last; ++i)
-            *i = Processor::process(((*src++)[0] / float(capacity)) - 1.0f);
+            *i = Processor::process(((*src++)[0] / 2048.0f) - 1.0f);
+      }
+      
+      template <typename I1, typename I2>
+      inline void copy(I1 first, I1 last, I2 src)
+      {
+         for (auto i = first; i != last; ++i)
+            *i = (*src++)[0];
       }
       
       /////////////////////////////////////////////////////////////////////////
@@ -87,19 +98,26 @@ namespace cycfi { namespace infinity
       void irq_conversion_half_complete()
       {
          _out = _obuff.middle();
+         _in = _ibuff.middle();
          process(_obuff.begin(), _obuff.middle(), _adc.begin());
+         copy(_ibuff.begin(), _ibuff.middle(), _adc.begin());
       }
 
       void irq_conversion_complete()
       {
          _out = _obuff.begin();
+         _in = _ibuff.begin();
          process(_obuff.middle(), _obuff.end(), _adc.middle());
+         copy(_ibuff.middle(), _ibuff.end(), _adc.middle());
       }
       
       void irq_timer_task()
       {
          // We generate a 12 bit signal
-         _dac((*_out++ * (capacity-1)) + capacity);
+         _dac_out((*_out++ * 2047) + 2048);
+         
+         // We generate the delayed input signal
+         _dac_in(*_in++);
       }
       
    private:
@@ -108,7 +126,10 @@ namespace cycfi { namespace infinity
       using adc_type = adc<1, 1, buffer_size>;
       using dac_type = dac<0>;
       using obuff_type = dbuff<float, buffer_size/2>;
-      using iter_type = typename obuff_type::iterator;
+      using oiter_type = typename obuff_type::iterator;
+      
+      using ibuff_type = dbuff<std::uint16_t, buffer_size/2>;
+      using iiter_type = typename ibuff_type::iterator;
 
       // The main clock
       timer_type _clock;
@@ -116,12 +137,17 @@ namespace cycfi { namespace infinity
       // The ADC
       adc_type _adc;
 
-      // The DAC
-      dac<0> _dac;
+      // The DACs
+      dac<0> _dac_out;
+      dac<1> _dac_in;
 
       // The Output buffer and iterator
       obuff_type _obuff;
-      iter_type _out;
+      oiter_type _out;
+
+      // The Output buffer and iterator
+      ibuff_type _ibuff;
+      iiter_type _in;
    };
 }}
 
