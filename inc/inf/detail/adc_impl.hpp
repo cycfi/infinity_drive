@@ -208,6 +208,105 @@ namespace cycfi { namespace infinity { namespace detail
          ;
    }
 
+   template <std::size_t channel>
+   std::size_t default_adc_pin();
+
+   template <>
+   constexpr std::size_t default_adc_pin<0>()
+   {
+      return port::porta + 0;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<1>()
+   {
+      return port::porta + 1;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<2>()
+   {
+      return port::porta + 2;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<3>()
+   {
+      return port::porta + 3;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<4>()
+   {
+      return port::porta + 4;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<5>()
+   {
+      return port::porta + 5;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<6>()
+   {
+      return port::porta + 6;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<7>()
+   {
+      return port::porta + 7;
+   }
+      
+   template <>
+   constexpr std::size_t default_adc_pin<8>()
+   {
+      return port::portb + 0;
+   }
+      
+   template <>
+   constexpr std::size_t default_adc_pin<9>()
+   {
+      return port::portb + 1;
+   }
+      
+   template <>
+   constexpr std::size_t default_adc_pin<10>()
+   {
+      return port::portc + 0;
+   }      
+   
+   template <>
+   constexpr std::size_t default_adc_pin<11>()
+   {
+      return port::portc + 1;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<12>()
+   {
+      return port::portc + 2;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<13>()
+   {
+      return port::portc + 3;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<14>()
+   {
+      return port::portc + 4;
+   }
+   
+   template <>
+   constexpr std::size_t default_adc_pin<15>()
+   {
+      return port::portc + 5;
+   }
+
    ////////////////////////////////////////////////////////////////////////////
    // The ADCs: We provide template functions for getting the memory mapped
    // adcs given a constant id. That way, we can use generic programming.
@@ -287,6 +386,7 @@ namespace cycfi { namespace infinity { namespace detail
    INFINITY_ADC_RANK(15)
    INFINITY_ADC_RANK(16)
 
+   INFINITY_ADC_CHANNEL(0)
    INFINITY_ADC_CHANNEL(1)
    INFINITY_ADC_CHANNEL(2)
    INFINITY_ADC_CHANNEL(3)

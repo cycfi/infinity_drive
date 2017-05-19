@@ -29,8 +29,8 @@ volatile int32_t adc_val = 0;
 
 void start()
 {
-   // channel 4, porta pin 4
-   adc_conv.enable_channel<4, porta + 4, 1>();
+   // channel 4
+   adc_conv.enable_channel<4, 1>();
 
    adc_conv.start();
    clock.start();

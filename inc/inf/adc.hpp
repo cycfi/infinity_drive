@@ -95,6 +95,12 @@ namespace cycfi { namespace infinity
          detail::enable_adc_channel(
             get_adc(), detail::adc_channel<channel>(), detail::adc_rank<rank>());
       }
+      
+      template <std::size_t channel, std::size_t rank>
+      void enable_channel()
+      {
+         enable_channel<channel, detail::default_adc_pin<channel>(), rank>();
+      }
 
       void start()
       {
