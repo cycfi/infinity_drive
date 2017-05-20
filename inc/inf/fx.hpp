@@ -258,16 +258,41 @@ namespace cycfi { namespace infinity
    };
 
    ////////////////////////////////////////////////////////////////////////////
-   // Automatic gain control (agc) uses an envelope follower to dynamically 
-   // adjust the gain following the signal level (s). Weaker signals are
+   // Noise gate: The noise gate closes if the current envelope (env), is 
+   // below the threshold (t). Returns 0.0f if noise gate is closed, otherwise
+   // returns the input sample (s).
+   ////////////////////////////////////////////////////////////////////////////
+   struct noise_gate
+   {
+      // t: threshold
+
+      constexpr noise_gate(float t)
+       : t(t)
+      {}
+
+      constexpr float operator()(float s, float env) const
+      {
+         return (env < t) ? 0.0f : s;
+      }
+   
+      constexpr bool gated(float env) const
+      {
+         return env < t;
+      }
+      
+      float t;
+   };
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Automatic gain control (agc) dynamically adjusts the gain following the 
+   // given envelope (env), and the signal level (s). Weaker signals are
    // amplified more than stronger signals to maintain a constant output 
    // level.
    //
-   // The agc incorporates a noise gate that turns off the amplifier below a 
-   // low threshold (l). Above this threshold, the gain is h / env, where h is 
-   // the high threshold and env is the current envelope. 
+   // The gain is t / env, where t is the agc threshold and env is the 
+   // current envelope. 
    //
-   // For example, if the high threshold is 1.0 and the current envelope is 
+   // For example, if the agc threshold is 1.0 and the current envelope is 
    // 0.01, then the gain is 100 (1.0 / 0.01). If the current envelope is 1.0, 
    // then the gain is 1 (1.0 / 1.0). 
    //
@@ -276,36 +301,19 @@ namespace cycfi { namespace infinity
    struct agc
    {
       // a: maximum gain
-      // l: low threshold
-      // h: high threshold
-      // d: decay
+      // t: threshold
 
-      agc(float a, float l, float h = 1.0f, float d = 0.0001f)
-       : ef(d), a(a), l(l), h(h)
+      constexpr agc(float a, float t = 1.0f)
+       : a(a), t(t)
       {}
 
-      float operator()(float s)
+      constexpr float operator()(float s, float env) const
       {
-         // get current value of the peak detector
-         auto env = ef(std::fabs(s));        
-         
-         // if env < l: noise gate closes; gain is 0 
-         // otherwise:  gain = h / env, limited to maximum gain (a)
-         return (env < l) ? 0.0f : s * std::min<float>(a, h / env);
-      }
-   
-      bool gated() const
-      {
-         return peak() < l;
-      }
-      
-      float peak() const
-      {
-         return ef();
+         // gain = t / env, limited to maximum gain (a)
+         return s * std::min<float>(a, t / env);
       }
 
-      envelope_follower ef;
-      float a, l, h;
+      float a, t;
    };
 
    ////////////////////////////////////////////////////////////////////////////

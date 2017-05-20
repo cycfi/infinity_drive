@@ -16,17 +16,17 @@
 namespace inf = cycfi::infinity;
 
 struct my_processor
-{
-   my_processor()
-    : _agc(1000, 0.01f, 1.0f, 0.0001f)
-   {}
-   
+{  
    float process(float val)
    {
-      return _agc(val);
+      constexpr inf::agc agc = {1000, 1.0f};
+      constexpr inf::noise_gate ng = {0.03f};
+      
+      auto env = _ef(std::abs(val));
+      return ng(agc(val, env), env);
    }
    
-   inf::agc _agc;
+   inf::envelope_follower _ef = {0.0001f};
 };
 
 inf::mono_processor<my_processor> proc;
