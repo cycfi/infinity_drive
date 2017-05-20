@@ -12,6 +12,7 @@
 #include <inf/support.hpp>
 #include <inf/app.hpp>
 #include <inf/pin.hpp>
+#include <inf/processor.hpp>
 
 namespace cycfi { namespace infinity
 {
@@ -45,20 +46,30 @@ namespace cycfi { namespace infinity
    // pin PA5 to another oscilloscope probe to see input the waveform. 
    ////////////////////////////////////////////////////////////////////////////
    template <
-      typename Processor
+      typename Base
     , std::size_t sampling_rate_ = 32000
     , std::size_t buffer_size_ = 1024
    >
-   struct mono_processor : Processor
-   {
+   struct mono_processor : Base
+   {   
       static constexpr auto sampling_rate = sampling_rate_;
       static constexpr auto adc_clock_rate = 2000000;
       static constexpr auto buffer_size = buffer_size_;
+      static constexpr auto resolution = Base::resolution;
+
+      static_assert((buffer_size & (buffer_size - 1)) == 0,
+         "buffer_size must be a power of 2, except 0"
+      );
       
+      static_assert(buffer_size > Base::n_samples, 
+         "buffer_size must be greater than Base::n_samples"
+      );
+
       mono_processor()
        : _clock(adc_clock_rate, sampling_rate)
        , _adc(_clock)
        , _out(_obuff.end())
+       , _ocount(0)
       {}
       
       void start()
@@ -70,26 +81,11 @@ namespace cycfi { namespace infinity
          _clock.enable_interrupt();
       }
       
-      /////////////////////////////////////////////////////////////////////////
-      // The main process function:
-      //    1) Converts data from the ADC (12 bits unsigned int) to float
-      //    2) Performs some processing 
-      //       - The base Processor class must have a process function with
-      //         the signature float process(float);
-      //    3) Copies the processed data to the output buffer
-      /////////////////////////////////////////////////////////////////////////
       template <typename I1, typename I2>
-      inline void process(I1 first, I1 last, I2 src)
+      inline void copy(I1 first, I1 last, I2 src, std::uint32_t channel)
       {
          for (auto i = first; i != last; ++i)
-            *i = Processor::process(((*src++)[0] / 2048.0f) - 1.0f);
-      }
-      
-      template <typename I1, typename I2>
-      inline void copy(I1 first, I1 last, I2 src)
-      {
-         for (auto i = first; i != last; ++i)
-            *i = (*src++)[0];
+            *i = (*src++)[channel];
       }
       
       /////////////////////////////////////////////////////////////////////////
@@ -99,22 +95,33 @@ namespace cycfi { namespace infinity
       {
          _out = _obuff.middle();
          _in = _ibuff.middle();
-         process(_obuff.begin(), _obuff.middle(), _adc.begin());
-         copy(_ibuff.begin(), _ibuff.middle(), _adc.begin());
+         
+         // process channel 0 into the output buffer
+         Base::process(_obuff.begin(), _obuff.middle(), _adc.begin(), 0);
+         
+         // copy the original input into the input buffer
+         copy(_ibuff.begin(), _ibuff.middle(), _adc.begin(), 0);
       }
 
       void irq_conversion_complete()
       {
          _out = _obuff.begin();
          _in = _ibuff.begin();
-         process(_obuff.middle(), _obuff.end(), _adc.middle());
-         copy(_ibuff.middle(), _ibuff.end(), _adc.middle());
+
+         // process channel 0 into the output buffer
+         Base::process(_obuff.middle(), _obuff.end(), _adc.middle(), 0);
+
+         // copy the original input into the input buffer
+         copy(_ibuff.middle(), _ibuff.end(), _adc.middle(), 0);
       }
       
       void irq_timer_task()
       {
-         // We generate a 12 bit signal
-         _dac_out((*_out++ * 2047) + 2048);
+         if ((Base::n_samples == 1) || ((_ocount++ & (Base::n_samples-1)) == 0))
+         {
+            // We generate the output signal
+            _dac_out((*_out++ * (resolution-1)) + resolution);
+         }
          
          // We generate the delayed input signal
          _dac_in(*_in++);
@@ -125,10 +132,10 @@ namespace cycfi { namespace infinity
       using timer_type = timer<2>;
       using adc_type = adc<1, 1, buffer_size>;
       using dac_type = dac<0>;
-      using obuff_type = dbuff<float, buffer_size/2>;
+      using obuff_type = dbuff<float, buffer_size / (2 * Base::n_samples)>;
       using oiter_type = typename obuff_type::iterator;
       
-      using ibuff_type = dbuff<std::uint16_t, buffer_size/2>;
+      using ibuff_type = dbuff<std::uint16_t, buffer_size / 2>;
       using iiter_type = typename ibuff_type::iterator;
 
       // The main clock
@@ -148,6 +155,9 @@ namespace cycfi { namespace infinity
       // The Output buffer and iterator
       ibuff_type _ibuff;
       iiter_type _in;
+      
+      // output count (for downsampling)
+      int _ocount;
    };
 }}
 

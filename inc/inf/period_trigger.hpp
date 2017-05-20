@@ -36,10 +36,10 @@ namespace cycfi { namespace infinity
          
          // A positive peak sets the state to 1 while the negative peak 
          // sets the state to 0. A complete cycle starts from a rising 
-         // edge until the next rising of the state. This makes the detector
-         // immune from multiple triggers, from multiple peaks, in both
-         // the positive and negative peak detectors, since multiple positive
-         // or negative triggers will not change the state.
+         // edge until the next rising edge of the state. This makes the 
+         // detector immune from multiple triggers, from multiple peaks, in 
+         // both the positive and negative peak detectors, since multiple 
+         // positive or negative triggers will not change the state.
          //
          // Multiple triggers are caused by overtones overpowering the
          // fundamental frequency. These harmonics typically occur as local 

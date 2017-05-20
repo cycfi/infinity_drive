@@ -29,7 +29,7 @@ struct my_processor
    inf::envelope_follower _ef = {0.0001f};
 };
 
-inf::mono_processor<my_processor> proc;
+inf::mono_processor<inf::processor<my_processor, 2048>> proc;
 
 void start()
 {

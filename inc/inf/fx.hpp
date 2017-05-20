@@ -22,11 +22,11 @@ namespace cycfi { namespace infinity
       // a: coeefficient
 
       one_pole_lp(float a)
-       : y(0), a(a)
+       : y(0.0f), a(a)
       {}
 
       one_pole_lp(float freq, uint32_t sps)
-       : y(0), a(1.0f - exp(-_2pi * freq/sps))
+       : y(0.0f), a(1.0f - exp(-_2pi * freq/sps))
       {}
 
       float operator()(float s)
@@ -48,7 +48,7 @@ namespace cycfi { namespace infinity
       // d: decay
       
       envelope_follower(float d = 0.001f)
-       : y(0), d(d)
+       : y(0.0f), d(d)
       {}
 
       float operator()(float s)
@@ -88,7 +88,7 @@ namespace cycfi { namespace infinity
       // h: hysteresis
 
       schmitt_trigger(float h)
-       : y(0), h(h)
+       : y(0.0f), h(h)
       {}
 
       bool operator()(float spos, float sneg)
@@ -172,7 +172,7 @@ namespace cycfi { namespace infinity
       // x: delayed input sample
 
       differentiator()
-       : x(0) {}
+       : x(0.0f) {}
 
       float operator()(float s)
       {
@@ -192,7 +192,7 @@ namespace cycfi { namespace infinity
       // y: current value
 
       integrator()
-       : y(0) {}
+       : y(0.0f) {}
 
       float operator()(float s)
       {
@@ -215,7 +215,7 @@ namespace cycfi { namespace infinity
    struct downsample
    {
       downsample()
-       : x(0)
+       : x(0.0f)
       {}
 
       T operator()(T s1, T s2)
@@ -241,7 +241,7 @@ namespace cycfi { namespace infinity
       // y: current state
 
       window_comparator(float l = -0.5f, float h = 0.5f)
-       : l(l), h(h), y(1)
+       : l(l), h(h), y(1.0f)
       {}
 
       bool operator()(float s)
@@ -345,7 +345,6 @@ namespace cycfi { namespace infinity
 
       float r, x, y;
    };
-
 }}
 
 #endif
