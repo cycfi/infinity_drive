@@ -32,7 +32,7 @@ namespace cycfi { namespace infinity
    {
       static constexpr std::uint32_t resolution = resolution_;   
       static constexpr std::uint32_t n_samples = n_samples_;   
-      static_assert((n_samples & (n_samples - 1)) == 0,
+      static_assert(is_pow2(n_samples),
          "n_samples must be a power of 2, except 0"
       );
 

@@ -165,7 +165,13 @@ namespace cycfi { namespace infinity
    template <typename T>
    constexpr T smallest_pow2(T n, T m = 1)
    {
-      return (m < n)? smallest_pow2(n, m<<1) : m;
+      return (m < n)? smallest_pow2(n, m << 1) : m;
+   }
+   
+   template <typename T>
+   constexpr bool is_pow2(T n)
+   {   
+      return (n & (n - 1)) == 0;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -175,12 +181,21 @@ namespace cycfi { namespace infinity
    // fast exp approximation (from http://www.musicdsp.org/)
    constexpr float exp(float x)
    {
-      return (362880+x*(362880+x*(181440+x*(60480+x*(15120+x*(
-         3024+x*(504+x*(72+x*(9+x)))))))))*2.75573192e-6;
+      return 
+         (362880.f + x * 
+            (362880.f + x * 
+               (181440.f + x * 
+                  (60480.f + x * 
+                     (15120.f + x * 
+                        (3024.f + x * 
+                           (504.f + x * 
+                              (72.f + x * 
+                                 (9.f + x)
+         )))))))) * 2.75573192e-6f;
    }
 
    // pi
-   constexpr float pi = 3.14159265359;
+   constexpr float pi = 3.1415926535897f;
    constexpr float _2pi = pi * 2.0f;
 
    // linear interpolation

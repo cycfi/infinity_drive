@@ -57,7 +57,7 @@ namespace cycfi { namespace infinity
       static constexpr auto buffer_size = buffer_size_;
       static constexpr auto resolution = Base::resolution;
 
-      static_assert((buffer_size & (buffer_size - 1)) == 0,
+      static_assert(is_pow2(buffer_size),
          "buffer_size must be a power of 2, except 0"
       );
       
