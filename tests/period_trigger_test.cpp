@@ -4,7 +4,7 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include "processor_test.hpp"
-#include <inf/period_trigger.hpp>
+#include "period_trigger.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Period Trigger test. Generates square pulses that correspond the period

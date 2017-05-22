@@ -135,10 +135,10 @@ namespace cycfi { namespace infinity
       }
 
       // push fresh data to the front of the delay
-        friend void operator>>(T val, single_delay& d)
-        {
+      friend void operator>>(T val, single_delay& d)
+      {
          val >> d.lu;
-        }
+      }
 
       // get/set the delay (in seconds)
       void delay(T delay, uint32_t sps) { tsamples_delay = delay * sps; }

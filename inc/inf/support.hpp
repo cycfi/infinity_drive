@@ -198,7 +198,11 @@ namespace cycfi { namespace infinity
    constexpr float pi = 3.1415926535897f;
    constexpr float _2pi = pi * 2.0f;
 
-   // linear interpolation
+   ////////////////////////////////////////////////////////////////////////////
+   // linear interpolation: Interpolates a value linearly between y1 and y2
+   // given mu. If mu is 0, the result is y1. If mu is 1, then the result is
+   // y2. 
+   ////////////////////////////////////////////////////////////////////////////
    constexpr float linear_interpolate(float y1, float y2, float mu)
    {
       return y1 + mu * (y2 - y1);

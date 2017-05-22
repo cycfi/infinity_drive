@@ -3,8 +3,8 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#if !defined(CYCFI_INFINITY_FILTER_HPP_DECEMBER_24_2015)
-#define CYCFI_INFINITY_FILTER_HPP_DECEMBER_24_2015
+#if !defined(CYCFI_INFINITY_FX_HPP_DECEMBER_24_2015)
+#define CYCFI_INFINITY_FX_HPP_DECEMBER_24_2015
 
 #include <cstdint>
 #include <cmath>
@@ -12,7 +12,7 @@
 #include <inf/support.hpp>
 
 namespace cycfi { namespace infinity
-{
+{   
    ////////////////////////////////////////////////////////////////////////////
    // Basic one pole low-pass filter (6dB/Oct)
    ////////////////////////////////////////////////////////////////////////////
@@ -107,18 +107,18 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct gain
    {
-      // a: gain
+      // g: gain
 
-      constexpr gain(float a)
-       : a(a)
+      constexpr gain(float g)
+       : g(g)
       {}
 
       constexpr float operator()(float s) const
       {
-         return s * a;
+         return s * g;
       }
 
-      float a;
+      float g;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -298,23 +298,23 @@ namespace cycfi { namespace infinity
    //
    // The maximum gain is constrained to a given maximum (a).
    ////////////////////////////////////////////////////////////////////////////
-   struct agc
-   {
-      // a: maximum gain
-      // t: threshold
-
-      constexpr agc(float a, float t = 1.0f)
-       : a(a), t(t)
-      {}
-
-      constexpr float operator()(float s, float env) const
-      {
-         // gain = t / env, limited to maximum gain (a)
-         return s * std::min<float>(a, t / env);
-      }
-
-      float a, t;
-   };
+//   struct agc
+//   {
+//      // g: maximum gain
+//      // t: threshold
+//
+//      constexpr agc(float g, float t = 1.0f)
+//       : g(g), t(t)
+//      {}
+//
+//      constexpr float operator()(float s, float env) const
+//      {
+//         // gain = t / env, limited to maximum gain (a)
+//         return s * std::min<float>(g, t / env);
+//      }
+//
+//      float g, t;
+//   };
 
    ////////////////////////////////////////////////////////////////////////////
    // DC blocker based on Julius O. Smith's document

@@ -38,7 +38,7 @@ namespace cycfi { namespace infinity
 
       float convert(std::uint32_t sample)
       {
-         return (sample / float(resolution_)) - 1.0f;
+         return (sample / float(resolution_ * n_samples)) - 1.0f;
       }
       
       template <typename I1, typename I2>
@@ -58,7 +58,7 @@ namespace cycfi { namespace infinity
                std::uint32_t val = 0;
                for (auto j = 0; j != n_samples; ++j)
                   val += (*src++)[channel];
-               *i = Base::process(convert(val / n_samples));
+               *i = Base::process(convert(val));
             }
          }
       }
