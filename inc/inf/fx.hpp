@@ -258,65 +258,6 @@ namespace cycfi { namespace infinity
    };
 
    ////////////////////////////////////////////////////////////////////////////
-   // Noise gate: The noise gate closes if the current envelope (env), is 
-   // below the threshold (t). Returns 0.0f if noise gate is closed, otherwise
-   // returns the input sample (s).
-   ////////////////////////////////////////////////////////////////////////////
-   struct noise_gate
-   {
-      // t: threshold
-
-      constexpr noise_gate(float t)
-       : t(t)
-      {}
-
-      constexpr float operator()(float s, float env) const
-      {
-         return (env < t) ? 0.0f : s;
-      }
-   
-      constexpr bool gated(float env) const
-      {
-         return env < t;
-      }
-      
-      float t;
-   };
-
-   ////////////////////////////////////////////////////////////////////////////
-   // Automatic gain control (agc) dynamically adjusts the gain following the 
-   // given envelope (env), and the signal level (s). Weaker signals are
-   // amplified more than stronger signals to maintain a constant output 
-   // level.
-   //
-   // The gain is t / env, where t is the agc threshold and env is the 
-   // current envelope. 
-   //
-   // For example, if the agc threshold is 1.0 and the current envelope is 
-   // 0.01, then the gain is 100 (1.0 / 0.01). If the current envelope is 1.0, 
-   // then the gain is 1 (1.0 / 1.0). 
-   //
-   // The maximum gain is constrained to a given maximum (a).
-   ////////////////////////////////////////////////////////////////////////////
-//   struct agc
-//   {
-//      // g: maximum gain
-//      // t: threshold
-//
-//      constexpr agc(float g, float t = 1.0f)
-//       : g(g), t(t)
-//      {}
-//
-//      constexpr float operator()(float s, float env) const
-//      {
-//         // gain = t / env, limited to maximum gain (a)
-//         return s * std::min<float>(g, t / env);
-//      }
-//
-//      float g, t;
-//   };
-
-   ////////////////////////////////////////////////////////////////////////////
    // DC blocker based on Julius O. Smith's document
    ////////////////////////////////////////////////////////////////////////////
    struct dc_block
