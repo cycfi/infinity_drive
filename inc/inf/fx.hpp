@@ -19,7 +19,7 @@ namespace cycfi { namespace infinity
    struct one_pole_lp
    {
       // y: current value
-      // a: coeefficient
+      // a: coefficient
 
       one_pole_lp(float a)
        : y(0.0f), a(a)

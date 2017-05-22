@@ -207,6 +207,20 @@ namespace cycfi { namespace infinity
    {
       return y1 + mu * (y2 - y1);
    }
+   
+   ////////////////////////////////////////////////////////////////////////////
+   // Fast reciprocal. See http://tinyurl.com/lgmnsyg. We want to avoid
+   // multiplication. So instead of 1.0f/val, we use this function which
+   // is a inaccurate, but fast substitute. It works by negating the exponent
+   // which is assumed to be IEEE754.
+   ////////////////////////////////////////////////////////////////////////////
+   inline float inverse(float val)
+   {
+      auto x = reinterpret_cast<std::int32_t&>(val);
+      x = 0x7EF311C2 - x;
+      return reinterpret_cast<float&>(x);
+   }
+   
 }}
 
 #endif
