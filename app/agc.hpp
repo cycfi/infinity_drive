@@ -61,8 +61,8 @@ namespace cycfi { namespace infinity
          return s * inverse(env);      
       }
 
-      schmitt_trigger _noise_gate = {threshold * 0.5f};
-      envelope_follower _env_follow = {0.001f};
+      schmitt_trigger _noise_gate = {/* hysteresis */ threshold * 0.5f};
+      envelope_follower _env_follow = {/* decay */ 0.001f};
       one_pole_lp _low_pass = {0.0f};
       dc_block _dc_block;
    };

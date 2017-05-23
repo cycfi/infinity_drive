@@ -4,7 +4,7 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include "processor_test.hpp"
-#include <inf/fx.hpp>
+#include "agc.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC test. Tests the AGC (automatic gain control).
@@ -15,21 +15,20 @@
 
 namespace inf = cycfi::infinity;
 
-struct my_processor
-{  
-   float process(float val)
-   {
-      constexpr inf::agc agc = {1000, 1.0f};
-      constexpr inf::noise_gate ng = {0.01f};
-      
-      auto env = _ef(std::abs(val));
-      return ng(agc(val, env), env);
+static constexpr auto clock = 64000;
+static constexpr auto sps_div = 4;
+static constexpr auto sps = clock / sps_div;
+
+struct my_processor : inf::agc<sps>
+{     
+   float process(float s)
+   {      
+      return (*this)(s);
    }
-   
-   inf::envelope_follower _ef = {0.0001f};
 };
 
-inf::mono_processor<inf::processor<my_processor, 2048>> proc;
+inf::mono_processor<inf::processor<my_processor, 2048, sps_div>, clock, 8> proc;
+inf::output_pin<inf::port::portc + 3> pin; // portc, pin 3
 
 void start()
 {
@@ -40,12 +39,16 @@ void start()
 
 inline void irq(adc_conversion_half_complete<1>)
 {
+   pin = 1;
    proc.irq_conversion_half_complete();
+   pin = 0;
 }
 
 inline void irq(adc_conversion_complete<1>)
 {
+   pin = 1;
    proc.irq_conversion_complete();
+   pin = 0;
 }
 
 void irq(timer_task<2>)
