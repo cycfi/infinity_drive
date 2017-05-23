@@ -24,6 +24,13 @@ struct my_processor
       out = _pt(val);
    }
    
+   template <typename Adc>
+   void setup_channels(Adc& adc)
+   {
+      // channel 0, porta pin 0
+      adc.template enable_channel<0, 1>();
+   }
+
    inf::period_trigger<32000 / sps_div> _pt;
 };
 

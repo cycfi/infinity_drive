@@ -25,9 +25,16 @@ struct my_processor : inf::agc<sps>
    {      
 	   out = (*this)(s);
    }
+   
+   template <typename Adc>
+   void setup_channels(Adc& adc)
+   {
+      // channel 0, porta pin 0
+      adc.template enable_channel<0, 1>();
+   }
 };
 
-inf::mono_processor<inf::processor<my_processor, 2048, sps_div>, clock, 8> proc;
+inf::mono_processor<inf::processor<my_processor, 2048, sps_div>, 1, 1, clock, 8> proc;
 inf::output_pin<inf::port::portc + 3> pin; // portc, pin 3
 
 void start()

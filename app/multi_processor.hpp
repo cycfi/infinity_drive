@@ -18,6 +18,8 @@ namespace cycfi { namespace infinity
 {
    template <
       typename Base
+    , std::uint32_t adc_id = 1
+    , std::uint32_t channels = 1
     , std::size_t sampling_rate_ = 32000
     , std::size_t buffer_size_ = 1024
    >
@@ -45,8 +47,8 @@ namespace cycfi { namespace infinity
       
       void start()
       {
-         // channel 0, porta pin 0
-         _adc.template enable_channel<0, 1>();
+         Base::setup_channels(_adc);
+
          _adc.start();
          _clock.start();
          _clock.enable_interrupt();
@@ -54,7 +56,7 @@ namespace cycfi { namespace infinity
       
       /////////////////////////////////////////////////////////////////////////
       // Interrupt handlers
-      /////////////////////////////////////////////////////////////////////////   
+      /////////////////////////////////////////////////////////////////////////
       void irq_conversion_half_complete()
       {
          _out = _obuff.middle();
@@ -87,7 +89,7 @@ namespace cycfi { namespace infinity
    private:
       
       using timer_type = timer<2>;
-      using adc_type = adc<1, 1, buffer_size>;
+      using adc_type = adc<adc_id, channels, buffer_size>;
       using out_type = std::array<float, 2>;
       using obuff_type = dbuff<out_type, buffer_size / (2 * Base::n_samples)>;
       using oiter_type = typename obuff_type::iterator;
