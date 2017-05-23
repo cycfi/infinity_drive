@@ -60,6 +60,11 @@ namespace cycfi { namespace infinity
          // Automatic gain control
          return s * inverse(env);      
       }
+      
+      bool gated() const
+      {
+         return _noise_gate();
+      }
 
       schmitt_trigger _noise_gate = {/* hysteresis */ threshold * 0.5f};
       envelope_follower _env_follow = {/* decay */ 0.001f};

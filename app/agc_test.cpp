@@ -21,9 +21,9 @@ static constexpr auto sps = clock / sps_div;
 
 struct my_processor : inf::agc<sps>
 {     
-   float process(float s)
+   void process(float& out, float s, std::uint32_t channel)
    {      
-      return (*this)(s);
+	   out = (*this)(s);
    }
 };
 

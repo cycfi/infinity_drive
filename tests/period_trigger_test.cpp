@@ -19,9 +19,9 @@ static constexpr auto sps_div = 4;
 
 struct my_processor
 {
-   float process(float val)
+   void process(float& out, float val, std::uint32_t channel)
    {
-      return _pt(val);
+      out = _pt(val);
    }
    
    inf::period_trigger<32000 / sps_div> _pt;

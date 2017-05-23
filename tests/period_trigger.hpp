@@ -5,6 +5,7 @@
 #define CYCFI_INFINITY_PERIOD_DETECTOR_HPP_FEBRUARY_11_2016
 
 #include <inf/fx.hpp>
+#include "agc.hpp"
 
 namespace cycfi { namespace infinity
 {
@@ -15,22 +16,10 @@ namespace cycfi { namespace infinity
 
       float operator()(float s)
       {
-         constexpr agc agc = {1000, 0.5f};
-         constexpr noise_gate ng = {threshold};
-         
-         // update the current envelope
-         auto env = _ef(std::abs(s));
+         // Automatic gain control
+         s = _agc(s);
 
-         // dc-block
-         s = _dc_blk(s);
-         
-         // automatic gain control
-         s = agc(s, env);
-         
-         // noise gate
-         s = ng(s, env);
-      
-         // detect the peaks
+         // Detect the peaks
          auto pos = _pos_peak(s);
          auto neg = _neg_peak(-s);
          
@@ -48,14 +37,12 @@ namespace cycfi { namespace infinity
 
          if (pos)
             _state = 1.0f;
-         else if (neg || ng.gated(env))
+         else if (neg || _agc.gated())
             _state = 0.0f;         
          return _state;
       }
 
-      envelope_follower _ef = {0.0001f};
-      dc_block          _dc_blk = {20.0f, sps};
-
+      agc<sps>			_agc;
       peak_trigger      _pos_peak;
       peak_trigger      _neg_peak;
       float             _state = {0.0f};

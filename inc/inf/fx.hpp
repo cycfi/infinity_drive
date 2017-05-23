@@ -97,6 +97,11 @@ namespace cycfi { namespace infinity
          y = ((spos + delta) > sneg) ? 1.0f : -1.0f;
          return y > 0.0f;
       }
+      
+      bool operator()() const
+      {
+         return y > 0.0f;
+      }
 
       float y;
       float h;

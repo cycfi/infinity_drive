@@ -14,7 +14,10 @@ namespace cycfi { namespace infinity
    //    1) Converts data from the ADC (of given resolution) to float
    //    2) Performs some processing 
    //       - The base Processor class must have a process function with
-   //         the signature float process(float);
+   //         the signature:
+   //             void process(T& out, float, std::uint32_t channel);
+   //         where T is float for mono processing and std::array<float, 2>
+   //         for stereo processing. channel is the 
    //    3) Copies the processed data to the output buffer
    //
    // If n_samples > 1, we perform down sampling. n_samples from the ADC 
@@ -49,7 +52,7 @@ namespace cycfi { namespace infinity
          if (n_samples == 1)
          {
             for (auto i = first; i != last; ++i)
-               *i = Base::process(convert((*src++)[channel]));
+               Base::process(*i, convert((*src++)[channel]), channel);
          }
          else
          {
@@ -58,7 +61,7 @@ namespace cycfi { namespace infinity
                std::uint32_t val = 0;
                for (auto j = 0; j != n_samples; ++j)
                   val += (*src++)[channel];
-               *i = Base::process(convert(val));
+               Base::process(*i, convert(val), channel);
             }
          }
       }
