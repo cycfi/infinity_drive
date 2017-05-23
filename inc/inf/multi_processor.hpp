@@ -128,22 +128,28 @@ namespace cycfi { namespace infinity
       {
          _out = _obuff.middle();
          
-         // process channel 0 into the output buffer
-         Base::process(
-            _obuff.begin(), _obuff.middle(), _adc.begin(), 0,
-            [](std::uint32_t sample) { return convert(sample); }
-         );
+         // process channels and place them in the output buffer
+         for (auto i = 0; i != channels; ++i)
+         {
+            Base::process(
+               _obuff.begin(), _obuff.middle(), _adc.begin(), i,
+               [](std::uint32_t sample) { return convert(sample); }
+            );
+         }
       }
 
       void irq_conversion_complete()
       {
          _out = _obuff.begin();
 
-         // process channel 0 into the output buffer
-         Base::process(
-            _obuff.middle(), _obuff.end(), _adc.middle(), 0,
-            [](std::uint32_t sample) { return convert(sample); }
-         );
+         // process channels and place them in the output buffer
+         for (auto i = 0; i != channels; ++i)
+         {
+            Base::process(
+               _obuff.middle(), _obuff.end(), _adc.middle(), i,
+               [](std::uint32_t sample) { return convert(sample); }
+            );
+         }
       }
       
       void irq_timer_task()
