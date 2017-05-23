@@ -37,6 +37,7 @@ namespace cycfi { namespace infinity
       static constexpr std::size_t id = id_;
       static constexpr std::size_t channels = channels_;
       static constexpr std::size_t buffer_size = buffer_size_;
+      static constexpr std::size_t resolution = 4096;
 
       template <std::size_t tid>
       adc(timer<tid>)

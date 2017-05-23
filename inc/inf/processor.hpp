@@ -28,24 +28,17 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    template <
       typename Base
-    , std::uint32_t resolution_
     , std::uint32_t n_samples_ = 1
    >
    struct processor : Base
    {
-      static constexpr std::uint32_t resolution = resolution_;   
       static constexpr std::uint32_t n_samples = n_samples_;   
       static_assert(is_pow2(n_samples),
          "n_samples must be a power of 2, except 0"
       );
-
-      float convert(std::uint32_t sample)
-      {
-         return (sample / float(resolution_ * n_samples)) - 1.0f;
-      }
       
-      template <typename I1, typename I2>
-      inline void process(I1 first, I1 last, I2 src, std::uint32_t channel)
+      template <typename I1, typename I2, typename Convert>
+      inline void process(I1 first, I1 last, I2 src, std::uint32_t channel, Convert convert)
       {
          // This if-else will be optimized by the compiler since n_samples
          // is a constant that is known at compile time.

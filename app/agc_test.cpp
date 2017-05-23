@@ -34,7 +34,7 @@ struct my_processor : inf::agc<sps>
    }
 };
 
-inf::mono_processor<inf::processor<my_processor, 2048, sps_div>, 1, 1, clock, 8> proc;
+inf::mono_processor<inf::processor<my_processor, sps_div>, 1, 1, clock, 8> proc;
 inf::output_pin<inf::port::portc + 3> pin; // portc, pin 3
 
 void start()

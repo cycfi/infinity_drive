@@ -47,17 +47,23 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    template <
       typename Base
-    , std::uint32_t adc_id = 1
-    , std::uint32_t channels = 1
+    , std::uint32_t adc_id_ = 1
+    , std::uint32_t channels_ = 1
     , std::size_t sampling_rate_ = 32000
     , std::size_t buffer_size_ = 1024
    >
    struct mono_processor : Base
-   {   
-      static constexpr auto sampling_rate = sampling_rate_;
-      static constexpr auto adc_clock_rate = 2000000;
+   {
+      static constexpr auto adc_id = adc_id_;
+      static constexpr auto channels = channels_;
       static constexpr auto buffer_size = buffer_size_;
-      static constexpr auto resolution = Base::resolution;
+      static constexpr auto adc_clock_rate = 2000000;
+      using adc_type = adc<adc_id, channels, buffer_size>;
+
+      static constexpr auto sampling_rate = sampling_rate_;
+      static constexpr auto resolution = adc_type::resolution;
+      static constexpr auto half_resolution = resolution / 2;
+      static constexpr auto n_samples = Base::n_samples;   
 
       static_assert(is_pow2(buffer_size),
          "buffer_size must be a power of 2, except 0"
@@ -92,14 +98,22 @@ namespace cycfi { namespace infinity
       
       /////////////////////////////////////////////////////////////////////////
       // Interrupt handlers
-      /////////////////////////////////////////////////////////////////////////   
+      /////////////////////////////////////////////////////////////////////////
+      static float convert(std::uint32_t sample)
+      {
+         return (sample / float(half_resolution * n_samples)) - 1.0f;
+      }
+
       void irq_conversion_half_complete()
       {
          _out = _obuff.middle();
          _in = _ibuff.middle();
          
          // process channel 0 into the output buffer
-         Base::process(_obuff.begin(), _obuff.middle(), _adc.begin(), 0);
+         Base::process(
+            _obuff.begin(), _obuff.middle(), _adc.begin(), 0,
+            [](std::uint32_t sample) { return mono_processor::convert(sample); }
+         );
          
          // copy the original input into the input buffer
          copy(_ibuff.begin(), _ibuff.middle(), _adc.begin(), 0);
@@ -111,7 +125,10 @@ namespace cycfi { namespace infinity
          _in = _ibuff.begin();
 
          // process channel 0 into the output buffer
-         Base::process(_obuff.middle(), _obuff.end(), _adc.middle(), 0);
+         Base::process(
+            _obuff.middle(), _obuff.end(), _adc.middle(), 0,
+            [](std::uint32_t sample) { return mono_processor::convert(sample); }
+         );
 
          // copy the original input into the input buffer
          copy(_ibuff.middle(), _ibuff.end(), _adc.middle(), 0);
@@ -122,7 +139,7 @@ namespace cycfi { namespace infinity
          if ((Base::n_samples == 1) || ((_ocount++ & (Base::n_samples-1)) == 0))
          {
             // We generate the output signal
-            _dac_out((*_out++ * (resolution-1)) + resolution);
+            _dac_out((*_out++ * (half_resolution-1)) + half_resolution);
          }
          
          // We generate the delayed input signal
@@ -132,7 +149,6 @@ namespace cycfi { namespace infinity
    private:
       
       using timer_type = timer<2>;
-      using adc_type = adc<adc_id, channels, buffer_size>;
       using obuff_type = dbuff<float, buffer_size / (2 * Base::n_samples)>;
       using oiter_type = typename obuff_type::iterator;
       
