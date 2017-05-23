@@ -36,8 +36,8 @@ namespace cycfi { namespace infinity
    template <std::uint32_t sps>
    struct agc
    {  
-      static constexpr float max_gain = 1000.0f;
-      static constexpr float threshold = 1.0f/max_gain;
+      static constexpr float max_gain = 500.0f;
+      static constexpr float threshold = 1.0f / max_gain;
       static constexpr float low_freq = 1.0f - exp(-_2pi * 300.0f/sps);
       static constexpr float high_freq = 1.0f - exp(-_2pi * 0.5);
 
@@ -61,8 +61,8 @@ namespace cycfi { namespace infinity
          return s * inverse(env);      
       }
 
-      schmitt_trigger _noise_gate = {0.001};
-      envelope_follower _env_follow = {0.0001f};
+      schmitt_trigger _noise_gate = {threshold * 0.5f};
+      envelope_follower _env_follow = {0.001f};
       one_pole_lp _low_pass = {0.0f};
       dc_block _dc_block;
    };

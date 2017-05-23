@@ -215,12 +215,23 @@ namespace cycfi { namespace infinity
    // which is assumed to be IEEE754.
    ////////////////////////////////////////////////////////////////////////////
    inline float inverse(float val)
+//   {
+//      union float_int
+//      {
+//         std::int32_t int_;
+//         float float_;
+//      };
+//      
+//      auto x = float_int{val}.int_;
+//      x = 0x7EF311C2 - x;
+//      return float_int{x}.float_;
+//   }
+   
    {
       auto x = reinterpret_cast<std::int32_t&>(val);
       x = 0x7EF311C2 - x;
       return reinterpret_cast<float&>(x);
    }
-   
 }}
 
 #endif

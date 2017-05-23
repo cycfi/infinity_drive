@@ -94,31 +94,12 @@ namespace cycfi { namespace infinity
       bool operator()(float spos, float sneg)
       {
          auto delta = (y - spos) * h;
-         y = (spos + delta) > sneg;
-         return y;
+         y = ((spos + delta) > sneg) ? 1.0f : -1.0f;
+         return y > 0.0f;
       }
 
-      bool y;
+      float y;
       float h;
-   };
-
-   ////////////////////////////////////////////////////////////////////////////
-   // Simple gain (amplifier).
-   ////////////////////////////////////////////////////////////////////////////
-   struct gain
-   {
-      // g: gain
-
-      constexpr gain(float g)
-       : g(g)
-      {}
-
-      constexpr float operator()(float s) const
-      {
-         return s * g;
-      }
-
-      float g;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -137,8 +118,7 @@ namespace cycfi { namespace infinity
 
       bool operator()(float s)
       {
-         constexpr gain g{0.70f};
-         return cmp(s, g(ef(s)));
+         return cmp(s, ef(s) * 0.70f);
       }
 
       envelope_follower ef;
