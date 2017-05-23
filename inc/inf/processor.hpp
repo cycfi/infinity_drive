@@ -43,30 +43,38 @@ namespace cycfi { namespace infinity
    struct processor : Base
    {
       static constexpr auto oversampling = Base::oversampling;   
+      static constexpr auto channels = Base::channels;   
+
       static_assert(is_pow2(oversampling),
          "oversampling must be a power of 2, except 0"
       );
       
       template <typename I1, typename I2, typename Convert>
-      inline void process(
-         I1 first, I1 last, I2 src, std::uint32_t channel, Convert convert
-      )
+      inline void process(I1 first, I1 last, I2 src, Convert convert)
       {
          // This if-else will be optimized by the compiler since oversampling
          // is a constant that is known at compile time.
          if (oversampling == 1)
          {
             for (auto i = first; i != last; ++i)
-               Base::process(*i, convert((*src++)[channel]), channel);
+            {
+               for (auto c = 0; c != channels; ++c)
+                  Base::process(*i, convert((*src)[c]), c);
+               ++src;
+            }
          }
          else
          {
             for (auto i = first; i != last; ++i)
             {
-               std::uint32_t val = 0;
-               for (auto j = 0; j != oversampling; ++j)
-                  val += (*src++)[channel];
-               Base::process(*i, convert(val), channel);
+               for (auto c = 0; c != channels; ++c)
+               {
+                  std::uint32_t val = 0;
+                  for (auto j = 0; j != oversampling; ++j)
+                     val += (*src)[c];
+                  Base::process(*i, convert(val), c);
+               }
+               ++src;
             }
          }
       }
