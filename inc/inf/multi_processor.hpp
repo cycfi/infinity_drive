@@ -3,8 +3,8 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#if !defined(CYCFI_INFINITY_PROCESSOR_TEST_HPP_MAY_16_2017)
-#define CYCFI_INFINITY_PROCESSOR_TEST_HPP_MAY_16_2017
+#if !defined(CYCFI_INFINITY_MULTI_PROCESSOR_HPP_MAY_16_2017)
+#define CYCFI_INFINITY_MULTI_PROCESSOR_HPP_MAY_16_2017
 
 #include <inf/adc.hpp>
 #include <inf/dac.hpp>
@@ -17,37 +17,70 @@
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
-   // A monophonic processor for DSP testing purposes
+   // A multi-channel DSP processor 
    //
-   // We read the signal from ADC channel 1 using pin PC0, process it and
-   // send the result output through the DAC1 pin PA4. The ADC is buffered. 
-   // The DAC1 output, after processing will be delayed by a number of samples 
-   // (the buffer size). With a sampling rate of 32kHz, the delay will be 
+   // Works in conjunction with the processor class (see processor.hpp). 
+   // We read the signal from ADC channels, process the signals and send 
+   // the result to two DAC channels. 
+   //
+   // - Base conforms to the processor protocol 
+   // - Base must declare some configuration constants:
+   //
+   //   - oversampling:    The oversampling factor
+   //   - adc_id:          The id of the ADC we want to use (see adc.hpp)
+   //   - channels:        The number of ADC channels
+   //   - sampling_rate:   The ADC sampling rate
+   //   - buffer_size:     The buffer size (see below)
+   //
+   //   Example:
+   //
+   //      static constexpr auto oversampling = 4;
+   //      static constexpr auto adc_id = 1;
+   //      static constexpr auto channels = 1;
+   //      static constexpr auto sampling_rate = 44100;
+   //      static constexpr auto buffer_size = 1024;
+   //
+   // - Base must have a setup_channels function responsible for setting up
+   //   the ADC channels (using the adc enable_channel member function). The
+   //   setup_channels function signature is as follows:
+   //   
+   //       template <typename Adc>
+   //       void setup_channels(Adc& adc);
+   //
+   //   Example:
+   //
+   //       template <typename Adc>
+   //       void setup_channels(Adc& adc)
+   //       {
+   //          adc.template enable_channel<0, 1>();
+   //       }
+   //
+   // The ADC is double buffered. The DAC output, after processing, will be 
+   // delayed by a number of samples (the buffer size). For example, with a 
+   // sampling rate of 32kHz and a buffer size of 1024, the delay will be 
    // 16ms. This delay is computed as:
    //
-   //    ((1/32000) * 1024) / 2
+   //    ((1 / 32000) * 1024) / 2
    //
-   // We divide by two because the ADC calls our processing routine twice.
-   // First when it finishes sampling half the buffer size:
+   // We divide by two because the ADC is double buffered and calls our 
+   // processing routine twice. First when it finishes sampling half the
+   // buffer size (adc_conversion_half_complete) and then again when it 
+   // concludes the entire conversion for the entire buffer
+   // (adc_conversion_complete)
    //
-   //    adc_conversion_half_complete
+   // - The irq_conversion_half_complete() member function must be called 
+   //   from the irq(adc_conversion_half_complete<1>) interrupt function.
    //
-   // and then again when it concludes the entire conversion for the entire 
-   // buffer:
+   // - The irq_conversion_complete() member function must be called 
+   //   from the irq(irq_conversion_complete<1>) interrupt function.
    //
-   //    adc_conversion_complete
+   // - The irq_timer_task() member function must be called 
+   //   from the irq(timer_task<2>) interrupt function.
    //
-   // To compensate for this delay, for the sake of testing, we use another
-   // buffer to delay the input and then sending the delayed input to DAC2
-   // pin PA5.
-   //
-   // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-   // pin PA4 to an oscilloscope probe to see the processed waveform. Connect 
-   // pin PA5 to another oscilloscope probe to see input the waveform. 
    ////////////////////////////////////////////////////////////////////////////
    template <typename Base>
-   struct mono_processor : Base
-   {
+   struct multi_channel_processor : Base
+   {   
       static constexpr auto adc_id = Base::adc_id;
       static constexpr auto channels = Base::channels;
       static constexpr auto buffer_size = Base::buffer_size;
@@ -67,7 +100,7 @@ namespace cycfi { namespace infinity
          "buffer_size must be greater than Base::oversampling"
       );
 
-      mono_processor()
+      multi_channel_processor()
        : _clock(adc_clock_rate, sampling_rate)
        , _adc(_clock)
        , _out(_obuff.end())
@@ -77,17 +110,10 @@ namespace cycfi { namespace infinity
       void start()
       {
          Base::setup_channels(_adc);
-               
+
          _adc.start();
          _clock.start();
          _clock.enable_interrupt();
-      }
-      
-      template <typename I1, typename I2>
-      inline void copy(I1 first, I1 last, I2 src, std::uint32_t channel)
-      {
-         for (auto i = first; i != last; ++i)
-            *i = (*src++)[channel];
       }
       
       /////////////////////////////////////////////////////////////////////////
@@ -97,58 +123,47 @@ namespace cycfi { namespace infinity
       {
          return (sample / float(half_resolution * oversampling)) - 1.0f;
       }
-
+      
       void irq_conversion_half_complete()
       {
          _out = _obuff.middle();
-         _in = _ibuff.middle();
          
          // process channel 0 into the output buffer
          Base::process(
             _obuff.begin(), _obuff.middle(), _adc.begin(), 0,
-            [](std::uint32_t sample) { return mono_processor::convert(sample); }
+            [](std::uint32_t sample) { return convert(sample); }
          );
-         
-         // copy the original input into the input buffer
-         copy(_ibuff.begin(), _ibuff.middle(), _adc.begin(), 0);
       }
 
       void irq_conversion_complete()
       {
          _out = _obuff.begin();
-         _in = _ibuff.begin();
 
          // process channel 0 into the output buffer
          Base::process(
             _obuff.middle(), _obuff.end(), _adc.middle(), 0,
-            [](std::uint32_t sample) { return mono_processor::convert(sample); }
+            [](std::uint32_t sample) { return convert(sample); }
          );
-
-         // copy the original input into the input buffer
-         copy(_ibuff.middle(), _ibuff.end(), _adc.middle(), 0);
       }
       
       void irq_timer_task()
       {
          if ((Base::oversampling == 1) || ((_ocount++ & (Base::oversampling-1)) == 0))
          {
-            // We generate the output signal
-            _dac_out((*_out++ * (half_resolution-1)) + half_resolution);
+            // We generate the output signals
+            _dac_l(((*_out)[0] * (half_resolution-1)) + half_resolution);
+            _dac_r(((*_out)[1] * (half_resolution-1)) + half_resolution);
+            _out++;
          }
-         
-         // We generate the delayed input signal
-         _dac_in(*_in++);
       }
       
    private:
       
       using timer_type = timer<2>;
-      using obuff_type = dbuff<float, buffer_size / (2 * Base::oversampling)>;
+      using out_type = std::array<float, 2>;
+      using obuff_type = dbuff<out_type, buffer_size / (2 * Base::oversampling)>;
       using oiter_type = typename obuff_type::iterator;
       
-      using ibuff_type = dbuff<std::uint16_t, buffer_size / 2>;
-      using iiter_type = typename ibuff_type::iterator;
-
       // The main clock
       timer_type _clock;
 
@@ -156,16 +171,12 @@ namespace cycfi { namespace infinity
       adc_type _adc;
 
       // The DACs
-      dac<0> _dac_out;
-      dac<1> _dac_in;
+      dac<0> _dac_l;
+      dac<1> _dac_r;
 
       // The Output buffer and iterator
       obuff_type _obuff;
       oiter_type _out;
-
-      // The input buffer and iterator
-      ibuff_type _ibuff;
-      iiter_type _in;
       
       // output count (for downsampling)
       int _ocount;

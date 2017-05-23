@@ -3,7 +3,7 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#include "processor_test.hpp"
+#include <inf/multi_processor.hpp>
 #include "agc.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,15 +21,16 @@ static constexpr auto sps = clock / sps_div;
 
 struct my_processor : inf::agc<sps>
 {
-   static constexpr std::uint32_t oversampling = sps_div;
+   static constexpr auto oversampling = sps_div;
    static constexpr auto adc_id = 1;
    static constexpr auto channels = 1;
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 8;
 
-   void process(float& out, float s, std::uint32_t channel)
+   void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {      
-      out = (*this)(s);
+      out[0] = (*this)(s);
+      out[1] = s;
    }
    
    template <typename Adc>
@@ -40,7 +41,7 @@ struct my_processor : inf::agc<sps>
    }
 };
 
-inf::mono_processor<inf::processor<my_processor>> proc;
+inf::multi_channel_processor<inf::processor<my_processor>> proc;
 inf::output_pin<inf::port::portc + 3> pin; // portc, pin 3
 
 void start()
