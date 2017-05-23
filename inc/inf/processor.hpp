@@ -20,29 +20,27 @@ namespace cycfi { namespace infinity
    //         for stereo processing. channel is the 
    //    3) Copies the processed data to the output buffer
    //
-   // If n_samples > 1, we perform down sampling. n_samples from the ADC 
-   // are accumulated. For every n_samples, the sum is divided by n_samples 
-   // before calling base Processor process function. Thus, the base 
-   // Processor process function is called, and the result copied to the 
-   // output buffer only once per n_samples.
+   // If oversampling > 1, we perform down-sampling. Samples from the ADC 
+   // are accumulated. The sum is divided by the oversampling factor before 
+   // calling base Processor process function. Thus, the base Processor 
+   // process function is called, and the result copied to the output buffer 
+   // only once per oversampling.
+   //
    ////////////////////////////////////////////////////////////////////////////
-   template <
-      typename Base
-    , std::uint32_t n_samples_ = 1
-   >
+   template <typename Base>
    struct processor : Base
    {
-      static constexpr std::uint32_t n_samples = n_samples_;   
-      static_assert(is_pow2(n_samples),
-         "n_samples must be a power of 2, except 0"
+      static constexpr std::uint32_t oversampling = Base::oversampling;   
+      static_assert(is_pow2(oversampling),
+         "oversampling must be a power of 2, except 0"
       );
       
       template <typename I1, typename I2, typename Convert>
       inline void process(I1 first, I1 last, I2 src, std::uint32_t channel, Convert convert)
       {
-         // This if-else will be optimized by the compiler since n_samples
+         // This if-else will be optimized by the compiler since oversampling
          // is a constant that is known at compile time.
-         if (n_samples == 1)
+         if (oversampling == 1)
          {
             for (auto i = first; i != last; ++i)
                Base::process(*i, convert((*src++)[channel]), channel);
@@ -52,7 +50,7 @@ namespace cycfi { namespace infinity
             for (auto i = first; i != last; ++i)
             {
                std::uint32_t val = 0;
-               for (auto j = 0; j != n_samples; ++j)
+               for (auto j = 0; j != oversampling; ++j)
                   val += (*src++)[channel];
                Base::process(*i, convert(val), channel);
             }

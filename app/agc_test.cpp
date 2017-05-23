@@ -20,10 +20,16 @@ static constexpr auto sps_div = 4;
 static constexpr auto sps = clock / sps_div;
 
 struct my_processor : inf::agc<sps>
-{     
+{
+   static constexpr std::uint32_t oversampling = sps_div;
+   static constexpr auto adc_id = 1;
+   static constexpr auto channels = 1;
+   static constexpr auto sampling_rate = clock;
+   static constexpr auto buffer_size = 8;
+
    void process(float& out, float s, std::uint32_t channel)
    {      
-	   out = (*this)(s);
+      out = (*this)(s);
    }
    
    template <typename Adc>
@@ -34,7 +40,7 @@ struct my_processor : inf::agc<sps>
    }
 };
 
-inf::mono_processor<inf::processor<my_processor, sps_div>, 1, 1, clock, 8> proc;
+inf::mono_processor<inf::processor<my_processor>> proc;
 inf::output_pin<inf::port::portc + 3> pin; // portc, pin 3
 
 void start()

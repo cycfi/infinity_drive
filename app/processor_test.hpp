@@ -45,32 +45,26 @@ namespace cycfi { namespace infinity
    // pin PA4 to an oscilloscope probe to see the processed waveform. Connect 
    // pin PA5 to another oscilloscope probe to see input the waveform. 
    ////////////////////////////////////////////////////////////////////////////
-   template <
-      typename Base
-    , std::uint32_t adc_id_ = 1
-    , std::uint32_t channels_ = 1
-    , std::size_t sampling_rate_ = 32000
-    , std::size_t buffer_size_ = 1024
-   >
+   template <typename Base>
    struct mono_processor : Base
    {
-      static constexpr auto adc_id = adc_id_;
-      static constexpr auto channels = channels_;
-      static constexpr auto buffer_size = buffer_size_;
+      static constexpr auto adc_id = Base::adc_id;
+      static constexpr auto channels = Base::channels;
+      static constexpr auto buffer_size = Base::buffer_size;
       static constexpr auto adc_clock_rate = 2000000;
       using adc_type = adc<adc_id, channels, buffer_size>;
 
-      static constexpr auto sampling_rate = sampling_rate_;
+      static constexpr auto sampling_rate = Base::sampling_rate;
       static constexpr auto resolution = adc_type::resolution;
       static constexpr auto half_resolution = resolution / 2;
-      static constexpr auto n_samples = Base::n_samples;   
+      static constexpr auto oversampling = Base::oversampling;
 
       static_assert(is_pow2(buffer_size),
          "buffer_size must be a power of 2, except 0"
       );
       
-      static_assert(buffer_size > Base::n_samples, 
-         "buffer_size must be greater than Base::n_samples"
+      static_assert(buffer_size > Base::oversampling,
+         "buffer_size must be greater than Base::oversampling"
       );
 
       mono_processor()
@@ -101,7 +95,7 @@ namespace cycfi { namespace infinity
       /////////////////////////////////////////////////////////////////////////
       static float convert(std::uint32_t sample)
       {
-         return (sample / float(half_resolution * n_samples)) - 1.0f;
+         return (sample / float(half_resolution * oversampling)) - 1.0f;
       }
 
       void irq_conversion_half_complete()
@@ -136,7 +130,7 @@ namespace cycfi { namespace infinity
       
       void irq_timer_task()
       {
-         if ((Base::n_samples == 1) || ((_ocount++ & (Base::n_samples-1)) == 0))
+         if ((Base::oversampling == 1) || ((_ocount++ & (Base::oversampling-1)) == 0))
          {
             // We generate the output signal
             _dac_out((*_out++ * (half_resolution-1)) + half_resolution);
@@ -149,7 +143,7 @@ namespace cycfi { namespace infinity
    private:
       
       using timer_type = timer<2>;
-      using obuff_type = dbuff<float, buffer_size / (2 * Base::n_samples)>;
+      using obuff_type = dbuff<float, buffer_size / (2 * Base::oversampling)>;
       using oiter_type = typename obuff_type::iterator;
       
       using ibuff_type = dbuff<std::uint16_t, buffer_size / 2>;
