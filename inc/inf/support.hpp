@@ -6,6 +6,7 @@
 #if !defined(CYCFI_INFINITY_SUPPORT_HPP_DECEMBER_20_2015)
 #define CYCFI_INFINITY_SUPPORT_HPP_DECEMBER_20_2015
 
+#include <type_traits>
 #include <cstdint>
 #include <system_stm32f4xx.h>
 #include <stm32f4xx_ll_utils.h>
@@ -17,6 +18,42 @@ extern "C"
 
 namespace cycfi { namespace infinity
 {
+   ////////////////////////////////////////////////////////////////////////////
+   // Basic metaprogramming utils
+   ////////////////////////////////////////////////////////////////////////////
+   template <bool val>
+   using bool_ = std::integral_constant<bool, val>;
+   
+   template <int i>
+   using int_ = std::integral_constant<int, i>;
+
+   template <std::size_t i>
+   using uint_ = std::integral_constant<std::size_t, i>;
+
+   template <int8_t i>
+   using int8_ = std::integral_constant<int8_t, i>;
+
+   template <uint8_t i>
+   using uint8_ = std::integral_constant<uint8_t, i>;
+
+   template <int16_t i>
+   using int16_ = std::integral_constant<int16_t, i>;
+
+   template <uint16_t i>
+   using uint16_ = std::integral_constant<uint16_t, i>;
+
+   template <int32_t i>
+   using int32_ = std::integral_constant<int32_t, i>;
+
+   template <uint32_t i>
+   using uint32_ = std::integral_constant<uint32_t, i>;
+
+   template <int64_t i>
+   using int64_ = std::integral_constant<int64_t, i>;
+
+   template <uint64_t i>
+   using uint64_ = std::integral_constant<uint64_t, i>;
+
    ////////////////////////////////////////////////////////////////////////////
    // Clock initialization
    ////////////////////////////////////////////////////////////////////////////
@@ -42,45 +79,6 @@ namespace cycfi { namespace infinity
    // error_handler
    ////////////////////////////////////////////////////////////////////////////
    void error_handler();
-
-   ////////////////////////////////////////////////////////////////////////////
-   // static int types
-	////////////////////////////////////////////////////////////////////////////
-   template <typename T, T value_>
-   struct static_int
-   {
-      static constexpr T value =  value_;
-   };
-
-   template <int i>
-   using int_ = static_int<int, i>;
-
-   template <std::size_t i>
-   using uint_ = static_int<std::size_t, i>;
-
-   template <int8_t i>
-   using int8_ = static_int<int8_t, i>;
-
-   template <uint8_t i>
-   using uint8_ = static_int<uint8_t, i>;
-
-   template <int16_t i>
-   using int16_ = static_int<int16_t, i>;
-
-   template <uint16_t i>
-   using uint16_ = static_int<uint16_t, i>;
-
-   template <int32_t i>
-   using int32_ = static_int<int32_t, i>;
-
-   template <uint32_t i>
-   using uint32_ = static_int<uint32_t, i>;
-
-   template <int64_t i>
-   using int64_ = static_int<int64_t, i>;
-
-   template <uint64_t i>
-   using uint64_ = static_int<uint64_t, i>;
 
    ////////////////////////////////////////////////////////////////////////////
    // Some constants
@@ -215,18 +213,6 @@ namespace cycfi { namespace infinity
    // which is assumed to be IEEE754.
    ////////////////////////////////////////////////////////////////////////////
    inline float inverse(float val)
-//   {
-//      union float_int
-//      {
-//         std::int32_t int_;
-//         float float_;
-//      };
-//      
-//      auto x = float_int{val}.int_;
-//      x = 0x7EF311C2 - x;
-//      return float_int{x}.float_;
-//   }
-   
    {
       auto x = reinterpret_cast<std::int32_t&>(val);
       x = 0x7EF311C2 - x;

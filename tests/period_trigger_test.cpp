@@ -3,7 +3,7 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#include "processor_test.hpp"
+#include <inf/multi_processor.hpp>
 #include "period_trigger.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -19,9 +19,16 @@ static constexpr auto sps_div = 4;
 
 struct my_processor
 {
-   void process(float& out, float val, std::uint32_t channel)
+   static constexpr auto oversampling = sps_div;
+   static constexpr auto adc_id = 1;
+   static constexpr auto channels = 1;
+   static constexpr auto sampling_rate = 32000;
+   static constexpr auto buffer_size = 1024;
+
+   void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      out = _pt(val);
+      out[0] = _pt(s);
+      out[1] = s;
    }
    
    template <typename Adc>
@@ -34,7 +41,7 @@ struct my_processor
    inf::period_trigger<32000 / sps_div> _pt;
 };
 
-inf::mono_processor<inf::processor<my_processor, 2048, sps_div>> proc;
+inf::multi_channel_processor<inf::processor<my_processor>> proc;
 inf::output_pin<inf::port::portc + 3> pin; // portc, pin 3
 
 void start()

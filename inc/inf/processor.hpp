@@ -6,6 +6,8 @@
 #if !defined(CYCFI_INFINITY_PROCESSOR_HPP_MAY_20_2017)
 #define CYCFI_INFINITY_PROCESSOR_HPP_MAY_20_2017
 
+#include <inf/support.hpp>
+
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
@@ -50,32 +52,42 @@ namespace cycfi { namespace infinity
       );
       
       template <typename I1, typename I2, typename Convert>
-      inline void process(I1 first, I1 last, I2 src, Convert convert)
+      void process(I1 first, I1 last, I2 src, Convert convert)
       {
-         // This if-else will be optimized by the compiler since oversampling
-         // is a constant that is known at compile time.
-         if (oversampling == 1)
+         process_impl(first, last, src, convert, bool_<oversampling == 1>{});
+      }
+      
+   private:
+   
+      // case oversampling == 1
+      template <typename I1, typename I2, typename Convert>
+      void process_impl(
+         I1 first, I1 last, I2 src, Convert convert, std::true_type)
+      {
+         for (auto i = first; i != last; ++i)
          {
-            for (auto i = first; i != last; ++i)
-            {
-               for (auto c = 0; c != channels; ++c)
-                  Base::process(*i, convert((*src)[c]), c);
-               ++src;
-            }
+            for (auto c = 0; c != channels; ++c)
+               Base::process(*i, convert((*src)[c]), c);
+            ++src;
          }
-         else
+      }
+      
+      // case oversampling != 1
+      template <typename I1, typename I2, typename Convert>
+      void process_impl(
+         I1 first, I1 last, I2 src, Convert convert, std::false_type)
+      {
+         for (auto i = first; i != last; ++i)
          {
-            for (auto i = first; i != last; ++i)
+            for (auto c = 0; c != channels; ++c)
             {
-               for (auto c = 0; c != channels; ++c)
-               {
-                  std::uint32_t val = 0;
-                  for (auto j = 0; j != oversampling; ++j)
-                     val += (*src)[c];
-                  Base::process(*i, convert(val), c);
-               }
-               ++src;
+               auto src_base = src;
+               std::uint32_t val = 0;
+               for (auto j = 0; j != oversampling; ++j)
+                  val += (*src_base++)[c];
+               Base::process(*i, convert(val), c);
             }
+            src += oversampling;
          }
       }
    };

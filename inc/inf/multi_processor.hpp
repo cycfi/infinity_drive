@@ -23,7 +23,7 @@ namespace cycfi { namespace infinity
    // We read the signal from ADC channels, process the signals and send 
    // the result to two DAC channels. 
    //
-   // - Base conforms to the processor protocol 
+   // - Base conforms to the processor requirements 
    // - Base must declare some configuration constants:
    //
    //   - oversampling:    The oversampling factor
