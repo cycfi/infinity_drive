@@ -16,8 +16,8 @@ namespace cycfi { namespace infinity
    //    1) Converts data from the ADC (of given resolution) to float
    //
    //    2) Performs some processing 
-   //       - The base Processor class must have a process function with
-   //         the signature:
+   //       - The base Processor class must have a process member function 
+   //         with the signature:
    //
    //             void process(
    //                std::array<float, 2>& out
@@ -26,13 +26,16 @@ namespace cycfi { namespace infinity
    //
    //         - out: Will hold the output values (2 channels) that will
    //           be sent to the 2-channel DAC
-   //         - s: The current sample to be processed
+   //         - s: The current sample to be processed (normalized 
+   //           to -1.0f...1.0f)
    //         - channel: The current channel being processed
    //
    //       - The base class Base must have a static oversampling constant
    //         that defines the oversampling factor.
    //
    //    3) Stores the processed data to the output buffer
+   //
+   // The
    //
    // If oversampling > 1, we perform down-sampling. Samples from the ADC 
    // are accumulated. The sum is divided by the oversampling factor before 
@@ -42,8 +45,10 @@ namespace cycfi { namespace infinity
    //
    ////////////////////////////////////////////////////////////////////////////
    template <typename Base>
-   struct processor : Base
+   class processor : public Base
    {
+   public:
+
       static constexpr auto oversampling = Base::oversampling;   
       static constexpr auto channels = Base::channels;   
 

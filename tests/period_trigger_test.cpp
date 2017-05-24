@@ -21,6 +21,7 @@ struct my_processor
 {
    static constexpr auto oversampling = sps_div;
    static constexpr auto adc_id = 1;
+   static constexpr auto timer_id = 2;
    static constexpr auto channels = 1;
    static constexpr auto sampling_rate = 32000;
    static constexpr auto buffer_size = 1024;

@@ -3,8 +3,8 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#if !defined(CYCFI_INFINITY_MULTI_PROCESSOR_HPP_MAY_16_2017)
-#define CYCFI_INFINITY_MULTI_PROCESSOR_HPP_MAY_16_2017
+#if !defined(CYCFI_INFINITY_CONTROL_ACQUISITION_HPP_MAY_16_2017)
+#define CYCFI_INFINITY_CONTROL_ACQUISITION_HPP_MAY_16_2017
 
 #include <inf/adc.hpp>
 #include <inf/dac.hpp>
@@ -17,16 +17,15 @@
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
-   // A multi-channel DSP processor 
+   // Control Acquisition 
    //
-   // Works in conjunction with the processor class (see processor.hpp). 
-   // We read the signal from ADC channels, process the signals and send 
-   // the result to two DAC channels. 
+   // This class is designed for acquiring analog controls data. See
+   // multiprocessor.hpp for a more elaborate signal acqusition and processing
+   // scheme. We read the signal from ADC channels and present the values 
+   // (uint32_t) to a base processor class. 
    //
-   // - Base conforms to the processor requirements 
    // - Base must declare some configuration constants:
    //
-   //   - oversampling:    The oversampling factor
    //   - adc_id:          The id of the ADC we want to use (see adc.hpp)
    //   - timer_id:        The id of the timer we want to use (see timer.hpp)
    //   - channels:        The number of ADC channels
@@ -35,14 +34,18 @@ namespace cycfi { namespace infinity
    //
    //   Example:
    //
-   //      static constexpr auto oversampling = 4;
    //      static constexpr auto adc_id = 1;
    //      static constexpr auto timer_id = 2;
    //      static constexpr auto channels = 1;
-   //      static constexpr auto sampling_rate = 44100;
-   //      static constexpr auto buffer_size = 1024;
+   //      static constexpr auto sampling_rate = 1000;
+   //      static constexpr auto buffer_size = 8;
    //
-   // - The 
+   // - Base must have a process member function with the signature:
+   //
+   //       void process(std::array<std::uint32_t, channels> const& in);
+   //
+   //       - in: Will hold the input values for each channel, at the 
+   //         native ADC resolution (e.g. 12 bits for the STM32F4 ADC).
    //
    // - Base must have a setup_channels function responsible for setting up
    //   the ADC channels (using the adc enable_channel member function). The
@@ -59,19 +62,6 @@ namespace cycfi { namespace infinity
    //          adc.template enable_channel<0, 1>();
    //       }
    //
-   // The ADC is double buffered. The DAC output, after processing, will be 
-   // delayed by a number of samples (the buffer size). For example, with a 
-   // sampling rate of 32kHz and a buffer size of 1024, the delay will be 
-   // 16ms. This delay is computed as:
-   //
-   //    ((1 / 32000) * 1024) / 2
-   //
-   // We divide by two because the ADC is double buffered and calls our 
-   // processing routine twice. First, when it finishes sampling half the
-   // buffer size (adc_conversion_half_complete) and then again when it 
-   // concludes the entire conversion for the entire buffer
-   // (adc_conversion_complete)
-   //
    // - The irq_conversion_half_complete() member function must be called 
    //   from the irq(adc_conversion_half_complete<1>) interrupt function.
    //
@@ -83,7 +73,7 @@ namespace cycfi { namespace infinity
    //
    ////////////////////////////////////////////////////////////////////////////
    template <typename Base>
-   class multi_channel_processor : public Base
+   class control_acquisition : public Base
    {   
    public:
 
@@ -92,26 +82,17 @@ namespace cycfi { namespace infinity
       static constexpr auto channels = Base::channels;
       static constexpr auto buffer_size = Base::buffer_size;
       static constexpr auto adc_clock_rate = 2000000;
-      using adc_type = adc<adc_id, channels, buffer_size>;
-
       static constexpr auto sampling_rate = Base::sampling_rate;
-      static constexpr auto resolution = adc_type::resolution;
-      static constexpr auto half_resolution = resolution / 2;
-      static constexpr auto oversampling = Base::oversampling;
+
+      using adc_type = adc<adc_id, channels, buffer_size>;
 
       static_assert(is_pow2(buffer_size),
          "buffer_size must be a power of 2, except 0"
       );
-      
-      static_assert(buffer_size > Base::oversampling,
-         "buffer_size must be greater than Base::oversampling"
-      );
 
-      multi_channel_processor()
+      control_acquisition()
        : _clock(adc_clock_rate, sampling_rate)
        , _adc(_clock)
-       , _out(_obuff.end())
-       , _ocount(0)
       {}
       
       void start()
@@ -126,67 +107,29 @@ namespace cycfi { namespace infinity
       /////////////////////////////////////////////////////////////////////////
       // Interrupt handlers
       /////////////////////////////////////////////////////////////////////////
-      static float convert(std::uint32_t sample)
-      {
-         return (sample / float(half_resolution * oversampling)) - 1.0f;
-      }
-      
       void irq_conversion_half_complete()
-      {
-         _out = _obuff.middle();
-         
-         // process channels and place them in the output buffer
-         Base::process(
-            _obuff.begin(), _obuff.middle(), _adc.begin(),
-            [](std::uint32_t sample) { return convert(sample); }
-         );
+      {         
+         // process channels
+         for (auto i = _adc.begin(); i != _adc.middle(); ++i)
+            Base::process(*i);
       }
 
       void irq_conversion_complete()
       {
-         _out = _obuff.begin();
-
-         // process channels and place them in the output buffer
-         Base::process(
-            _obuff.middle(), _obuff.end(), _adc.middle(),
-            [](std::uint32_t sample) { return convert(sample); }
-         );
-      }
-      
-      void irq_timer_task()
-      {
-         if ((Base::oversampling == 1) || ((_ocount++ & (Base::oversampling-1)) == 0))
-         {
-            // We generate the output signals
-            _dac_l(((*_out)[0] * (half_resolution-1)) + half_resolution);
-            _dac_r(((*_out)[1] * (half_resolution-1)) + half_resolution);
-            _out++;
-         }
+         // process channels
+         for (auto i = _adc.middle(); i != _adc.end(); ++i)
+            Base::process(*i);
       }
       
    private:
       
       using timer_type = timer<timer_id>;
-      using out_type = std::array<float, 2>;
-      using obuff_type = dbuff<out_type, buffer_size / (2 * Base::oversampling)>;
-      using oiter_type = typename obuff_type::iterator;
       
       // The main clock
       timer_type _clock;
 
       // The ADC
       adc_type _adc;
-
-      // The DACs
-      dac<0> _dac_l;
-      dac<1> _dac_r;
-
-      // The Output buffer and iterator
-      obuff_type _obuff;
-      oiter_type _out;
-      
-      // output count (for downsampling)
-      int _ocount;
    };
 }}
 

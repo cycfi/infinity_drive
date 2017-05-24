@@ -21,8 +21,8 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // Basic metaprogramming utils
    ////////////////////////////////////////////////////////////////////////////
-   template <bool val>
-   using bool_ = std::integral_constant<bool, val>;
+   template <bool b>
+   using bool_ = std::integral_constant<bool, b>;
    
    template <int i>
    using int_ = std::integral_constant<int, i>;
@@ -31,28 +31,28 @@ namespace cycfi { namespace infinity
    using uint_ = std::integral_constant<std::size_t, i>;
 
    template <int8_t i>
-   using int8_ = std::integral_constant<int8_t, i>;
+   using int8_ = std::integral_constant<std::int8_t, i>;
 
    template <uint8_t i>
-   using uint8_ = std::integral_constant<uint8_t, i>;
+   using uint8_ = std::integral_constant<std::uint8_t, i>;
 
    template <int16_t i>
-   using int16_ = std::integral_constant<int16_t, i>;
+   using int16_ = std::integral_constant<std::int16_t, i>;
 
    template <uint16_t i>
-   using uint16_ = std::integral_constant<uint16_t, i>;
+   using uint16_ = std::integral_constant<std::uint16_t, i>;
 
    template <int32_t i>
-   using int32_ = std::integral_constant<int32_t, i>;
+   using int32_ = std::integral_constant<std::int32_t, i>;
 
    template <uint32_t i>
-   using uint32_ = std::integral_constant<uint32_t, i>;
+   using uint32_ = std::integral_constant<std::uint32_t, i>;
 
    template <int64_t i>
-   using int64_ = std::integral_constant<int64_t, i>;
+   using int64_ = std::integral_constant<std::int64_t, i>;
 
    template <uint64_t i>
-   using uint64_ = std::integral_constant<uint64_t, i>;
+   using uint64_ = std::integral_constant<std::uint64_t, i>;
 
    ////////////////////////////////////////////////////////////////////////////
    // Clock initialization
