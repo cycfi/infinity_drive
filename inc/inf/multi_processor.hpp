@@ -17,7 +17,7 @@
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
-   // A multi-channel DSP processor 
+   // A multi-channel digital signal processor.
    //
    // Works in conjunction with the processor class (see processor.hpp). 
    // We read the signal from ADC channels, process the signals and send 
@@ -92,7 +92,9 @@ namespace cycfi { namespace infinity
       static constexpr auto channels = Base::channels;
       static constexpr auto buffer_size = Base::buffer_size;
       static constexpr auto adc_clock_rate = 2000000;
+
       using adc_type = adc<adc_id, channels, buffer_size>;
+      using timer_type = timer<timer_id>;
 
       static constexpr auto sampling_rate = Base::sampling_rate;
       static constexpr auto resolution = adc_type::resolution;
@@ -166,7 +168,6 @@ namespace cycfi { namespace infinity
       
    private:
       
-      using timer_type = timer<timer_id>;
       using out_type = std::array<float, 2>;
       using obuff_type = dbuff<out_type, buffer_size / (2 * Base::oversampling)>;
       using oiter_type = typename obuff_type::iterator;

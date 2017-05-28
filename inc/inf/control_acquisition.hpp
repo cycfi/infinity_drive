@@ -19,10 +19,12 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // Control Acquisition 
    //
-   // This class is designed for acquiring analog controls data. See
-   // multiprocessor.hpp for a more elaborate signal acqusition and processing
-   // scheme. We read the signal from ADC channels and present the values 
-   // (uint32_t) to a base processor class. 
+   // This class is designed for acquiring analog controls data. We read the 
+   // signal from ADC channels and present the values (uint32_t) to a base 
+   // processor class. 
+   //
+   // (See multiprocessor.hpp for a more elaborate signal acquisition and 
+   // digital signal processing scheme.)
    //
    // - Base must declare some configuration constants:
    //
@@ -35,7 +37,7 @@ namespace cycfi { namespace infinity
    //   Example:
    //
    //      static constexpr auto adc_id = 1;
-   //      static constexpr auto timer_id = 2;
+   //      static constexpr auto timer_id = 3;
    //      static constexpr auto channels = 1;
    //      static constexpr auto sampling_rate = 1000;
    //      static constexpr auto buffer_size = 8;
@@ -85,6 +87,7 @@ namespace cycfi { namespace infinity
       static constexpr auto sampling_rate = Base::sampling_rate;
 
       using adc_type = adc<adc_id, channels, buffer_size>;
+      using timer_type = timer<timer_id>;
 
       static_assert(is_pow2(buffer_size),
          "buffer_size must be a power of 2, except 0"
@@ -122,8 +125,6 @@ namespace cycfi { namespace infinity
       }
       
    private:
-      
-      using timer_type = timer<timer_id>;
       
       // The main clock
       timer_type _clock;

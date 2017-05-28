@@ -35,8 +35,6 @@ namespace cycfi { namespace infinity
    //
    //    3) Stores the processed data to the output buffer
    //
-   // The
-   //
    // If oversampling > 1, we perform down-sampling. Samples from the ADC 
    // are accumulated. The sum is divided by the oversampling factor before 
    // calling base Processor process function. Thus, the base Processor 
