@@ -174,17 +174,18 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct integrator
    {
-      // y: current value
+      // y: current output value
+      // g: gain
 
-      integrator()
-       : y(0.0f) {}
+      integrator(float g = 0.1)
+       : y(0.0f), g(g) {}
 
       float operator()(float s)
       {
-         return y = s + y;
+         return (y += g * s);
       }
 
-      float y;
+      float y, g;
    };
 
    ////////////////////////////////////////////////////////////////////////////
