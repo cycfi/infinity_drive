@@ -12,7 +12,31 @@
 #include <inf/support.hpp>
 
 namespace cycfi { namespace infinity
-{   
+{
+   //////////////////////////////////////////////////////////////////////////////
+   // Leaky Integrator
+   //////////////////////////////////////////////////////////////////////////////
+   struct leaky_integrator
+   {
+      leaky_integrator(float a = 0.995)
+       : y(0)
+       , a(a)
+      {}
+      
+      leaky_integrator(float cutoff, uint32_t sps)
+       : y(0.0f)
+       , a(1.0f -(_2pi * cutoff/sps))
+      {}
+
+      float operator()(float s)
+      {
+         return y = s + a * (y - s);
+      }
+
+      float y;
+      float a;
+   };
+
    ////////////////////////////////////////////////////////////////////////////
    // Basic one pole low-pass filter (6dB/Oct)
    ////////////////////////////////////////////////////////////////////////////
