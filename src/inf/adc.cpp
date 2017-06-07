@@ -106,6 +106,10 @@ namespace cycfi { namespace infinity { namespace detail
       // Set ADC conversion data alignment
       LL_ADC_SetResolution(adc, LL_ADC_DATA_ALIGN_RIGHT);
 
+      // Set Set ADC sequencers scan mode, for all ADC groups
+      // (group regular, group injected).
+      LL_ADC_SetSequencersScanMode(ADC1, LL_ADC_SEQ_SCAN_ENABLE);
+
       // Set ADC group regular trigger source
       LL_ADC_REG_SetTriggerSource(adc, timer_trigger_id);
 
