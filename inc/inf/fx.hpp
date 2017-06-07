@@ -50,7 +50,7 @@ namespace cycfi { namespace infinity
       {}
 
       one_pole_lp(float freq, uint32_t sps)
-       : y(0.0f), a(1.0f - exp(-_2pi * freq/sps))
+       : y(0.0f), a(1.0f - std::exp(-_2pi * freq/sps))
       {}
 
       float operator()(float s)
@@ -80,7 +80,7 @@ namespace cycfi { namespace infinity
          if (s > y)
             y = s;
          else
-            y -= (y-s) * d;
+            y -= (y - s) * d;
          return y;
       }
       
@@ -295,6 +295,44 @@ namespace cycfi { namespace infinity
       }
 
       float r, x, y;
+   };
+   
+   ////////////////////////////////////////////////////////////////////////////
+   // Dynamic Smoothing Using Self Modulating Filter. 
+   // https://cytomic.com/files/dsp/DynamicSmoothing.pdf
+   // Andrew Simper, Cytomic, 2014, andy@cytomic.com
+   ////////////////////////////////////////////////////////////////////////////
+   struct dynamic_smoothing
+   {  
+      dynamic_smoothing(
+         float freq
+       , uint32_t sps
+       , float sensitivity = 0.5f
+      )
+       : g0(compute_g0(freq, sps))
+       , sense(sensitivity * 4)     // efficient linear cutoff mapping
+       , lowl(0.0f)
+       , low2(0.0f)
+      {}
+      
+      float operator()(float s)
+      {
+         float bandz = lowl - low2;
+         float g = std::min(g0 + sense * std::abs(bandz), 1.0f);
+
+         lowl += g * (s - lowl);
+         low2 = low2 + g * (lowl - low2);
+         return low2;
+      }
+      
+      static constexpr float compute_g0(float freq, uint32_t sps)
+      {
+         auto wc = freq / sps;
+         auto gc = std::tan(pi * wc);
+         return 2.0f * gc / (1.0f + gc);
+      }
+      
+      float g0, sense, lowl, low2;
    };
 }}
 
