@@ -63,7 +63,7 @@ namespace cycfi { namespace infinity
 
    ////////////////////////////////////////////////////////////////////////////
    // The envelope follower will follow the envelope of a signal with gradual
-   // decay (given by the d parameter). The signal decays exponentially if
+   // release (given by the r parameter). The signal decays exponentially if
    // the signal is below the peak.
    ////////////////////////////////////////////////////////////////////////////
    struct envelope_follower
@@ -71,8 +71,12 @@ namespace cycfi { namespace infinity
       // y: current value
       // d: decay
       
-      envelope_follower(float d = 0.001f)
-       : y(0.0f), d(d)
+      envelope_follower(float r = 0.999f)
+       : y(0.0f), r(r)
+      {}
+      
+      envelope_follower(float release_time, uint32_t sps)
+       : y(0.0f), r(std::exp(-1.0f / (sps * release_time)))
       {}
 
       float operator()(float s)
@@ -80,7 +84,7 @@ namespace cycfi { namespace infinity
          if (s > y)
             y = s;
          else
-            y -= (y - s) * d;
+            y = s + r * (y - s);
          return y;
       }
       
@@ -89,7 +93,7 @@ namespace cycfi { namespace infinity
          return y;
       }
 
-      float y, d;
+      float y, r;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -141,8 +145,8 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct peak_trigger
    {      
-      peak_trigger(float d = 0.001f)
-       : ef(d), cmp(0.002f)
+      peak_trigger(float r = 0.001f)
+       : ef(r), cmp(0.002f)
       {}
 
       bool operator()(float s)
