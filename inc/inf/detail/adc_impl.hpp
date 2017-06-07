@@ -32,7 +32,8 @@ namespace cycfi { namespace infinity { namespace detail
    void adc_config(
       ADC_TypeDef* adc,
       uint32_t timer_trigger_id,
-      uint32_t adc_periph_id
+      uint32_t adc_periph_id,
+      uint32_t num_channels
    );
    
    inline void activate_adc(ADC_TypeDef* adc)

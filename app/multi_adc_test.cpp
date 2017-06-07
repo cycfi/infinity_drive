@@ -4,6 +4,7 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include <inf/multi_processor.hpp>
+#include <inf/fx.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC test. Tests the AGC (automatic gain control).
@@ -23,21 +24,23 @@ struct my_processor
    static constexpr auto oversampling = sps_div;
    static constexpr auto adc_id = 1;
    static constexpr auto timer_id = 2;
-   static constexpr auto channels = 1;
+   static constexpr auto channels = 6;
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 8;
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
-   {      
-      out[0] = s;
-      out[1] = s;
+   {
+      out[0] += blk1(s);
+      out[1] += blk2(s);
    }
    
    template <typename Adc>
    void setup_channels(Adc& adc)
    {
-      adc.template enable_channel<11, 1>();
+      adc.template enable_channels<0, 12, 13, 3, 10, 11>();
    }
+   
+   inf::dc_block blk1, blk2;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;

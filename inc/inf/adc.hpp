@@ -12,6 +12,7 @@
 #include <inf/detail/adc_impl.hpp>
 #include <algorithm>
 #include <array>
+#include <utility>
 
 namespace cycfi { namespace infinity
 {
@@ -56,7 +57,8 @@ namespace cycfi { namespace infinity
          detail::adc_config(
             get_adc(), 
             detail::adc_timer_trigger_id<tid>(),
-            detail::adc_info<id>::periph_id
+            detail::adc_info<id>::periph_id,
+            channels
          );
          
          detail::activate_adc(get_adc());
@@ -74,27 +76,10 @@ namespace cycfi { namespace infinity
             buff.fill(0);
       }
       
-      template <std::size_t channel, std::size_t rank>
-      void enable_channel()
-      {         
-         static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
-
-         static constexpr std::size_t pin = detail::get_adc_pin<channel>(id);
-         static constexpr uint16_t bit = pin % 16;
-         static constexpr uint16_t port = pin / 16;
-         static constexpr uint32_t mask = 1 << bit;
-
-         auto* gpio = &detail::get_port<port>();
-
-         // Enable GPIO peripheral clock
-         detail::enable_port_clock<port>();
-
-         // Configure GPIO in analog mode to be used as ADC input
-         LL_GPIO_SetPinMode(gpio, mask, LL_GPIO_MODE_ANALOG);
-         
-         // Enable the ADC channel on the selected sequence rank.
-         detail::enable_adc_channel(
-            get_adc(), detail::adc_channel<channel>(), detail::adc_rank<rank>());
+      template <std::size_t... channels>
+      void enable_channels()
+      {
+         enable_all_channels<1>(std::index_sequence<channels...>());
       }
 
       void start()
@@ -118,6 +103,42 @@ namespace cycfi { namespace infinity
       sample_group_type const& operator[](std::size_t i) const { return _data[i]; }
 
    private:
+      
+      template <std::size_t channel, std::size_t rank>
+      void enable_one_channel()
+      {         
+         static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
+
+         static constexpr std::size_t pin = detail::get_adc_pin<channel>(id);
+         static constexpr uint16_t bit = pin % 16;
+         static constexpr uint16_t port = pin / 16;
+         static constexpr uint32_t mask = 1 << bit;
+
+         auto* gpio = &detail::get_port<port>();
+
+         // Enable GPIO peripheral clock
+         detail::enable_port_clock<port>();
+
+         // Configure GPIO in analog mode to be used as ADC input
+         LL_GPIO_SetPinMode(gpio, mask, LL_GPIO_MODE_ANALOG);
+         
+         // Enable the ADC channel on the selected sequence rank.
+         detail::enable_adc_channel(
+            get_adc(), detail::adc_channel<channel>(), detail::adc_rank<rank>());
+      }
+      
+      template <std::size_t rank>
+      void enable_all_channels(std::index_sequence<>)
+      {
+         // end recursion
+      }
+      
+      template <std::size_t rank, std::size_t channel, std::size_t... rest>
+      void enable_all_channels(std::index_sequence<channel, rest...>)
+      {
+         enable_one_channel<channel, rank>();
+         enable_all_channels<rank + 1>(std::index_sequence<rest...>{});
+      }
 
       ADC_TypeDef* get_adc() const
       {

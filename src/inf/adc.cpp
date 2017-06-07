@@ -74,11 +74,37 @@ namespace cycfi { namespace infinity { namespace detail
       // Enable the DMA transfer
       LL_DMA_EnableStream(dma, dma_stream);
    }
+   
+   namespace
+   {
+      uint32_t seq_length(uint32_t num_channels)
+      {
+         switch (num_channels)
+         {
+            case 2: return LL_ADC_REG_SEQ_SCAN_ENABLE_2RANKS;
+            case 3: return LL_ADC_REG_SEQ_SCAN_ENABLE_3RANKS;
+            case 4: return LL_ADC_REG_SEQ_SCAN_ENABLE_4RANKS;
+            case 5: return LL_ADC_REG_SEQ_SCAN_ENABLE_5RANKS;
+            case 6: return LL_ADC_REG_SEQ_SCAN_ENABLE_6RANKS;
+            case 7: return LL_ADC_REG_SEQ_SCAN_ENABLE_7RANKS;
+            case 8: return LL_ADC_REG_SEQ_SCAN_ENABLE_8RANKS;
+            case 9: return LL_ADC_REG_SEQ_SCAN_ENABLE_9RANKS;    
+            case 10: return LL_ADC_REG_SEQ_SCAN_ENABLE_10RANKS;
+            case 11: return LL_ADC_REG_SEQ_SCAN_ENABLE_11RANKS;
+            case 12: return LL_ADC_REG_SEQ_SCAN_ENABLE_12RANKS;
+            case 13: return LL_ADC_REG_SEQ_SCAN_ENABLE_13RANKS; 
+            case 14: return LL_ADC_REG_SEQ_SCAN_ENABLE_14RANKS;
+            case 15: return LL_ADC_REG_SEQ_SCAN_ENABLE_15RANKS; 
+            default: return LL_ADC_REG_SEQ_SCAN_DISABLE;
+         }
+      }
+   }
 
    void adc_config(
       ADC_TypeDef* adc,
       uint32_t timer_trigger_id,
-      uint32_t adc_periph_id
+      uint32_t adc_periph_id,
+      uint32_t num_channels
    )
    {
       // Configuration of NVIC
@@ -123,7 +149,7 @@ namespace cycfi { namespace infinity { namespace detail
       LL_ADC_REG_SetDMATransfer(adc, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
 
       // Set ADC group regular sequencer length and scan direction
-      LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_DISABLE);
+      LL_ADC_REG_SetSequencerLength(adc, seq_length(num_channels));
 
       // Set ADC group regular sequencer discontinuous mode
       // LL_ADC_REG_SetSequencerDiscont(adc, LL_ADC_REG_SEQ_DISCONT_DISABLE);

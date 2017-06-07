@@ -69,6 +69,7 @@ namespace cycfi { namespace infinity
       {
          for (auto i = first; i != last; ++i)
          {
+            i->fill(0.0f);
             for (auto c = 0; c != channels; ++c)
                Base::process(*i, convert((*src)[c]), c);
             ++src;
@@ -82,6 +83,7 @@ namespace cycfi { namespace infinity
       {
          for (auto i = first; i != last; ++i)
          {
+            i->fill(0.0f);
             for (auto c = 0; c != channels; ++c)
             {
                auto src_base = src;
