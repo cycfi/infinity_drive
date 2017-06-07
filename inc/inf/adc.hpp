@@ -27,7 +27,7 @@ namespace cycfi { namespace infinity
    class adc
    {
    public:
-      
+
       static_assert(detail::valid_adc(id_), "Invalid ADC id");
 
       using adc_type = adc;
@@ -44,41 +44,44 @@ namespace cycfi { namespace infinity
       adc(timer<tid>)
       {
          static_assert(detail::valid_adc_timer(tid), "Invalid Timer for ADC");
-         
+
          detail::system_clock_config();
 
          detail::adc_dma_config(
             get_adc(),
             detail::adc_info<id>::dma_stream,
+            detail::adc_info<id>::dma_channel,
             detail::adc_info<id>::dma_irq_id,
             &_data[0][0], buffer_size * channels
          );
 
          detail::adc_config(
-            get_adc(), 
+            get_adc(),
             detail::adc_timer_trigger_id<tid>(),
             detail::adc_info<id>::periph_id,
             channels
          );
-         
+
          detail::activate_adc(get_adc());
 
          // Set timer the trigger output (TRGO)
-         LL_TIM_SetTriggerOutput(&detail::get_timer<tid>(), LL_TIM_TRGO_UPDATE);  
-         
+         LL_TIM_SetTriggerOutput(&detail::get_timer<tid>(), LL_TIM_TRGO_UPDATE);
+
          // Clear the ADC buffer
          clear();
       }
-         
+
       void clear()
       {
          for (auto& buff : _data)
             buff.fill(0);
       }
-      
+
       template <std::size_t... channels>
       void enable_channels()
       {
+         static_assert(sizeof...(channels) == channels_,
+            "Invalid number of channnels");
          enable_all_channels<1>(std::index_sequence<channels...>());
       }
 
@@ -86,7 +89,7 @@ namespace cycfi { namespace infinity
       {
          detail::start_adc(get_adc());
       }
-      
+
       void stop()
       {
          detail::stop_adc(get_adc());
@@ -103,10 +106,10 @@ namespace cycfi { namespace infinity
       sample_group_type const& operator[](std::size_t i) const { return _data[i]; }
 
    private:
-      
+
       template <std::size_t channel, std::size_t rank>
       void enable_one_channel()
-      {         
+      {
          static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
 
          static constexpr std::size_t pin = detail::get_adc_pin<channel>(id);
@@ -121,18 +124,18 @@ namespace cycfi { namespace infinity
 
          // Configure GPIO in analog mode to be used as ADC input
          LL_GPIO_SetPinMode(gpio, mask, LL_GPIO_MODE_ANALOG);
-         
+
          // Enable the ADC channel on the selected sequence rank.
          detail::enable_adc_channel(
             get_adc(), detail::adc_channel<channel>(), detail::adc_rank<rank>());
       }
-      
+
       template <std::size_t rank>
       void enable_all_channels(std::index_sequence<>)
       {
          // end recursion
       }
-      
+
       template <std::size_t rank, std::size_t channel, std::size_t... rest>
       void enable_all_channels(std::index_sequence<channel, rest...>)
       {
@@ -144,7 +147,7 @@ namespace cycfi { namespace infinity
       {
          return detail::adc_info<id>::adc;
       }
-      
+
       buffer_type _data;
    };
 }}

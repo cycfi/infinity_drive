@@ -24,6 +24,7 @@ namespace cycfi { namespace infinity { namespace detail
    void adc_dma_config(
       ADC_TypeDef* adc_n,
       uint32_t dma_stream,
+      uint32_t dma_channel,
       IRQn_Type dma_channel_irq,
       uint16_t values[],
       uint16_t size
@@ -35,9 +36,9 @@ namespace cycfi { namespace infinity { namespace detail
       uint32_t adc_periph_id,
       uint32_t num_channels
    );
-   
+
    inline void activate_adc(ADC_TypeDef* adc)
-   {      
+   {
       // ADC must be disabled at this point
       if (LL_ADC_IsEnabled(adc) != 0)
          error_handler();
@@ -45,7 +46,7 @@ namespace cycfi { namespace infinity { namespace detail
       // Enable ADC
       LL_ADC_Enable(adc);
    }
-   
+
    inline void enable_adc_channel(
       ADC_TypeDef* adc, std::size_t channel, std::size_t rank)
    {
@@ -53,7 +54,7 @@ namespace cycfi { namespace infinity { namespace detail
       LL_ADC_REG_SetSequencerRanks(adc, rank, channel);
       LL_ADC_SetChannelSamplingTime(adc, channel, LL_ADC_SAMPLINGTIME_3CYCLES);
    }
-   
+
    inline void start_adc(ADC_TypeDef* adc)
    {
       if (LL_ADC_IsEnabled(adc))
@@ -69,7 +70,7 @@ namespace cycfi { namespace infinity { namespace detail
          LL_ADC_REG_StopConversionExtTrig(adc);
       }
    }
-   
+
    // Check if id is a valid adc.
    constexpr bool valid_adc(std::size_t id)
    {
@@ -96,91 +97,91 @@ namespace cycfi { namespace infinity { namespace detail
    {
       return port::porta + 0;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<1>(std::size_t adc_id)
    {
       return port::porta + 1;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<2>(std::size_t adc_id)
    {
       return port::porta + 2;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<3>(std::size_t adc_id)
    {
       return port::porta + 3;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<4>(std::size_t adc_id)
    {
       return (adc_id == 3)? port::portf + 6 : port::porta + 4;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<5>(std::size_t adc_id)
    {
       return (adc_id == 3)? port::portf + 7 : port::porta + 5;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<6>(std::size_t adc_id)
    {
       return (adc_id == 3)? port::portf + 8 : port::porta + 6;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<7>(std::size_t adc_id)
    {
       return (adc_id == 3)? port::portf + 9 : port::porta + 7;
    }
-      
+
    template <>
    constexpr std::size_t get_adc_pin<8>(std::size_t adc_id)
    {
       return (adc_id == 3)? port::portf + 10 : port::portb + 0;
    }
-      
+
    template <>
    constexpr std::size_t get_adc_pin<9>(std::size_t adc_id)
    {
       return (adc_id == 3)? port::portf + 3 : port::portb + 1;
    }
-      
+
    template <>
    constexpr std::size_t get_adc_pin<10>(std::size_t adc_id)
    {
       return port::portc + 0;
-   }      
-   
+   }
+
    template <>
    constexpr std::size_t get_adc_pin<11>(std::size_t adc_id)
    {
       return port::portc + 1;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<12>(std::size_t adc_id)
    {
       return port::portc + 2;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<13>(std::size_t adc_id)
    {
       return port::portc + 3;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<14>(std::size_t adc_id)
    {
       return (adc_id == 3)? port::portf + 4 : port::portc + 4;
    }
-   
+
    template <>
    constexpr std::size_t get_adc_pin<15>(std::size_t adc_id)
    {
@@ -206,7 +207,7 @@ namespace cycfi { namespace infinity { namespace detail
    template <std::size_t id>
    uint32_t adc_channel();
 
-#define INFINITY_ADC(id, stream)                                               \
+#define INFINITY_ADC(id, stream, channel)                                      \
    template <>                                                                 \
    struct adc_info<id>                                                         \
    {                                                                           \
@@ -214,6 +215,7 @@ namespace cycfi { namespace infinity { namespace detail
       static constexpr uint32_t periph_id = LL_APB2_GRP1_PERIPH_ADC##id;       \
       static constexpr IRQn_Type dma_irq_id = DMA2_Stream##stream##_IRQn;      \
       static constexpr uint32_t dma_stream = LL_DMA_STREAM_##stream;           \
+      static constexpr uint32_t dma_channel = LL_DMA_CHANNEL_##channel;        \
    };                                                                          \
    /***/
 
@@ -241,9 +243,9 @@ namespace cycfi { namespace infinity { namespace detail
    }                                                                           \
    /***/
 
-   INFINITY_ADC(1, 0)
-   INFINITY_ADC(2, 1)
-   INFINITY_ADC(3, 2)
+   INFINITY_ADC(1, 0, 0)
+   INFINITY_ADC(2, 2, 1)
+   INFINITY_ADC(3, 1, 2)
 
    INFINITY_ADC_TIMER_TRIGGER(2)
    INFINITY_ADC_TIMER_TRIGGER(3)

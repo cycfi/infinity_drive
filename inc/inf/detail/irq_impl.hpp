@@ -80,7 +80,7 @@ extern "C"
 #if defined(TIM8)
  TIMER_INTERRUPT_HANDLER(8, TIM8_UP_IRQHandler)
 #endif
-    
+
 #define HANDLE_ADC_INTERRUPT(ID, STREAM)                                       \
    {                                                                           \
       if (LL_DMA_IsActiveFlag_TC##STREAM(DMA2) == 1)                           \
@@ -110,12 +110,12 @@ extern "C"
 
    void DMA2_Stream1_IRQHandler(void)
    {
-      HANDLE_ADC_INTERRUPT(2, 1);
+      HANDLE_ADC_INTERRUPT(3, 1);
    }
 
    void DMA2_Stream2_IRQHandler(void)
    {
-      HANDLE_ADC_INTERRUPT(3, 2);
+      HANDLE_ADC_INTERRUPT(2, 2);
    }
 
    void ADC_IRQHandler(void)

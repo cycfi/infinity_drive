@@ -13,6 +13,7 @@ namespace cycfi { namespace infinity { namespace detail
    void adc_dma_config(
       ADC_TypeDef* adc_n,
       uint32_t dma_stream,
+      uint32_t dma_channel,
       IRQn_Type dma_channel_irq,
       uint16_t values[],
       uint16_t size
@@ -49,6 +50,8 @@ namespace cycfi { namespace infinity { namespace detail
          LL_DMA_PRIORITY_HIGH
       );
 
+      LL_DMA_SetChannelSelection(dma, dma_stream, dma_channel);
+
       // Set DMA transfer addresses of source and destination
       LL_DMA_ConfigAddresses(
          dma,
@@ -74,7 +77,7 @@ namespace cycfi { namespace infinity { namespace detail
       // Enable the DMA transfer
       LL_DMA_EnableStream(dma, dma_stream);
    }
-   
+
    namespace
    {
       uint32_t seq_length(uint32_t num_channels)
@@ -88,13 +91,13 @@ namespace cycfi { namespace infinity { namespace detail
             case 6: return LL_ADC_REG_SEQ_SCAN_ENABLE_6RANKS;
             case 7: return LL_ADC_REG_SEQ_SCAN_ENABLE_7RANKS;
             case 8: return LL_ADC_REG_SEQ_SCAN_ENABLE_8RANKS;
-            case 9: return LL_ADC_REG_SEQ_SCAN_ENABLE_9RANKS;    
+            case 9: return LL_ADC_REG_SEQ_SCAN_ENABLE_9RANKS;
             case 10: return LL_ADC_REG_SEQ_SCAN_ENABLE_10RANKS;
             case 11: return LL_ADC_REG_SEQ_SCAN_ENABLE_11RANKS;
             case 12: return LL_ADC_REG_SEQ_SCAN_ENABLE_12RANKS;
-            case 13: return LL_ADC_REG_SEQ_SCAN_ENABLE_13RANKS; 
+            case 13: return LL_ADC_REG_SEQ_SCAN_ENABLE_13RANKS;
             case 14: return LL_ADC_REG_SEQ_SCAN_ENABLE_14RANKS;
-            case 15: return LL_ADC_REG_SEQ_SCAN_ENABLE_15RANKS; 
+            case 15: return LL_ADC_REG_SEQ_SCAN_ENABLE_15RANKS;
             default: return LL_ADC_REG_SEQ_SCAN_DISABLE;
          }
       }
@@ -108,19 +111,26 @@ namespace cycfi { namespace infinity { namespace detail
    )
    {
       // Configuration of NVIC
-      // Configure NVIC to enable ADC1 interruptions
+      // Configure NVIC to enable ADC interruptions
       NVIC_SetPriority(ADC_IRQn, 0); // ADC IRQ greater priority than DMA IRQ
       NVIC_EnableIRQ(ADC_IRQn);
 
       // Enable ADC clock (core clock)
       LL_APB2_GRP1_EnableClock(adc_periph_id);
- 
-      // ADC common instance must not be enabled at this point
-      if (__LL_ADC_IS_ENABLED_ALL_COMMON_INSTANCE() != 0)
-         error_handler();
 
-      // Set ADC clock (conversion clock) common to several ADC instances
-      LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+      static bool adc_common_initialized = false;
+
+      if (!adc_common_initialized)
+      {
+         // ADC common instance must not be enabled at this point
+         if (__LL_ADC_IS_ENABLED_ALL_COMMON_INSTANCE() != 0)
+            error_handler();
+
+         // Set ADC clock (conversion clock) common to several ADC instances
+         LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+
+         adc_common_initialized = true;
+      }
 
       // ADC must not be enabled at this point
       if (LL_ADC_IsEnabled(adc) != 0)

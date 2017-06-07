@@ -7,10 +7,11 @@
 #include <inf/fx.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// AGC test. Tests the AGC (automatic gain control).
+// Multichannel ADC test. Tests the multichannel ADC.
 //
-// Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-// pin PA4 to an oscilloscope to see the waveform. 
+// Setup: Connect an input signals to channels 0, 12, 13, 3, 10, and 11.
+// PA0, PC2, PC3, PA3, PC0, and PC1. Connect pin PA4 and PA5 to an
+// oscilloscope to see the mixed waveform.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
@@ -33,13 +34,13 @@ struct my_processor
       out[0] += blk1(s);
       out[1] += blk2(s);
    }
-   
+
    template <typename Adc>
    void setup_channels(Adc& adc)
    {
       adc.template enable_channels<0, 12, 13, 3, 10, 11>();
    }
-   
+
    inf::dc_block blk1, blk2;
 };
 
