@@ -73,16 +73,17 @@ namespace cycfi { namespace infinity
          for (auto& buff : _data)
             buff.fill(0);
       }
-
-      template <std::size_t channel, std::size_t pin, std::size_t rank>
+      
+      template <std::size_t channel, std::size_t rank>
       void enable_channel()
-      {
+      {         
          static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
-         static_assert(detail::valid_adc_pin<channel>(id, pin), "Invalid ADC Pin");
 
+         static constexpr std::size_t pin = detail::get_adc_pin<channel>(id);
          static constexpr uint16_t bit = pin % 16;
          static constexpr uint16_t port = pin / 16;
          static constexpr uint32_t mask = 1 << bit;
+
          auto* gpio = &detail::get_port<port>();
 
          // Enable GPIO peripheral clock
@@ -94,12 +95,6 @@ namespace cycfi { namespace infinity
          // Enable the ADC channel on the selected sequence rank.
          detail::enable_adc_channel(
             get_adc(), detail::adc_channel<channel>(), detail::adc_rank<rank>());
-      }
-      
-      template <std::size_t channel, std::size_t rank>
-      void enable_channel()
-      {
-         enable_channel<channel, detail::default_adc_pin<channel>(), rank>();
       }
 
       void start()

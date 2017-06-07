@@ -84,227 +84,106 @@ namespace cycfi { namespace infinity { namespace detail
    // Check if channel is a valid adc channel.
    constexpr bool valid_adc_channel(std::size_t channel)
    {
-      return channel >= 0 && channel <= 16;
-   }
-   
-   // Check if pin is a valid input port for adc, given id and channel.
-   // Defaults to returning false, with specializations for each valid
-   // configuration.
-   template <std::size_t channel>
-   constexpr bool valid_adc_pin(std::size_t id, std::size_t pin)
-   {
-      return false;
-   }
-
-   template <>
-   constexpr bool valid_adc_pin<0>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::porta + 0;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<1>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::porta + 1;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<2>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::porta + 2;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<3>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::porta + 3;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<4>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::porta + 4)
-         ||  ((id == 3) && pin == port::portf + 6)
-         ;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<5>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::porta + 5)
-         ||  ((id == 3) && pin == port::portf + 7)
-         ;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<6>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::porta + 6)
-         ||  ((id == 3) && pin == port::portf + 8)
-         ;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<7>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::porta + 7)
-         ||  ((id == 3) && pin == port::portf + 9)
-         ;
-   }
-      
-   template <>
-   constexpr bool valid_adc_pin<8>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::portb + 0)
-         ||  ((id == 3) && pin == port::portf + 10)
-         ;
-   }
-      
-   template <>
-   constexpr bool valid_adc_pin<9>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::portb + 1)
-         ||  ((id == 3) && pin == port::portf + 3)
-         ;
-   }
-      
-   template <>
-   constexpr bool valid_adc_pin<10>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::portc + 0;
-   }      
-   
-   template <>
-   constexpr bool valid_adc_pin<11>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::portc + 1;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<12>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::portc + 2;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<13>(std::size_t id, std::size_t pin)
-   {
-      return pin == port::portc + 3;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<14>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::portc + 4)
-         ||  ((id == 3) && pin == port::portf + 4)
-         ;
-   }
-   
-   template <>
-   constexpr bool valid_adc_pin<15>(std::size_t id, std::size_t pin)
-   {
-      return ((id == 1 || id == 2) && pin == port::portc + 5)
-         ||  ((id == 3) && pin == port::portf + 5)
-         ;
+      return channel >= 0 && channel <= 15;
    }
 
    template <std::size_t channel>
-   std::size_t default_adc_pin();
+   std::size_t get_adc_pin(std::size_t adc_id);
 
    template <>
-   constexpr std::size_t default_adc_pin<0>()
+   constexpr std::size_t get_adc_pin<0>(std::size_t adc_id)
    {
       return port::porta + 0;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<1>()
+   constexpr std::size_t get_adc_pin<1>(std::size_t adc_id)
    {
       return port::porta + 1;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<2>()
+   constexpr std::size_t get_adc_pin<2>(std::size_t adc_id)
    {
       return port::porta + 2;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<3>()
+   constexpr std::size_t get_adc_pin<3>(std::size_t adc_id)
    {
       return port::porta + 3;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<4>()
+   constexpr std::size_t get_adc_pin<4>(std::size_t adc_id)
    {
-      return port::porta + 4;
+      return (adc_id == 3)? port::portf + 6 : port::porta + 4;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<5>()
+   constexpr std::size_t get_adc_pin<5>(std::size_t adc_id)
    {
-      return port::porta + 5;
+      return (adc_id == 3)? port::portf + 7 : port::porta + 5;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<6>()
+   constexpr std::size_t get_adc_pin<6>(std::size_t adc_id)
    {
-      return port::porta + 6;
+      return (adc_id == 3)? port::portf + 8 : port::porta + 6;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<7>()
+   constexpr std::size_t get_adc_pin<7>(std::size_t adc_id)
    {
-      return port::porta + 7;
+      return (adc_id == 3)? port::portf + 9 : port::porta + 7;
    }
       
    template <>
-   constexpr std::size_t default_adc_pin<8>()
+   constexpr std::size_t get_adc_pin<8>(std::size_t adc_id)
    {
-      return port::portb + 0;
+      return (adc_id == 3)? port::portf + 10 : port::portb + 0;
    }
       
    template <>
-   constexpr std::size_t default_adc_pin<9>()
+   constexpr std::size_t get_adc_pin<9>(std::size_t adc_id)
    {
-      return port::portb + 1;
+      return (adc_id == 3)? port::portf + 3 : port::portb + 1;
    }
       
    template <>
-   constexpr std::size_t default_adc_pin<10>()
+   constexpr std::size_t get_adc_pin<10>(std::size_t adc_id)
    {
       return port::portc + 0;
    }      
    
    template <>
-   constexpr std::size_t default_adc_pin<11>()
+   constexpr std::size_t get_adc_pin<11>(std::size_t adc_id)
    {
       return port::portc + 1;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<12>()
+   constexpr std::size_t get_adc_pin<12>(std::size_t adc_id)
    {
       return port::portc + 2;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<13>()
+   constexpr std::size_t get_adc_pin<13>(std::size_t adc_id)
    {
       return port::portc + 3;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<14>()
+   constexpr std::size_t get_adc_pin<14>(std::size_t adc_id)
    {
-      return port::portc + 4;
+      return (adc_id == 3)? port::portf + 4 : port::portc + 4;
    }
    
    template <>
-   constexpr std::size_t default_adc_pin<15>()
+   constexpr std::size_t get_adc_pin<15>(std::size_t adc_id)
    {
-      return port::portc + 5;
+      return (adc_id == 3)? port::portf + 5 : port::portc + 5;
    }
 
    ////////////////////////////////////////////////////////////////////////////
