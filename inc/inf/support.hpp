@@ -176,8 +176,31 @@ namespace cycfi { namespace infinity
    // basic math functions and constants
    ////////////////////////////////////////////////////////////////////////////
 
+   ////////////////////////////////////////////////////////////////////////////
+   // pi
+   ////////////////////////////////////////////////////////////////////////////
+   constexpr float pi = 3.1415926535897f;
+   constexpr float _2pi = pi * 2.0f;
+   
+   ////////////////////////////////////////////////////////////////////////////
+   // fast tan approximation (from http://www.musicdsp.org/)
+   ////////////////////////////////////////////////////////////////////////////
+   constexpr float fast_tan(float x)
+   {
+       float sqr = x * x;
+       float r = 2.033e-01f;
+       r *= sqr;
+       r += 3.1755e-01f;
+       r *= sqr;
+       r += 1.0f;
+       r *= x;
+       return r;
+   }
+   
+   ////////////////////////////////////////////////////////////////////////////
    // fast exp approximation (from http://www.musicdsp.org/)
-   constexpr float exp(float x)
+   ////////////////////////////////////////////////////////////////////////////
+   constexpr float fast_exp(float x)
    {
       return 
          (362880.f + x * 
@@ -191,10 +214,6 @@ namespace cycfi { namespace infinity
                                  (9.f + x)
          )))))))) * 2.75573192e-6f;
    }
-
-   // pi
-   constexpr float pi = 3.1415926535897f;
-   constexpr float _2pi = pi * 2.0f;
 
    ////////////////////////////////////////////////////////////////////////////
    // linear interpolation: Interpolates a value linearly between y1 and y2
@@ -212,7 +231,7 @@ namespace cycfi { namespace infinity
    // is a inaccurate, but fast substitute. It works by negating the exponent
    // which is assumed to be IEEE754.
    ////////////////////////////////////////////////////////////////////////////
-   inline float inverse(float val)
+   inline float fast_inverse(float val)
    {
       auto x = reinterpret_cast<std::int32_t&>(val);
       x = 0x7EF311C2 - x;
