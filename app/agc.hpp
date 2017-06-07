@@ -33,8 +33,7 @@ namespace cycfi { namespace infinity
    {  
       static constexpr float max_gain = 100.0f;
       static constexpr float threshold = 1.0f / max_gain;
-      static constexpr float low_freq = 1.0f - exp(-_2pi * 300.0f/sps);
-      static constexpr float high_freq = 1.0f - exp(-_2pi * 0.5);
+      static constexpr float release = std::exp(-1.0f / (sps * 0.2f /*seconds*/));
 
       float operator()(float s)
       {      
@@ -49,10 +48,14 @@ namespace cycfi { namespace infinity
 
          // Noise gate      
          if (_noise_gate(threshold, env))
-            return 0.0f;
+         {
+            _gain *= release;
+            return s * _gain;
+         }
 
          // Automatic gain control
-         return s * inverse(env);      
+         _gain = fast_inverse(env);
+         return s * _gain;      
       }
       
       bool gated() const
@@ -61,10 +64,11 @@ namespace cycfi { namespace infinity
       }
 
       schmitt_trigger _noise_gate = {/* hysteresis */ threshold * 0.5f};
-      envelope_follower _env_follow = {/* decay */ 0.0005f};
+      envelope_follower _env_follow = {/* decay */ 0.9995f};
       dc_block _dc_block = { 10.0f /* hz */, sps };
       dc_block _dc_block2 = { 10.0f /* hz */, sps };
       integrator _integrate = {0.1};
+      float _gain = {1.0f};
    };
 }}
 
