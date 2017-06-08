@@ -17,13 +17,13 @@
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
-   // Control Acquisition 
+   // Control Acquisition
    //
-   // This class is designed for acquiring analog controls data. We read the 
-   // signal from ADC channels and present the values (uint32_t) to a base 
-   // processor class. 
+   // This class is designed for acquiring analog controls data. We read the
+   // signal from ADC channels and present the values (uint32_t) to a base
+   // processor class.
    //
-   // (See multiprocessor.hpp for a more elaborate signal acquisition and 
+   // (See multiprocessor.hpp for a more elaborate signal acquisition and
    // digital signal processing scheme.)
    //
    // - Base must declare some configuration constants:
@@ -44,15 +44,19 @@ namespace cycfi { namespace infinity
    //
    // - Base must have a process member function with the signature:
    //
-   //       void process(std::array<std::uint32_t, channels> const& in);
+   //       template <typename T>
+   //       void process(std::array<T, channels> const& in);
    //
-   //       - in: Will hold the input values for each channel, at the 
+   //       - in: Will hold the input values for each channel, at the
    //         native ADC resolution (e.g. 12 bits for the STM32F4 ADC).
+   //
+   //       - Note that we make it a template to make the data type generic,
+   //         thereby making it future proof for ADCs with greater precision.
    //
    // - Base must have a setup_channels function responsible for setting up
    //   the ADC channels (using the adc enable_channel member function). The
    //   setup_channels function signature is as follows:
-   //   
+   //
    //       template <typename Adc>
    //       void setup_channels(Adc& adc);
    //
@@ -64,19 +68,19 @@ namespace cycfi { namespace infinity
    //          adc.template enable_channel<0, 1>();
    //       }
    //
-   // - The irq_conversion_half_complete() member function must be called 
+   // - The irq_conversion_half_complete() member function must be called
    //   from the irq(adc_conversion_half_complete<1>) interrupt function.
    //
-   // - The irq_conversion_complete() member function must be called 
+   // - The irq_conversion_complete() member function must be called
    //   from the irq(irq_conversion_complete<1>) interrupt function.
    //
-   // - The irq_timer_task() member function must be called from the 
+   // - The irq_timer_task() member function must be called from the
    //   irq(timer_task<timer_id>) interrupt function.
    //
    ////////////////////////////////////////////////////////////////////////////
    template <typename Base>
    class control_acquisition : public Base
-   {   
+   {
    public:
 
       static constexpr auto adc_id = Base::adc_id;
@@ -97,7 +101,7 @@ namespace cycfi { namespace infinity
        : _clock(adc_clock_rate, sampling_rate)
        , _adc(_clock)
       {}
-      
+
       void start()
       {
          Base::setup_channels(_adc);
@@ -106,12 +110,12 @@ namespace cycfi { namespace infinity
          _clock.start();
          _clock.enable_interrupt();
       }
-      
+
       /////////////////////////////////////////////////////////////////////////
       // Interrupt handlers
       /////////////////////////////////////////////////////////////////////////
       void irq_conversion_half_complete()
-      {         
+      {
          // process channels
          for (auto i = _adc.begin(); i != _adc.middle(); ++i)
             Base::process(*i);
@@ -123,9 +127,9 @@ namespace cycfi { namespace infinity
          for (auto i = _adc.middle(); i != _adc.end(); ++i)
             Base::process(*i);
       }
-      
+
    private:
-      
+
       // The main clock
       timer_type _clock;
 

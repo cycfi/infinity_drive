@@ -14,8 +14,9 @@ namespace inf = cycfi::infinity;
 
 ///////////////////////////////////////////////////////////////////////////////
 static constexpr auto control_sps = 1000;
+static constexpr auto control_buffer_size = 32;
 
-float pot1 = 0.0f;
+float gain = 0.0f;
 float pot2 = 0.0f;
 
 struct infinity_controller
@@ -24,20 +25,22 @@ struct infinity_controller
    static constexpr auto timer_id = 3;
    static constexpr auto channels = 2;
    static constexpr auto sampling_rate = control_sps;
-   static constexpr auto buffer_size = 1;
+   static constexpr auto buffer_size = 4;
 
    template <typename T>
    void process(std::array<T, channels> const& in)
    {
-      pot1 = in[0];
-      pot2 = in[1];
+      gain = in[0] / 4096.0f;
+      pot2 = in[1] / 4096.0f;
    }
 
    template <typename Adc>
    void setup_channels(Adc& adc)
    {
-      adc.template enable_channels<7, 8>();
+      adc.template enable_channels<6, 7>();
    }
+
+   inf::dynamic_smoothing smooth = {1.0f /*hz*/, control_sps};
 };
 
 inf::control_acquisition<infinity_controller> ctrl;
@@ -59,7 +62,9 @@ struct infinity_processor
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
       out[0] += blk1(s);
-      out[1] += blk2(s);
+      //out[1] += blk2(s);
+
+      out[1] = gain;
    }
 
    template <typename Adc>
