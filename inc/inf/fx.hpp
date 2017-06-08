@@ -22,7 +22,7 @@ namespace cycfi { namespace infinity
        : y(0)
        , a(a)
       {}
-      
+
       leaky_integrator(float cutoff, uint32_t sps)
        : y(0.0f)
        , a(1.0f -(_2pi * cutoff/sps))
@@ -58,6 +58,11 @@ namespace cycfi { namespace infinity
          return y += a * (s - y);
       }
 
+      float operator()() const
+      {
+         return y;
+      }
+
       float y, a;
    };
 
@@ -70,11 +75,11 @@ namespace cycfi { namespace infinity
    {
       // y: current value
       // d: decay
-      
+
       envelope_follower(float r = 0.999f)
        : y(0.0f), r(r)
       {}
-      
+
       envelope_follower(float release_time, uint32_t sps)
        : y(0.0f), r(std::exp(-1.0f / (sps * release_time)))
       {}
@@ -87,7 +92,7 @@ namespace cycfi { namespace infinity
             y = s + r * (y - s);
          return y;
       }
-      
+
       float operator()() const
       {
          return y;
@@ -101,11 +106,11 @@ namespace cycfi { namespace infinity
    // is high (1) if the positive input (spos) is greater than the negative
    // input (sneg). Otherwise, the output is low (0).
    //
-   // The schmitt trigger adds some hysteresis (h) to improve noise immunity 
-   // and minimize multiple triggering by adding and subtracting a certain 
-   // fraction of the previous output (y) back to the positive input (spos). 
-   // hysteresis is the fraction (should be less than < 1.0) that determines 
-   // how much is added or subtracted. By doing so, the comparator "bar" is 
+   // The schmitt trigger adds some hysteresis (h) to improve noise immunity
+   // and minimize multiple triggering by adding and subtracting a certain
+   // fraction of the previous output (y) back to the positive input (spos).
+   // hysteresis is the fraction (should be less than < 1.0) that determines
+   // how much is added or subtracted. By doing so, the comparator "bar" is
    // raised or lowered depending on the previous state.
    //
    // The result is a bool.
@@ -125,7 +130,7 @@ namespace cycfi { namespace infinity
          y = ((spos + delta) > sneg) ? 1.0f : -1.0f;
          return y > 0.0f;
       }
-      
+
       bool operator()() const
       {
          return y > 0.0f;
@@ -144,7 +149,7 @@ namespace cycfi { namespace infinity
    // The result is a bool corresponding to the peaks.
    ////////////////////////////////////////////////////////////////////////////
    struct peak_trigger
-   {      
+   {
       peak_trigger(float r = 0.001f)
        : ef(r), cmp(0.002f)
       {}
@@ -222,7 +227,7 @@ namespace cycfi { namespace infinity
    // antialiasing. Each source sample is convolved with { 0.25, 0.5, 0.25 }
    // before downsampling. (from http://www.musicdsp.org/)
    //
-   // This class is templated on the native integer sample type 
+   // This class is templated on the native integer sample type
    // (e.g. uint16_t).
    ////////////////////////////////////////////////////////////////////////////
    template <typename T>
@@ -241,11 +246,11 @@ namespace cycfi { namespace infinity
 
       T x;
    };
-   
+
    ////////////////////////////////////////////////////////////////////////////
    // window_comparator. If input (s) exceeds a high threshold (h), the
    // current state (y) becomes 1. Else, if input (s) is below a low
-   // threshold (l), the current state (y) becomes 0. If the state (s) 
+   // threshold (l), the current state (y) becomes 0. If the state (s)
    // is in between the low and high thresholds, the previous state is kept.
    ////////////////////////////////////////////////////////////////////////////
    struct window_comparator
@@ -278,9 +283,9 @@ namespace cycfi { namespace infinity
    {
       // y: current value
       // x: delayed input sample
-      // r: pole 
-      
-      // A smaller r value allows faster tracking of "wandering dc levels", 
+      // r: pole
+
+      // A smaller r value allows faster tracking of "wandering dc levels",
       // but at the cost of greater low-frequency attenuation.
 
       dc_block(float r = 0.995)
@@ -300,14 +305,14 @@ namespace cycfi { namespace infinity
 
       float r, x, y;
    };
-   
+
    ////////////////////////////////////////////////////////////////////////////
-   // Dynamic Smoothing Using Self Modulating Filter. 
+   // Dynamic Smoothing Using Self Modulating Filter.
    // https://cytomic.com/files/dsp/DynamicSmoothing.pdf
    // Andrew Simper, Cytomic, 2014, andy@cytomic.com
    ////////////////////////////////////////////////////////////////////////////
    struct dynamic_smoothing
-   {  
+   {
       dynamic_smoothing(
          float freq
        , uint32_t sps
@@ -318,7 +323,7 @@ namespace cycfi { namespace infinity
        , lowl(0.0f)
        , low2(0.0f)
       {}
-      
+
       float operator()(float s)
       {
          float bandz = lowl - low2;
@@ -328,14 +333,14 @@ namespace cycfi { namespace infinity
          low2 = low2 + g * (lowl - low2);
          return low2;
       }
-      
+
       static constexpr float compute_g0(float freq, uint32_t sps)
       {
          auto wc = freq / sps;
          auto gc = std::tan(pi * wc);
          return 2.0f * gc / (1.0f + gc);
       }
-      
+
       float g0, sense, lowl, low2;
    };
 }}

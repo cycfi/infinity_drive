@@ -19,11 +19,11 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // A multi-channel digital signal processor.
    //
-   // Works in conjunction with the processor class (see processor.hpp). 
-   // We read the signal from ADC channels, process the signals and send 
-   // the result to two DAC channels. 
+   // Works in conjunction with the processor class (see processor.hpp).
+   // We read the signal from ADC channels, process the signals and send
+   // the result to two DAC channels.
    //
-   // - Base conforms to the processor requirements 
+   // - Base conforms to the processor requirements
    // - Base must declare some configuration constants:
    //
    //   - oversampling:    The oversampling factor
@@ -42,12 +42,12 @@ namespace cycfi { namespace infinity
    //      static constexpr auto sampling_rate = 44100;
    //      static constexpr auto buffer_size = 1024;
    //
-   // - The 
+   // - The
    //
    // - Base must have a setup_channels function responsible for setting up
    //   the ADC channels (using the adc enable_channel member function). The
    //   setup_channels function signature is as follows:
-   //   
+   //
    //       template <typename Adc>
    //       void setup_channels(Adc& adc);
    //
@@ -59,32 +59,32 @@ namespace cycfi { namespace infinity
    //          adc.template enable_channel<0, 1>();
    //       }
    //
-   // The ADC is double buffered. The DAC output, after processing, will be 
-   // delayed by a number of samples (the buffer size). For example, with a 
-   // sampling rate of 32kHz and a buffer size of 1024, the delay will be 
+   // The ADC is double buffered. The DAC output, after processing, will be
+   // delayed by a number of samples (the buffer size). For example, with a
+   // sampling rate of 32kHz and a buffer size of 1024, the delay will be
    // 16ms. This delay is computed as:
    //
    //    ((1 / 32000) * 1024) / 2
    //
-   // We divide by two because the ADC is double buffered and calls our 
+   // We divide by two because the ADC is double buffered and calls our
    // processing routine twice. First, when it finishes sampling half the
-   // buffer size (adc_conversion_half_complete) and then again when it 
+   // buffer size (adc_conversion_half_complete) and then again when it
    // concludes the entire conversion for the entire buffer
    // (adc_conversion_complete)
    //
-   // - The irq_conversion_half_complete() member function must be called 
+   // - The irq_conversion_half_complete() member function must be called
    //   from the irq(adc_conversion_half_complete<1>) interrupt function.
    //
-   // - The irq_conversion_complete() member function must be called 
+   // - The irq_conversion_complete() member function must be called
    //   from the irq(irq_conversion_complete<1>) interrupt function.
    //
-   // - The irq_timer_task() member function must be called from the 
+   // - The irq_timer_task() member function must be called from the
    //   irq(timer_task<timer_id>) interrupt function.
    //
    ////////////////////////////////////////////////////////////////////////////
    template <typename Base>
    class multi_channel_processor : public Base
-   {   
+   {
    public:
 
       static constexpr auto adc_id = Base::adc_id;
@@ -104,7 +104,7 @@ namespace cycfi { namespace infinity
       static_assert(is_pow2(buffer_size),
          "buffer_size must be a power of 2, except 0"
       );
-      
+
       static_assert(buffer_size > Base::oversampling,
          "buffer_size must be greater than Base::oversampling"
       );
@@ -115,7 +115,7 @@ namespace cycfi { namespace infinity
        , _out(_obuff.end())
        , _ocount(0)
       {}
-      
+
       void start()
       {
          Base::setup_channels(_adc);
@@ -124,7 +124,7 @@ namespace cycfi { namespace infinity
          _clock.start();
          _clock.enable_interrupt();
       }
-      
+
       /////////////////////////////////////////////////////////////////////////
       // Interrupt handlers
       /////////////////////////////////////////////////////////////////////////
@@ -132,11 +132,11 @@ namespace cycfi { namespace infinity
       {
          return (sample / float(half_resolution * oversampling)) - 1.0f;
       }
-      
+
       void irq_conversion_half_complete()
       {
          _out = _obuff.middle();
-         
+
          // process channels and place them in the output buffer
          Base::process(
             _obuff.begin(), _obuff.middle(), _adc.begin(),
@@ -154,7 +154,7 @@ namespace cycfi { namespace infinity
             [](std::uint32_t sample) { return convert(sample); }
          );
       }
-      
+
       void irq_timer_task()
       {
          if ((Base::oversampling == 1) || ((_ocount++ & (Base::oversampling-1)) == 0))
@@ -165,13 +165,13 @@ namespace cycfi { namespace infinity
             _out++;
          }
       }
-      
+
    private:
-      
+
       using out_type = std::array<float, 2>;
       using obuff_type = dbuff<out_type, buffer_size / (2 * Base::oversampling)>;
       using oiter_type = typename obuff_type::iterator;
-      
+
       // The main clock
       timer_type _clock;
 
@@ -185,10 +185,29 @@ namespace cycfi { namespace infinity
       // The Output buffer and iterator
       obuff_type _obuff;
       oiter_type _out;
-      
+
       // output count (for downsampling)
       int _ocount;
    };
+
+///////////////////////////////////////////////////////////////////////////////
+#define INF_PROCESSOR_IRQ(ADC_ID, TIMER_ID, proc)                             \
+   inline void irq(adc_conversion_half_complete<ADC_ID>)                      \
+   {                                                                          \
+      proc.irq_conversion_half_complete();                                    \
+   }                                                                          \
+                                                                              \
+   inline void irq(adc_conversion_complete<ADC_ID>)                           \
+   {                                                                          \
+      proc.irq_conversion_complete();                                         \
+   }                                                                          \
+                                                                              \
+   inline void irq(timer_task<TIMER_ID>)                                      \
+   {                                                                          \
+      proc.irq_timer_task();                                                  \
+   }                                                                          \
+   /***/
+
 }}
 
 #endif

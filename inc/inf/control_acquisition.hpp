@@ -53,6 +53,13 @@ namespace cycfi { namespace infinity
    //       - Note that we make it a template to make the data type generic,
    //         thereby making it future proof for ADCs with greater precision.
    //
+   // - Base must have a ready member function with the signature:
+   //
+   //       void complete();
+   //
+   //       This member function is called when all values for the given
+   //       buffer size has been acquired an processed.
+   //
    // - Base must have a setup_channels function responsible for setting up
    //   the ADC channels (using the adc enable_channel member function). The
    //   setup_channels function signature is as follows:
@@ -126,6 +133,7 @@ namespace cycfi { namespace infinity
          // process channels
          for (auto i = _adc.middle(); i != _adc.end(); ++i)
             Base::process(*i);
+         Base::complete();
       }
 
    private:
@@ -136,6 +144,20 @@ namespace cycfi { namespace infinity
       // The ADC
       adc_type _adc;
    };
+
+///////////////////////////////////////////////////////////////////////////////
+#define INF_CONTROLLER_IRQ(ADC_ID, ctrl)                                      \
+   inline void irq(adc_conversion_half_complete<ADC_ID>)                      \
+   {                                                                          \
+      ctrl.irq_conversion_half_complete();                                    \
+   }                                                                          \
+                                                                              \
+   inline void irq(adc_conversion_complete<ADC_ID>)                           \
+   {                                                                          \
+      ctrl.irq_conversion_complete();                                         \
+   }                                                                          \
+   /***/
+
 }}
 
 #endif
