@@ -28,6 +28,8 @@ namespace cycfi { namespace infinity { namespace detail
       // Enable the peripheral clock of DMA
       LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA2);
 
+      LL_DMA_SetChannelSelection(dma, dma_stream, dma_channel);
+
       // Configure the DMA transfer
       //    - DMA transfer in circular mode to match with ADC configuration:
       //      DMA unlimited requests.
@@ -49,8 +51,6 @@ namespace cycfi { namespace infinity { namespace detail
          LL_DMA_MDATAALIGN_HALFWORD        |
          LL_DMA_PRIORITY_HIGH
       );
-
-      LL_DMA_SetChannelSelection(dma, dma_stream, dma_channel);
 
       // Set DMA transfer addresses of source and destination
       LL_DMA_ConfigAddresses(
@@ -144,7 +144,7 @@ namespace cycfi { namespace infinity { namespace detail
 
       // Set Set ADC sequencers scan mode, for all ADC groups
       // (group regular, group injected).
-      LL_ADC_SetSequencersScanMode(ADC1, LL_ADC_SEQ_SCAN_ENABLE);
+      LL_ADC_SetSequencersScanMode(adc, LL_ADC_SEQ_SCAN_ENABLE);
 
       // Set ADC group regular trigger source
       LL_ADC_REG_SetTriggerSource(adc, timer_trigger_id);
