@@ -57,24 +57,25 @@ struct infinity_processor
    static constexpr auto adc_id = 1;
    static constexpr auto timer_id = 2;
 //   static constexpr auto channels = 6;
-   static constexpr auto channels = 1;
+   static constexpr auto channels = 3;
    static constexpr auto sampling_rate = audio_clock;
    static constexpr auto buffer_size = 8;
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      out[0] = agc(s) * gain;
-      out[1] = s;
+      out[0] += agc[channel](s) * gain;
+      out[1] += s;
    }
 
    template <typename Adc>
    void setup_channels(Adc& adc)
    {
 //      adc.template enable_channels<0, 12, 13, 3, 10, 11>();
-      adc.template enable_channels<0>();
+      adc.template enable_channels<0, 12, 13>();
+//      adc.template enable_channels<3, 10, 11>();
    }
 
-   inf::agc<audio_sps> agc;
+   inf::agc<audio_sps> agc[channels];
 };
 
 inf::multi_channel_processor<inf::processor<infinity_processor>> proc;
