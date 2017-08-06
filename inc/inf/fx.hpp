@@ -272,6 +272,11 @@ namespace cycfi { namespace infinity
          return y;
       }
 
+      bool operator()() const
+      {
+         return y;
+      }
+
       float l, h;
       bool y;
    };
