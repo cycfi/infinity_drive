@@ -39,8 +39,8 @@ namespace cycfi { namespace infinity
    struct agc
    {
       static constexpr float max_gain = 100.0f;
-      static constexpr float threshold = 1.0f / max_gain;
-      static constexpr float lp_threshold = 1.0f / 20.0f;
+      static constexpr float threshold = 1.0f / 20.0f; //1.0f / max_gain;
+      static constexpr float lp_threshold = 1.0f / 10.0f;
       static constexpr float release = std::exp(-1.0f / (sps * 0.01f /*seconds*/));
 
       static constexpr float low_freq = 1.0f - exp(-_2pi * 300.0f/sps);
@@ -52,11 +52,10 @@ namespace cycfi { namespace infinity
          // DC block
          s = _dc_block(s);
 
-         // First low pass
-         s = _low_pass2(s);
+
 
          // Get the current envelope
-         auto env = envelope();
+//         auto env = envelope();
 
 //         if (env < lp_threshold)
 //         {
@@ -69,17 +68,28 @@ namespace cycfi { namespace infinity
 
          // Automatic filter control
 //         _low_pass.a = linear_interpolate(low_freq, high_freq, env);
-//         auto lps = _low_pass(s);
+         s = _low_pass(s);
+
+
 
          // Update the envelope follower
-         env = _env_follow(std::abs(s));
+         auto env = _env_follow(std::abs(s));
+
+//         s = _low_pass2(s);
+
 
          // Noise gate
-         if (_noise_gate(threshold, env))
+         if (!_noise_gate(env))
          {
+             //op = 0;
+
 //            return 0.0f;
             _gain *= release;
             return s * _gain;
+         }
+         else
+         {
+            //op = 1;
          }
 
          // Automatic gain control
@@ -97,11 +107,14 @@ namespace cycfi { namespace infinity
          return _env_follow();
       }
 
-      schmitt_trigger _noise_gate = {/* hysteresis */ threshold * 0.5f};
-      envelope_follower _env_follow = {/* decay */ 0.9995f};
+      window_comparator _noise_gate = { threshold, lp_threshold };
+//      schmitt_trigger _noise_gate = {/* hysteresis */ threshold * 0.5f};
+//      envelope_follower _env_follow = {/* decay */ 0.995f};
+      envelope_follower _env_follow = {/* decay */ 0.999f};
       dc_block _dc_block = { 10.0f /* hz */, sps };
       one_pole_lp _low_pass = {lp_freq};
       one_pole_lp _low_pass2 = {lp_freq};
+      one_pole_lp _gain_smooth = {0.99995f};
       float _gain = {1.0f};
    };
 }}
