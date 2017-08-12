@@ -64,16 +64,8 @@ struct infinity_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-	  auto r = agc[channel](s) * gain;
-
+	  auto r = (agc[channel](s) * gain) / (channels / 2.0f);
       out[0] += r;
-      //out[1] += r;
-      if (channel == 0)
-      {
-         out[1] += agc[channel]._env_follow();
-         op = agc[channel]._noise_gate();
-      }
-      //out[1] = -1;
    }
 
    template <typename Adc>

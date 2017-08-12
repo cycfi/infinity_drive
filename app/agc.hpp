@@ -38,11 +38,8 @@ namespace cycfi { namespace infinity
    template <std::uint32_t sps>
    struct agc
    {
-      static constexpr float l_threshold = 1.0f / 20.0f; //1.0f / max_gain;
-      static constexpr float h_threshold = 1.0f / 10.0f;
-
-      static constexpr float low_freq = 1.0f - exp(-_2pi * 300.0f/sps);
-      static constexpr float high_freq = 1.0f - exp(-_2pi * 0.5);
+      static constexpr float l_threshold = 0.02f;
+      static constexpr float h_threshold = 0.1f;
       static constexpr float lp_freq = 1.0f - exp(-_2pi * 1000.0f/sps);
 
       float operator()(float s)
@@ -76,8 +73,8 @@ namespace cycfi { namespace infinity
       window_comparator _noise_gate = { l_threshold, h_threshold };
       envelope_follower _env_follow = {/* decay */ 0.999f};
       dc_block _dc_block = { 10.0f /* hz */, sps };
-      one_pole_lp _low_pass = {lp_freq};
-      float _gain = {1.0f};
+      one_pole_lp _low_pass = { lp_freq };
+      float _gain = { 1.0f };
    };
 }}
 
