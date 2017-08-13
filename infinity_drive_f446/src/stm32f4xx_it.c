@@ -12,7 +12,7 @@
 #ifdef USE_RTOS_SYSTICK
 #include <cmsis_os.h>
 #endif
-#include "sys/stm32f4xx_it.h"
+#include "stm32f4xx_it.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

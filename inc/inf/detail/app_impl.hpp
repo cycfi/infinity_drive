@@ -14,9 +14,17 @@ namespace cycfi { namespace infinity
    // Generic LED indicator (used for signaling errors)
    // (Port and Pin is application specific)
    //
-   // This implementation is for the STM32F429I-Discovery dev board.
    ////////////////////////////////////////////////////////////////////////////
+
+#ifdef STM32F429I_DISCO
+    // STM32F429I-Discovery dev board.
    using main_led_type = output_pin<port::portg + 13>;
+#endif
+
+#ifdef NUCLEO_F446RE
+   // STM32F446 Nucleo-64 board
+   using main_led_type = output_pin<port::porta + 5>;
+#endif
 }}
 
 #endif
