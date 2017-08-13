@@ -12,8 +12,7 @@ namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
    // Generic LED indicator (used for signaling errors)
-   // (Port and Pin is application specific)
-   //
+   // (Port and Pin is board/application specific)
    ////////////////////////////////////////////////////////////////////////////
 
 #ifdef STM32F429I_DISCO
