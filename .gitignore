@@ -1,4 +1,3 @@
-*.DS_Store
 .metadata
 bin/
 tmp/
@@ -8,6 +7,11 @@ tmp/
 *~.nib
 local.properties
 .settings/
+*.DS_Store
+/Debug
+/Release
+*.xml
+*.gitignore
 .loadpath
 .recommenders
 

@@ -6,6 +6,8 @@
 #include <inf/support.hpp>
 #include <inf/pin.hpp>
 #include <inf/app.hpp>
+#include <inf/i2c.hpp>
+#include <inf/canvas.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Simplest toggle the led test. This test uses simple delay to toggle

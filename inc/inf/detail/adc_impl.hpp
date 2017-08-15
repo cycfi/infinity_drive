@@ -3,8 +3,8 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#if !defined(CYCFI_INFINITY_ADC_HPP_MAY_1_2017)
-#define CYCFI_INFINITY_ADC_HPP_MAY_1_2017
+#if !defined(CYCFI_INFINITY_ADC_IMPL_HPP_MAY_1_2017)
+#define CYCFI_INFINITY_ADC_IMPL_HPP_MAY_1_2017
 
 ///////////////////////////////////////////////////////////////////////////////
 // This implementation is for the STM32F4 series.

@@ -28,6 +28,21 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>src/adc.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/src/inf/adc.cpp</locationURI>
+		</link>
+		<link>
+			<name>src/canvas.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/src/inf/canvas.cpp</locationURI>
+		</link>
+		<link>
+			<name>src/i2c.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/src/inf/i2c.cpp</locationURI>
+		</link>
+		<link>
 			<name>src/main.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/main.cpp</locationURI>
