@@ -14,12 +14,17 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // i2c
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t id_, std::size_t sda_pin, std::size_t scl_pin>
+   template <std::size_t id_, std::size_t sda_pin_, std::size_t scl_pin_>
    struct i2c_master
    {
-      i2c_master()
+      static constexpr std::size_t id = id_;
+      static constexpr std::size_t sda_pin = sda_pin_;
+      static constexpr std::size_t scl_pin = scl_pin_;
+
+		i2c_master()
       {
          detail::i2c_config(
+				id,
             detail::get_port<sda_pin/16>(),
             1 << (sda_pin % 16),
             detail::get_port<scl_pin/16>(),
@@ -27,9 +32,12 @@ namespace cycfi { namespace infinity
          );
       }
 
-      void write(std::uint8_t const* data, std::size_t len, uint32_t timeout)
+      void write(
+			std::uint32_t addr, std::uint8_t const* data,
+			std::size_t len, uint32_t timeout = 0xffffffff
+		)
       {
-         detail::i2c_write(data, len, timeout);
+         detail::i2c_write(id, addr, data, len, timeout);
       }
    };
 }}

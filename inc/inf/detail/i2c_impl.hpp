@@ -12,11 +12,14 @@
 namespace cycfi { namespace infinity { namespace detail
 {
    void i2c_config(
+		std::size_t id,
       GPIO_TypeDef& sda_gpio, std::uint32_t sda_pin_mask,
       GPIO_TypeDef& scl_gpio, std::uint32_t scl_pin_mask
    );
 
-   void i2c_write(uint8_t const* data, uint32_t len, uint32_t timeout);
+   void i2c_write(
+		std::size_t id, std::uint32_t addr,
+		uint8_t const* data, uint32_t len, uint32_t timeout);
 }}}
 
 #endif

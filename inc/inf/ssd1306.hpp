@@ -91,6 +91,8 @@ namespace cycfi { namespace infinity
          set_high_column            = 0x10,
          column_addr                = 0x21,
          page_addr                  = 0x22,
+
+   		ssd1306_i2c_addr           = 0x78
       };
    }
 
@@ -104,7 +106,8 @@ namespace cycfi { namespace infinity
    template <typename Port, typename Canvas, std::size_t timeout>
    inline void ssd1306<Port, Canvas, timeout>::out(std::uint8_t const* data, std::size_t len)
    {
-      this->_out.write(data, len, timeout);
+      using namespace ssd1306_constants;
+      this->_out.write(ssd1306_i2c_addr, data, len, timeout);
    }
 
    template <typename Port, typename Canvas, std::size_t timeout>
