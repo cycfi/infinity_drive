@@ -11,12 +11,24 @@ namespace cycfi { namespace infinity { namespace detail
 {
    I2C_HandleTypeDef hi2c3;
 
-   /* I2C SPEEDCLOCK define to max value: 400 KHz */
+   // I2C SPEEDCLOCK define to max value: 400 KHz
    #define I2C_SPEEDCLOCK                 400000
    #define I2C_DUTYCYCLE                  I2C_DUTYCYCLE_2
    #define SSD1306_ADDR                   (0x78)
 
-   void i2c_config()
+   void setup_i2c_pin(GPIO_TypeDef& gpio, std::uint32_t pin_mask)
+   {
+      LL_GPIO_SetPinMode(&gpio, pin_mask, LL_GPIO_MODE_ALTERNATE);
+      LL_GPIO_SetAFPin_8_15(&gpio, pin_mask, LL_GPIO_AF_4);
+      LL_GPIO_SetPinSpeed(&gpio, pin_mask, LL_GPIO_SPEED_FREQ_HIGH);
+      LL_GPIO_SetPinOutputType(&gpio, pin_mask, LL_GPIO_OUTPUT_OPENDRAIN);
+      LL_GPIO_SetPinPull(&gpio, pin_mask, LL_GPIO_PULL_UP);
+   }
+
+   void i2c_config(
+      GPIO_TypeDef& sda_gpio, std::uint32_t sda_pin_mask,
+      GPIO_TypeDef& scl_gpio, std::uint32_t scl_pin_mask
+   )
    {
       __HAL_RCC_GPIOC_CLK_ENABLE();
       __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -31,30 +43,15 @@ namespace cycfi { namespace infinity { namespace detail
       hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
       hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
-      /**I2C3 GPIO Configuration
-      PC9     ------> I2C3_SDA
-      PA8     ------> I2C3_SCL
-      */
-
-      /* Enable the peripheral clock of GPIOA and GPIOC */
+      // Enable the peripheral clock of GPIOA and GPIOC
       LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
       LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
 
-      /* Configure SCL Pin as : Alternate function, High Speed, Open drain, Pull up */
-      LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_ALTERNATE);
-      LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_8, LL_GPIO_AF_4);
-      LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_8, LL_GPIO_SPEED_FREQ_HIGH);
-      LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_8, LL_GPIO_OUTPUT_OPENDRAIN);
-      LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_8, LL_GPIO_PULL_UP);
+      // Configure SDA and SCL Pins
+      setup_i2c_pin(sda_gpio, sda_pin_mask);
+      setup_i2c_pin(scl_gpio, scl_pin_mask);
 
-      /* Configure SDA Pin as : Alternate function, High Speed, Open drain, Pull up */
-      LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
-      LL_GPIO_SetAFPin_8_15(GPIOC, LL_GPIO_PIN_9, LL_GPIO_AF_4);
-      LL_GPIO_SetPinSpeed(GPIOC, LL_GPIO_PIN_9, LL_GPIO_SPEED_FREQ_HIGH);
-      LL_GPIO_SetPinOutputType(GPIOC, LL_GPIO_PIN_9, LL_GPIO_OUTPUT_OPENDRAIN);
-      LL_GPIO_SetPinPull(GPIOC, LL_GPIO_PIN_9, LL_GPIO_PULL_UP);
-
-      /* Peripheral clock enable */
+      // Peripheral clock enable
       __HAL_RCC_I2C3_CLK_ENABLE();
 
       HAL_I2C_Init(&hi2c3);

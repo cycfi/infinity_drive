@@ -7,6 +7,7 @@
 #define CYCFI_INFINITY_I2C_HPP_AUGUST_16_2017
 
 #include <inf/detail/i2c_impl.hpp>
+#include <inf/detail/pin_impl.hpp>
 
 namespace cycfi { namespace infinity
 {
@@ -18,7 +19,12 @@ namespace cycfi { namespace infinity
    {
       i2c_master()
       {
-         detail::i2c_config();
+         detail::i2c_config(
+            detail::get_port<sda_pin/16>(),
+            1 << (sda_pin % 16),
+            detail::get_port<scl_pin/16>(),
+            1 << (scl_pin % 16)
+         );
       }
 
       void write(std::uint8_t const* data, std::size_t len, uint32_t timeout)

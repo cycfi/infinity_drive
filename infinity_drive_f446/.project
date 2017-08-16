@@ -28,6 +28,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>inf</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/inc/inf</locationURI>
+		</link>
+		<link>
 			<name>src/adc.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/adc.cpp</locationURI>

@@ -35,20 +35,19 @@ void start()
 #else // Test some text drawing
 
    cnv.draw_string("Hello, World!", 25, 0, font::small);
-   cnv.draw_string("Hello, World!", 10, 15, font::medium);
+   cnv.draw_string("Hello, World!", 15, 15, font::medium);
    cnv.refresh();
    delay_ms(1000);
 
    cnv.clear();
    cnv.draw_string("cycfi", 30, 0, font::large);
-   cnv.refresh();
-   delay_ms(2000);
-
    cnv.bright(false);
+   cnv.refresh();
+
    for (int v = 0; v < 255; ++v)
    {
       cnv.brightness(v);
-      delay_ms(50);
+      delay_ms(5);
    }
 
    cnv.bright();
