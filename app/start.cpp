@@ -39,15 +39,19 @@ void start()
    cnv.refresh();
    delay_ms(1000);
 
-   cnv.clear();
-   cnv.draw_string("cycfi", 30, 0, font::large);
-   cnv.bright(false);
-   cnv.refresh();
+   for (int y = -30; y <= 0; ++y)
+   {
+      cnv.clear();
+      cnv.draw_string("cycfi", 30, y, font::large);
+      cnv.refresh();
+      delay_ms(50);
+   }
 
-   for (int v = 0; v < 255; ++v)
+   cnv.bright(false);
+   for (int v = 255; v >= 0; --v)
    {
       cnv.brightness(v);
-      delay_ms(5);
+      delay_ms(1);
    }
 
    cnv.bright();

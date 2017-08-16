@@ -219,28 +219,37 @@ namespace cycfi { namespace infinity { namespace detail
    }
 
    void draw_bitmap(
-      std::uint8_t* buffer, int width, int height,
+      std::uint8_t* buffer, std::uint8_t* end, int width, int height,
       int x, int y, bitmap const& bm, color color_
    )
    {
       int const cols = bm.width;
       int const rows = (bm.height + 7) / 8;
-      auto dest = buffer + x + ((y / 8) * width);
+      auto start_row = y / 8;
+      auto yoffs = y % 8;
+      if (y < 0)
+      {
+         start_row -= 1;
+         yoffs += 8;
+      }
+      auto dest = buffer + x + (start_row * width);
       auto src = bm.data;
 
       for (int yi = 0; yi < rows; yi++)
       {
          for (int xi = 0; xi < cols; xi++)
          {
-            if (xi + x < width)
+            auto xii = xi + x;
+            if (xii >= 0 && xii < width)
             {
-               auto yoffs = y % 8;
                auto pix = src[xi];
                auto out = dest + xi;
+               auto out2 = out + width;
 
-               draw_byte(*out, pix << yoffs, color_);
-               if (yoffs && ((y + 8) < height))
-                  draw_byte(*(out + width), pix >> (8 - yoffs), color_);
+               if (out >= buffer && out < end)
+                  draw_byte(*out, pix << yoffs, color_);
+               if (out2 >= buffer && out2 < end && yoffs)
+                  draw_byte(*out2, pix >> (8 - yoffs), color_);
             }
          }
          dest += width;
@@ -249,8 +258,8 @@ namespace cycfi { namespace infinity { namespace detail
    }
 
    int draw_char(
-       std::uint8_t* buffer, int width, int height,
-       int x, int y, char ch, font font_, color color_
+      std::uint8_t* buffer, std::uint8_t* end, int width, int height,
+      int x, int y, char ch, font font_, color color_
    )
    {
       FONT_INFO const* font_info = nullptr;
@@ -286,7 +295,7 @@ namespace cycfi { namespace infinity { namespace detail
 
       // Draw the font bitmap
       bitmap const bm = { address, glyph_width, glyph_height };
-      draw_bitmap(buffer, width, height, x, y, bm, color_);
+      draw_bitmap(buffer, end, width, height, x, y, bm, color_);
       return x + glyph_width + 2;
    }
 }}}

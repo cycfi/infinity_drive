@@ -107,7 +107,7 @@ namespace cycfi { namespace infinity
       );
 
       void draw_bitmap(
-          std::uint8_t* buffer, int width, int height,
+          std::uint8_t* buffer, std::uint8_t* end, int width, int height,
           int x, int y, monochrome::bitmap const& bm, monochrome::color color_
       );
 
@@ -134,7 +134,7 @@ namespace cycfi { namespace infinity
       }
 
       int draw_char(
-          std::uint8_t* buffer, int width, int height,
+          std::uint8_t* buffer, std::uint8_t* end, int width, int height,
           int x, int y, char ch, monochrome::font font_, monochrome::color color_
       );
    }
@@ -204,7 +204,7 @@ namespace cycfi { namespace infinity
    template <std::size_t width, std::size_t height>
    inline int mono_canvas<width, height>::draw_char(char ch, int x, int y, font font_, color color_)
    {
-      return detail::draw_char(_buffer, width, height, x, y, ch, font_, color_);
+      return detail::draw_char(_buffer, _buffer+size, width, height, x, y, ch, font_, color_);
    }
 
    template <std::size_t width, std::size_t height>
