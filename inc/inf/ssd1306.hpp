@@ -28,7 +28,7 @@ namespace cycfi { namespace infinity
       static std::size_t const width = Canvas::width;
       static std::size_t const buffer_size = Canvas::size + 1;
 
-      ssd1306();
+      ssd1306(Port& out);
 
       void refresh();
       void on();
@@ -44,7 +44,7 @@ namespace cycfi { namespace infinity
       void out(std::uint8_t const* data, std::size_t len);
 
       std::uint8_t   _buffer[buffer_size];
-      Port           _out;
+      Port&          _out;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -117,8 +117,9 @@ namespace cycfi { namespace infinity
    }
 
    template <typename Port, typename Canvas, std::size_t timeout>
-   inline ssd1306<Port, Canvas, timeout>::ssd1306()
+   inline ssd1306<Port, Canvas, timeout>::ssd1306(Port& out)
     : Canvas(&_buffer[1])
+	 , _out(out)
    {
       using namespace ssd1306_constants;
 

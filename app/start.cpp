@@ -23,8 +23,8 @@ void start()
    using oled_type = inf::ssd1306<i2c_type, canvas_type>;
    using namespace inf::monochrome;
 
-   oled_type cnv;
-   delay_ms(100); // delay a bit
+   i2c_type 	i2c;
+   oled_type 	cnv{ i2c };
 
 #if 0 // Test some rects and line
 
@@ -52,7 +52,6 @@ void start()
 
    cnv.bright();
    delay_ms(1000);
-
 
 #endif
 
