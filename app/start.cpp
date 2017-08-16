@@ -42,10 +42,20 @@ void start()
    cnv.clear();
    cnv.draw_string("cycfi", 30, 0, font::large);
    cnv.refresh();
+   delay_ms(2000);
+
+   cnv.bright(false);
+   for (int v = 0; v < 255; ++v)
+   {
+      cnv.brightness(v);
+      delay_ms(50);
+   }
+
+   cnv.bright();
    delay_ms(1000);
 
-#endif
 
+#endif
 
    while (true)
       ;

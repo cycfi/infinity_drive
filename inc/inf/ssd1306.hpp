@@ -34,6 +34,9 @@ namespace cycfi { namespace infinity
       void on();
       void off();
 
+      void bright(bool val = true);
+      void brightness(std::uint8_t val);
+
    private:
 
       void command(std::uint8_t cmd);
@@ -55,6 +58,8 @@ namespace cycfi { namespace infinity
          charge_pump                = 0x8d,
          enable_charge_val          = 0x14,
          set_pre_charge             = 0xd9,
+         pre_charge_value           = 0x10,
+         vcom_detect_value          = 0x10,
 
          memory_mode                = 0x20,
 
@@ -86,11 +91,6 @@ namespace cycfi { namespace infinity
          set_high_column            = 0x10,
          column_addr                = 0x21,
          page_addr                  = 0x22,
-         set_vert_scroll_area       = 0xa3,
-         right_horiz_scroll         = 0x26,
-         left_horiz_scroll          = 0x27,
-         vert_right_horiz_scroll    = 0x29,
-         vert_left_horiz_scroll     = 0x2a
       };
    }
 
@@ -135,8 +135,9 @@ namespace cycfi { namespace infinity
       // Enable charge pump
       command(charge_pump);
       command(enable_charge_val);
-      command(set_pre_charge);
-      command(0xf1);
+
+      // Set the overall backlight brightness
+      bright();
 
       // Memory mode: act like ks0108
       command(memory_mode);
@@ -165,8 +166,6 @@ namespace cycfi { namespace infinity
       else if (width == 96 && height == 16)
          command(0x2);
 
-      command(set_vcom_detect);
-      command(0x40);
       command(display_all_on_resume);
       command(normal_display);
       command(deactivate_scroll);
@@ -207,13 +206,35 @@ namespace cycfi { namespace infinity
    template <typename Port, typename Canvas, std::size_t timeout>
    inline void ssd1306<Port, Canvas, timeout>::on()
    {
-      command(ssd1306_constants::display_on);
+      using namespace ssd1306_constants;
+      command(display_on);
    }
 
    template <typename Port, typename Canvas, std::size_t timeout>
    inline void ssd1306<Port, Canvas, timeout>::off()
    {
-      command(ssd1306_constants::display_off);
+      using namespace ssd1306_constants;
+      command(display_off);
+   }
+
+   template <typename Port, typename Canvas, std::size_t timeout>
+   void ssd1306<Port, Canvas, timeout>::brightness(std::uint8_t val)
+   {
+      using namespace ssd1306_constants;
+      command(set_contrast);
+      command(val);
+      command(set_vcom_detect);
+      command(val / 4);
+   }
+
+   template <typename Port, typename Canvas, std::size_t timeout>
+   void ssd1306<Port, Canvas, timeout>::bright(bool val)
+   {
+      using namespace ssd1306_constants;
+      command(set_pre_charge);
+      command(val ? 0xf1 : pre_charge_value);
+      command(set_vcom_detect);
+      command(val ? 0x40 : vcom_detect_value);
    }
 }}
 
