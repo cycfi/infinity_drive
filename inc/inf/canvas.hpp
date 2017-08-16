@@ -12,19 +12,18 @@
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
-   // mono_oled_canvas canvas. This is implements routines for drawing
-   // into monochromatic OLED frame buffers.
+   // Simple basic types for monochrome graphics
    ////////////////////////////////////////////////////////////////////////////
    namespace monochrome
    {
-      enum color
+      enum class color
       {
          white,
          black,
          inverse,
       };
 
-      enum font
+      enum class font
       {
          small,
          medium,
@@ -39,8 +38,12 @@ namespace cycfi { namespace infinity
       };
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   // mono_canvas canvas. This is implements routines for drawing
+   // into monochromatic OLED frame buffers.
+   ////////////////////////////////////////////////////////////////////////////
    template <std::size_t width_, std::size_t height_>
-   struct mono_oled_canvas
+   struct mono_canvas
    {
    public:
 
@@ -48,6 +51,13 @@ namespace cycfi { namespace infinity
       using color = monochrome::color;
       using font = monochrome::font;
       using bitmap = monochrome::bitmap;
+      static std::size_t const size = (width * height) / 8;
+
+      mono_canvas(std::uint8_t* buffer_)
+       : _buffer(buffer_)
+      {
+         clear();
+      }
 
       void  clear();
 
@@ -63,15 +73,17 @@ namespace cycfi { namespace infinity
       int   draw_char(char ch, int x, int y, font font_, color color_ = color::white);
       int   draw_string(char const* str, int x, int y, font font_, color color_ = color::white);
 
-      std::uint8_t*        begin()        { return _buffer; }
-      std::uint8_t const*  begin() const  { return _buffer; }
-      std::uint8_t*        end()          { return _buffer + buffer_size; }
-      std::uint8_t const*  end() const    { return _buffer + buffer_size; }
+      std::uint8_t*           begin()        { return _buffer; }
+      std::uint8_t const*     begin() const  { return _buffer; }
+      std::uint8_t*           end()          { return _buffer + size; }
+      std::uint8_t const*     end() const    { return _buffer + size; }
+
+      std::uint8_t&           operator[](std::size_t i)        { return _buffer[i]; }
+      std::uint8_t const      operator[](std::size_t i) const  { return _buffer[i]; }
 
    private:
 
-      static std::size_t const buffer_size = (width * height) / 8;
-      std::uint8_t _buffer[buffer_size];
+      std::uint8_t* _buffer;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -128,32 +140,32 @@ namespace cycfi { namespace infinity
    }
 
    template <std::size_t width, std::size_t height>
-   inline void mono_oled_canvas<width, height>::clear()
+   inline void mono_canvas<width, height>::clear()
    {
-      for (auto& pixels : _buffer)
+      for (auto& pixels : *this)
          pixels = 0;
    }
 
    template <std::size_t width, std::size_t height>
-   inline void mono_oled_canvas<width, height>::fast_hline(int x, int y, int w, color color_)
+   inline void mono_canvas<width, height>::fast_hline(int x, int y, int w, color color_)
    {
       detail::fast_hline_impl(_buffer, width, height, x, y, w, color_);
    }
 
    template <std::size_t width, std::size_t height>
-   inline void mono_oled_canvas<width, height>::fast_vline(int x, int y, int h, color color_)
+   inline void mono_canvas<width, height>::fast_vline(int x, int y, int h, color color_)
    {
       detail::fast_vline_impl(_buffer, width, height, x, y, h, color_);
    }
 
    template <std::size_t width, std::size_t height>
-   void mono_oled_canvas<width, height>::draw_pixel(int x, int y, color color_)
+   void mono_canvas<width, height>::draw_pixel(int x, int y, color color_)
    {
       detail::draw_pixel(_buffer, width, height, x, y, color_);
    }
 
    template <std::size_t width, std::size_t height>
-   inline void mono_oled_canvas<width, height>::draw_line(int x0, int y0, int x1, int y1, color color_)
+   inline void mono_canvas<width, height>::draw_line(int x0, int y0, int x1, int y1, color color_)
    {
       if (x0 == x1)
       {
@@ -174,14 +186,14 @@ namespace cycfi { namespace infinity
    }
 
    template <std::size_t width, std::size_t height>
-   inline void mono_oled_canvas<width, height>::fill_rect(int x, int y, int w, int h, color color_)
+   inline void mono_canvas<width, height>::fill_rect(int x, int y, int w, int h, color color_)
    {
       for (auto i=x; i<x+w; ++i)
          fast_vline(i, y, h, color_);
    }
 
    template <std::size_t width, std::size_t height>
-   inline void mono_oled_canvas<width, height>::draw_rect(int x, int y, int w, int h, color color_)
+   inline void mono_canvas<width, height>::draw_rect(int x, int y, int w, int h, color color_)
    {
       fast_hline(x, y, w, color_);
       fast_hline(x, y+h-1, w, color_);
@@ -190,13 +202,13 @@ namespace cycfi { namespace infinity
    }
 
    template <std::size_t width, std::size_t height>
-   inline int mono_oled_canvas<width, height>::draw_char(char ch, int x, int y, font font_, color color_)
+   inline int mono_canvas<width, height>::draw_char(char ch, int x, int y, font font_, color color_)
    {
       return detail::draw_char(_buffer, width, height, x, y, ch, font_, color_);
    }
 
    template <std::size_t width, std::size_t height>
-   inline int mono_oled_canvas<width, height>::draw_string(char const* str, int x, int y, font font_, color color_)
+   inline int mono_canvas<width, height>::draw_string(char const* str, int x, int y, font font_, color color_)
    {
       if (str)
       {

@@ -12,7 +12,8 @@
 #ifdef USE_RTOS_SYSTICK
 #include <cmsis_os.h>
 #endif
-#include "stm32f4xx_it.h"
+#include <stm32f4xx_it.h>
+#include <stm32f4xx_hal.h>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -32,4 +33,6 @@
   */
 void SysTick_Handler(void)
 {
+   HAL_IncTick();
+   HAL_SYSTICK_IRQHandler();
 }
