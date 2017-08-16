@@ -26,19 +26,6 @@ void start()
    oled_type cnv;
    delay_ms(100); // delay a bit
 
-//   for (int i = 0; i < 256; ++i)
-//   {
-//	   cnv[i] = 0xff;
-//	   cnv.refresh();
-//	   delay_ms(100);
-//   }
-//
-//   cnv[0] = 1;
-//   cnv[3] = 0xff;
-//   cnv[127] = 0xff;
-//   cnv[128] = 0xff;
-
-
 #if 0 // Test some rects and line
 
    cnv.fill_rect(10, 10, 50, 50);
@@ -49,11 +36,16 @@ void start()
 
    cnv.draw_string("Hello, World!", 25, 0, font::small);
    cnv.draw_string("Hello, World!", 10, 15, font::medium);
-//   cnv.draw_string("cycfi", 25, 30, font::large);
+   cnv.refresh();
+   delay_ms(1000);
+
+   cnv.clear();
+   cnv.draw_string("cycfi", 30, 0, font::large);
+   cnv.refresh();
+   delay_ms(1000);
 
 #endif
 
-   cnv.refresh();
 
    while (true)
       ;

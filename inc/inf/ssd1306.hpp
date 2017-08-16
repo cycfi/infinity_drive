@@ -31,6 +31,8 @@ namespace cycfi { namespace infinity
       ssd1306();
 
       void refresh();
+      void on();
+      void off();
 
    private:
 
@@ -49,31 +51,41 @@ namespace cycfi { namespace infinity
    {
       enum
       {
+         set_mux_ratio              = 0xa8,
+         charge_pump                = 0x8d,
+         enable_charge_val          = 0x14,
+         set_pre_charge             = 0xd9,
+
+         memory_mode                = 0x20,
+
          set_contrast               = 0x81,
+         default_contrast           = 0x8F,
+
+         set_display_clock_div      = 0xd5,
+         set_display_offset         = 0xd3,
+         set_start_line             = 0x40,
+
+         seg_remap                  = 0xa0,
+         com_scan_inc               = 0xc0,
+         com_scan_dec               = 0xc8,
+
+         set_com_pins               = 0xda,
+         set_vcom_detect            = 0xdb,
          display_all_on_resume      = 0xa4,
          display_all_on             = 0xa5,
          normal_display             = 0xa6,
          invert_display             = 0xa7,
+
          display_off                = 0xae,
          display_on                 = 0xaf,
-         set_display_offset         = 0xd3,
-         set_com_pins               = 0xda,
-         set_vcom_detect            = 0xdb,
-         set_display_clock_div      = 0xd5,
-         set_pre_charge             = 0xd9,
-         set_multiplex              = 0xa8,
-         set_low_column             = 0x00,
-         set_high_column            = 0x10,
-         set_start_line             = 0x40,
-         memory_mode                = 0x20,
-         column_addr                = 0x21,
-         page_addr                  = 0x22,
-         com_scan_inc               = 0xc0,
-         com_scan_dec               = 0xc8,
-         seg_remap                  = 0xa0,
-         charge_pump                = 0x8d,
+
          activate_scroll            = 0x2f,
          deactivate_scroll          = 0x2e,
+
+         set_low_column             = 0x00,
+         set_high_column            = 0x10,
+         column_addr                = 0x21,
+         page_addr                  = 0x22,
          set_vert_scroll_area       = 0xa3,
          right_horiz_scroll         = 0x26,
          left_horiz_scroll          = 0x27,
@@ -110,29 +122,40 @@ namespace cycfi { namespace infinity
       // place the 0x40 prefix
       _buffer[0] = 0x40;
 
-      command(display_off);
+      // Turn display off
+      off();
 
-      // Wait 100mS for DC-DC to stabilise. This can probably be reduced
+      // Wait for DC-DC to stabilise.
       delay_ms(100);
+
+      // Set MUX ratio
+      command(set_mux_ratio);
+      command(height - 1);
+
+      // Enable charge pump
+      command(charge_pump);
+      command(enable_charge_val);
+      command(set_pre_charge);
+      command(0xf1);
+
+      // Memory mode: act like ks0108
+      command(memory_mode);
+      command(0x00);
+
+      // Set default contrast
+      command(set_contrast);
+      command(default_contrast);
 
       command(set_display_clock_div);
       command(0x80);
 
-      command(set_multiplex);
-      command(height - 1);
-
+      // Set no display offset
       command(set_display_offset);
-      command(0x0);                          // no offset
-      command(set_start_line | 0x0);         // line #0
-      command(charge_pump);
-      command(0x14);
-      command(memory_mode);
-      command(0x00);                         // 0x0 act like ks0108
+      command(0x0);
+      command(set_start_line | 0x0);
+
       command(seg_remap | 0x1);
       command(com_scan_dec);
-
-      command(set_contrast);
-      command(0xff);
 
       command(set_com_pins);
       if (width == 128 && height == 32)
@@ -140,21 +163,23 @@ namespace cycfi { namespace infinity
       else if (width == 64 && height == 32)
          command(0x12);
       else if (width == 96 && height == 16)
-         command(0x2);                       // ada x12
-
-      command(set_pre_charge);
-      command(0xf1);
+         command(0x2);
 
       command(set_vcom_detect);
       command(0x40);
       command(display_all_on_resume);
       command(normal_display);
-
       command(deactivate_scroll);
-      command(display_on);
 
+      // Clear the canvas
       Canvas::clear();
       refresh();
+
+      // Turn display on
+      on();
+
+      // Wait 150ms for display to turn on
+      delay_ms(150);
    }
 
    template <typename Port, typename Canvas, std::size_t timeout>
@@ -177,6 +202,18 @@ namespace cycfi { namespace infinity
           command(1);               // Page end address
 
       out(_buffer, buffer_size);
+   }
+
+   template <typename Port, typename Canvas, std::size_t timeout>
+   inline void ssd1306<Port, Canvas, timeout>::on()
+   {
+      command(ssd1306_constants::display_on);
+   }
+
+   template <typename Port, typename Canvas, std::size_t timeout>
+   inline void ssd1306<Port, Canvas, timeout>::off()
+   {
+      command(ssd1306_constants::display_off);
    }
 }}
 
