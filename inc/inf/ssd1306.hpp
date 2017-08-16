@@ -40,7 +40,6 @@ namespace cycfi { namespace infinity
    private:
 
       void command(std::uint8_t cmd);
-      void out(std::uint8_t data);
       void out(std::uint8_t const* data, std::size_t len);
 
       std::uint8_t   _buffer[buffer_size];
@@ -107,13 +106,7 @@ namespace cycfi { namespace infinity
    inline void ssd1306<Port, Canvas, timeout>::out(std::uint8_t const* data, std::size_t len)
    {
       using namespace ssd1306_constants;
-      this->_out.write(ssd1306_i2c_addr, data, len, timeout);
-   }
-
-   template <typename Port, typename Canvas, std::size_t timeout>
-   inline void ssd1306<Port, Canvas, timeout>::out(std::uint8_t data)
-   {
-      out(&data, 1);
+      _out.write(ssd1306_i2c_addr, data, len, timeout);
    }
 
    template <typename Port, typename Canvas, std::size_t timeout>
