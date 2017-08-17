@@ -26,13 +26,33 @@ void start()
    i2c_type 	i2c;
    oled_type 	cnv{ i2c };
 
-#if 0 // Test some rects and line
+   // Draw some lines
+   for (int y = 0; y < cnv.height; y += 3)
+   {
+      cnv.draw_line(cnv.width / 2, y, cnv.width, 0);
+      cnv.refresh();
+      delay_ms(100);
+   }
+   for (int x = cnv.width / 2; x < cnv.width; x += 3)
+   {
+      cnv.draw_line(cnv.width, 0, x, cnv.height);
+      cnv.refresh();
+      delay_ms(100);
+   }
+   delay_ms(1000);
 
-   cnv.fill_rect(10, 10, 50, 50);
-   cnv.draw_rect(8, 8, 54, 54);
-   cnv.draw_line(0, 0, 128, 32, color::black);
+   // Draw some rects
+   for (int i = 0; i < 32; i += 3)
+   {
+      auto w = cnv.width / 2 - i * 2;
+      auto h = cnv.height - i * 2;
+      cnv.draw_rect(i, i, w, h);
+      cnv.refresh();
+      delay_ms(100);
+   }
 
-#else // Test some text drawing
+   delay_ms(1000);
+   cnv.clear();
 
    cnv.draw_string("Hello, World!", 25, 0, font::small);
    cnv.draw_string("Hello, World!", 15, 15, font::medium);
@@ -56,8 +76,6 @@ void start()
 
    cnv.bright();
    delay_ms(1000);
-
-#endif
 
    while (true)
       ;
