@@ -19,7 +19,7 @@ using inf::delay_ms;
 void start()
 {
    using canvas_type = inf::mono_canvas<128, 32>;
-   using i2c_type = inf::i2c_master<2, portb+10, portb+3>;
+   using i2c_type = inf::i2c_master<portb+10, portb+3>;
    using oled_type = inf::ssd1306<i2c_type, canvas_type>;
    using namespace inf::monochrome;
 

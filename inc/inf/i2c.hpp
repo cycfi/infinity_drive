@@ -14,12 +14,15 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // i2c
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t id_, std::size_t scl_pin_, std::size_t sda_pin_>
+   template <std::size_t scl_pin_, std::size_t sda_pin_>
    struct i2c_master
    {
-      static constexpr std::size_t id = id_;
+      static_assert(detail::valid_scl_pin<scl_pin_>(), "Invalid SCL pin");
+      static_assert(detail::valid_sda_pin<sda_pin_>(), "Invalid SDA pin");
+
       static constexpr std::size_t scl_pin = scl_pin_;
       static constexpr std::size_t sda_pin = sda_pin_;
+      static constexpr std::size_t id = detail::scl_pin<scl_pin>::i2c_id;
       
       i2c_master()
       {
