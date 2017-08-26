@@ -12,17 +12,17 @@ namespace cycfi { namespace infinity { namespace detail
    I2C_HandleTypeDef inc_handles[3];
 
    // I2C SPEEDCLOCK define to max value: 400 KHz
-   #define I2C_SPEEDCLOCK                 400000
-   #define I2C_DUTYCYCLE                  I2C_DUTYCYCLE_2
+   static auto constexpr i2c_clock_speed = 400000;
+   static auto constexpr i2c_duty_cycle = I2C_DUTYCYCLE_2;
 
    void setup_i2c_pin(GPIO_TypeDef& gpio, std::uint32_t pin_mask)
    {
       LL_GPIO_SetPinMode(&gpio, pin_mask, LL_GPIO_MODE_ALTERNATE);
 
       if (pin_mask > LL_GPIO_PIN_7)
-    	  LL_GPIO_SetAFPin_8_15(&gpio, pin_mask, LL_GPIO_AF_4);
+         LL_GPIO_SetAFPin_8_15(&gpio, pin_mask, LL_GPIO_AF_4);
       else
-    	  LL_GPIO_SetAFPin_0_7(&gpio, pin_mask, LL_GPIO_AF_4);
+         LL_GPIO_SetAFPin_0_7(&gpio, pin_mask, LL_GPIO_AF_4);
 
       LL_GPIO_SetPinSpeed(&gpio, pin_mask, LL_GPIO_SPEED_FREQ_HIGH);
       LL_GPIO_SetPinOutputType(&gpio, pin_mask, LL_GPIO_OUTPUT_OPENDRAIN);
@@ -36,19 +36,14 @@ namespace cycfi { namespace infinity { namespace detail
    )
    {
       auto& handle = inc_handles[id-1];
-
-//      __HAL_RCC_GPIOC_CLK_ENABLE();
-//      __HAL_RCC_GPIOA_CLK_ENABLE();
-      __HAL_RCC_GPIOB_CLK_ENABLE();
-
       switch (id-1)
       {
            case 0: handle.Instance = I2C1; 	break;
            case 1: handle.Instance = I2C2; 	break;
            case 2: handle.Instance = I2C3; 	break;
       }
-      handle.Init.ClockSpeed = I2C_SPEEDCLOCK;
-      handle.Init.DutyCycle = I2C_DUTYCYCLE;
+      handle.Init.ClockSpeed = i2c_clock_speed;
+      handle.Init.DutyCycle = i2c_duty_cycle;
       handle.Init.OwnAddress1 = 0;
       handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
       handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -61,21 +56,21 @@ namespace cycfi { namespace infinity { namespace detail
       setup_i2c_pin(sda_gpio, sda_pin_mask);
 
       // Peripheral clock enable
-	  switch (id-1)
-	  {
+      switch (id-1)
+      {
          case 0: __HAL_RCC_I2C1_CLK_ENABLE(); 	break;
-      	 case 1: __HAL_RCC_I2C2_CLK_ENABLE(); 	break;
-      	 case 2: __HAL_RCC_I2C3_CLK_ENABLE(); 	break;
-	  }
+         case 1: __HAL_RCC_I2C2_CLK_ENABLE(); 	break;
+         case 2: __HAL_RCC_I2C3_CLK_ENABLE(); 	break;
+      }
 
       HAL_I2C_Init(&handle);
    }
 
    void i2c_write(
-		std::size_t id, std::uint32_t addr,
-		uint8_t const* data, uint32_t len, uint32_t timeout)
+      std::size_t id, std::uint32_t addr,
+      uint8_t const* data, uint32_t len, uint32_t timeout)
    {
       HAL_I2C_Master_Transmit(
-			&inc_handles[id-1], addr, const_cast<uint8_t*>(data), len, timeout);
+         &inc_handles[id-1], addr, const_cast<uint8_t*>(data), len, timeout);
    }
 }}}

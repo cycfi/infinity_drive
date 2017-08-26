@@ -23,15 +23,18 @@ namespace cycfi { namespace infinity
       
       i2c_master()
       {
+         static constexpr auto scl_port = scl_pin / 16;
+         static constexpr auto sda_port = sda_pin / 16;
+         
          // Enable GPIO peripheral clocks
-         detail::enable_port_clock<scl_pin / 16>();
-         detail::enable_port_clock<sda_pin / 16>();
+         detail::enable_port_clock<scl_port>();
+         detail::enable_port_clock<sda_port>();
          
          detail::i2c_config(
             id,
-            detail::get_port<scl_pin/16>(),
+            detail::get_port<scl_port>(),
             1 << (scl_pin % 16),
-            detail::get_port<sda_pin/16>(),
+            detail::get_port<sda_port>(),
             1 << (sda_pin % 16)
          );
       }
