@@ -98,6 +98,22 @@ namespace cycfi { namespace infinity { namespace detail
          &i2c_handles[id-1], addr, data, len, timeout);
    }
 
+   inline void i2c_mem_write(
+      std::size_t id, std::uint32_t addr, uint16_t mem_addr, uint16_t mem_size,
+      uint8_t const* data, uint32_t len, uint32_t timeout)
+   {
+      HAL_I2C_Mem_Write(
+         &i2c_handles[id-1], addr, mem_addr, mem_size, const_cast<uint8_t*>(data), len, timeout);
+   }
+
+   inline void i2c_mem_read(
+      std::size_t id, std::uint32_t addr, uint16_t mem_addr, uint16_t mem_size,
+      uint8_t* data, uint32_t len, uint32_t timeout)
+   {
+      HAL_I2C_Mem_Read(
+         &i2c_handles[id-1], addr, mem_addr, mem_size, data, len, timeout);
+   }
+
 }}}
 
 #endif

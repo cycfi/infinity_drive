@@ -9,6 +9,7 @@
 #include <inf/i2c.hpp>
 #include <inf/canvas.hpp>
 #include <inf/ssd1306.hpp>
+#include <inf/mpr121.hpp>
 
 namespace inf = cycfi::infinity;
 using namespace inf::port;
@@ -26,58 +27,36 @@ void start()
    i2c_type 	i2c;
    oled_type 	cnv{ i2c };
 
+   char status1[] = "01-02-03-04-05-06-";
+   char status2[] = "07-08-09-10-11-12-";
+   bool touch[12] = { false, false, true, true, false, false, true, true, false, false, true, true };
+
    while (true)
    {
-      // Draw some lines
-      for (std::size_t y = 0; y < cnv.height; y += 3)
+      char* p = status1;
+      for (int i = 0; i != 12; ++i)
       {
-            cnv.draw_line(cnv.width / 2, y, cnv.width, 0);
-            cnv.refresh();
-            delay_ms(100);
-      }
-      for (std::size_t x = cnv.width / 2; x < cnv.width; x += 3)
-      {
-            cnv.draw_line(cnv.width, 0, x, cnv.height);
-            cnv.refresh();
-            delay_ms(100);
-      }
-      delay_ms(1000);
-
-      // Draw some rects
-      for (int i = 0; i < 32; i += 3)
-      {
-            auto w = cnv.width / 2 - i * 2;
-            auto h = cnv.height - i * 2;
-            cnv.draw_rect(i, i, w, h);
-            cnv.refresh();
-            delay_ms(100);
+         auto n = i+1;
+         if (n == 7)
+            p = status2;
+         if (touch[i])
+         {
+            *p++ = (n >= 10)? '1' : '0';
+            *p++ = '0' + (n % 10);
+            p++;
+         }
+         else
+         {
+            *p++ = '_';
+            *p++ = '_';
+            p++;
+         }
       }
 
-      delay_ms(1000);
       cnv.clear();
-
-      cnv.draw_string("Hello, World!", 25, 0, font::small);
-      cnv.draw_string("Hello, World!", 15, 15, font::medium);
+      cnv.draw_string(status1, 10, 0, font::small);
+      cnv.draw_string(status2, 10, 15, font::small);
       cnv.refresh();
-      delay_ms(1000);
-
-      for (int y = -30; y <= 0; ++y)
-      {
-            cnv.clear();
-            cnv.draw_string("cycfi", 30, y, font::large);
-            cnv.refresh();
-            delay_ms(50);
-      }
-
-      cnv.bright(false);
-      for (int v = 255; v >= 0; --v)
-      {
-            cnv.brightness(v);
-            delay_ms(1);
-      }
-
-      cnv.bright();
-      delay_ms(1000);
-      cnv.clear();
+      delay_ms(100);
    }
 }
