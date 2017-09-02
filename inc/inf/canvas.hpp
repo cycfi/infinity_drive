@@ -8,6 +8,7 @@
 
 #include <utility>
 #include <cstdint>
+#include <string>
 
 namespace cycfi { namespace infinity
 {
@@ -72,6 +73,7 @@ namespace cycfi { namespace infinity
 
       int   draw_char(char ch, int x, int y, font font_, color color_ = color::white);
       int   draw_string(char const* str, int x, int y, font font_, color color_ = color::white);
+      int   draw_string(std::string const& str, int x, int y, font font_, color color_ = color::white);
 
       std::uint8_t*           begin()        { return _buffer; }
       std::uint8_t const*     begin() const  { return _buffer; }
@@ -217,6 +219,12 @@ namespace cycfi { namespace infinity
          return x;
       }
       return 0;
+   }
+
+   template <std::size_t width, std::size_t height>
+   inline int mono_canvas<width, height>::draw_string(std::string const& str, int x, int y, font font_, color color_)
+   {
+      return draw_string(str.c_str(), x, y, font_, color_);
    }
 }}
 
