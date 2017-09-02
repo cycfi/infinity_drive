@@ -49,6 +49,14 @@ namespace cycfi { namespace infinity
       {
          detail::i2c_write(id, addr, data, len, timeout);
       }
+
+      void write(
+         std::uint32_t addr, std::uint8_t* data,
+         std::size_t len, uint32_t timeout = 0xffffffff
+      )
+      {
+         detail::i2c_read(id, addr, data, len, timeout);
+      }
    };
 }}
 

@@ -80,9 +80,24 @@ namespace cycfi { namespace infinity { namespace detail
       GPIO_TypeDef& sda_gpio, std::uint32_t sda_pin_mask
    );
 
-   void i2c_write(
-		std::size_t id, std::uint32_t addr,
-		uint8_t const* data, uint32_t len, uint32_t timeout);
+   extern I2C_HandleTypeDef i2c_handles[3];
+
+   inline void i2c_write(
+      std::size_t id, std::uint32_t addr,
+      uint8_t const* data, uint32_t len, uint32_t timeout)
+   {
+      HAL_I2C_Master_Transmit(
+         &i2c_handles[id-1], addr, const_cast<uint8_t*>(data), len, timeout);
+   }
+
+   inline void i2c_read(
+      std::size_t id, std::uint32_t addr,
+      uint8_t* data, uint32_t len, uint32_t timeout)
+   {
+      HAL_I2C_Master_Receive(
+         &i2c_handles[id-1], addr, data, len, timeout);
+   }
+
 }}}
 
 #endif

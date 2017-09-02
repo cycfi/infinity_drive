@@ -9,7 +9,7 @@
 
 namespace cycfi { namespace infinity { namespace detail
 {
-   I2C_HandleTypeDef inc_handles[3];
+   I2C_HandleTypeDef i2c_handles[3];
 
    // I2C SPEEDCLOCK define to max value: 400 KHz
    static auto constexpr i2c_clock_speed = 400000;
@@ -35,7 +35,7 @@ namespace cycfi { namespace infinity { namespace detail
       GPIO_TypeDef& sda_gpio, std::uint32_t sda_pin_mask
    )
    {
-      auto& handle = inc_handles[id-1];
+      auto& handle = i2c_handles[id-1];
       switch (id-1)
       {
            case 0: handle.Instance = I2C1; 	break;
@@ -64,13 +64,5 @@ namespace cycfi { namespace infinity { namespace detail
       }
 
       HAL_I2C_Init(&handle);
-   }
-
-   void i2c_write(
-      std::size_t id, std::uint32_t addr,
-      uint8_t const* data, uint32_t len, uint32_t timeout)
-   {
-      HAL_I2C_Master_Transmit(
-         &inc_handles[id-1], addr, const_cast<uint8_t*>(data), len, timeout);
    }
 }}}
