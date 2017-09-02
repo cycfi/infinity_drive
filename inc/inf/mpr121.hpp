@@ -32,10 +32,10 @@ namespace cycfi { namespace infinity
    private:
 
       void           write(std::uint16_t addr, std::uint8_t data);
-      std::uint8_t   read8(std::uint16_t addr);
-      std::uint16_t  read16(std::uint16_t addr);
+      std::uint8_t   read8(std::uint16_t addr) const;
+      std::uint16_t  read16(std::uint16_t addr) const;
       
-      Port& _io;
+      Port&          _io;
    };
 
    namespace mpr121_constants
@@ -97,14 +97,14 @@ namespace cycfi { namespace infinity
    }
 
    template <typename Port, std::size_t timeout>
-   inline std::uint8_t mpr121<Port, timeout>::read8(std::uint16_t addr)
+   inline std::uint8_t mpr121<Port, timeout>::read8(std::uint16_t addr) const
    {
       using namespace mpr121_constants;
       return _io.mem_read8(mpr121_i2c_addr, addr, timeout);
    }
 
    template <typename Port, std::size_t timeout>
-   inline std::uint16_t mpr121<Port, timeout>::read16(std::uint16_t addr)
+   inline std::uint16_t mpr121<Port, timeout>::read16(std::uint16_t addr) const
    {
       using namespace mpr121_constants;
       return _io.mem_read16(mpr121_i2c_addr, addr, timeout);

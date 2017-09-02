@@ -112,7 +112,7 @@ namespace cycfi { namespace infinity
    )
    {
       detail::i2c_mem_write(id, addr, mem_addr, 2, 
-         static_cast<std::uint8_t const*>(&data), 2, timeout);
+         reinterpret_cast<std::uint8_t const*>(&data), 2, timeout);
    }
 
    template <std::size_t scl_pin, std::size_t sda_pin>
@@ -131,8 +131,8 @@ namespace cycfi { namespace infinity
    )
    {
       std::uint16_t result;
-      detail::i2c_mem_read(id, addr, mem_addr, 1, 
-         static_cast<std::uint8_t*>(&result), 1, timeout);
+      detail::i2c_mem_read(id, addr, mem_addr, 2, 
+         reinterpret_cast<std::uint8_t*>(&result), 2, timeout);
       return result; 
    }
 }}
