@@ -42,50 +42,25 @@ namespace cycfi { namespace infinity
    {
       enum
       {
-         mpr121_i2c_addr = 0x5A << 1
-
-
-         #define MPR121_I2CADDR_DEFAULT 0x5A
-         
-         #define MPR121_TOUCHSTATUS_L 0x00
-         #define MPR121_TOUCHSTATUS_H 0x01
-         #define MPR121_FILTDATA_0L  0x04
-         #define MPR121_FILTDATA_0H  0x05
-         #define MPR121_BASELINE_0   0x1E
-         #define MPR121_MHDR         0x2B
-         #define MPR121_NHDR         0x2C
-         #define MPR121_NCLR         0x2D
-         #define MPR121_FDLR         0x2E
-         #define MPR121_MHDF         0x2F
-         #define MPR121_NHDF         0x30
-         #define MPR121_NCLF         0x31
-         #define MPR121_FDLF         0x32
-         #define MPR121_NHDT         0x33
-         #define MPR121_NCLT         0x34
-         #define MPR121_FDLT         0x35
-         
-         #define MPR121_TOUCHTH_0    0x41
-         #define MPR121_RELEASETH_0    0x42
-         #define MPR121_DEBOUNCE 0x5B
-         #define MPR121_CONFIG1 0x5C
-         #define MPR121_CONFIG2 0x5D
-         #define MPR121_CHARGECURR_0 0x5F
-         #define MPR121_CHARGETIME_1 0x6C
-         #define MPR121_ECR 0x5E
-         #define MPR121_AUTOCONFIG0 0x7B
-         #define MPR121_AUTOCONFIG1 0x7C
-         #define MPR121_UPLIMIT   0x7D
-         #define MPR121_LOWLIMIT  0x7E
-         #define MPR121_TARGETLIMIT  0x7F
-         
-         #define MPR121_GPIODIR  0x76
-         #define MPR121_GPIOEN  0x77
-         #define MPR121_GPIOSET  0x78
-         #define MPR121_GPIOCLR  0x79
-         #define MPR121_GPIOTOGGLE  0x7A
-
-         #define MPR121_SOFTRESET 0x80
-         
+         mpr121_i2c_addr      = 0x5A << 1,
+         mhdr                 = 0x2B,    
+         nhdr                 = 0x2C,                    
+         nclr                 = 0x2D,             
+         fdlr                 = 0x2E,    
+         mhdf                 = 0x2F,
+         nhdf                 = 0x30,
+         nclf                 = 0x31,
+         fdlf                 = 0x32,
+         ecr                  = 0x5E,
+         auto_config0         = 0x7B,   
+         auto_config_upper    = 0x7D,    
+         auto_config_lower    = 0x7E,
+         auto_config_target   = 0x7F,
+         touch_status         = 0x00,
+         filter_data          = 0x04,
+         baseline             = 0x1E,
+         touch_threshold      = 0x41,
+         release_threshold    = 0x42
       };
    }
 
@@ -114,70 +89,64 @@ namespace cycfi { namespace infinity
    inline mpr121<Port, timeout>::mpr121(Port& io_)
     : _io(io_)
    {      
-      // soft reset
-      write(MPR121_SOFTRESET, 0x63);
-      delay_ms(1);
-   
-      write(MPR121_ECR, 0x0);
-   
-      uint8_t c = read8(MPR121_CONFIG2);
-      if (c != 0x24)
-         return;
-   
+      using namespace mpr121_constants;
+  
+      // Controls filtering when data is > baseline.
+      write(mhdr, 0x01);
+      write(nhdr, 0x01);                          
+      write(nclr, 0x00);                 
+      write(fdlr, 0x00);
+      
+      // Controls filtering when data is < baseline.
+      write(mhdf, 0x01);
+      write(nhdf, 0x01);             
+      write(nclf, 0x7F);
+      write(fdlf, 0x09); 
+
+      // Set the electrode thresholds
       set_thresholds(12, 6);
-      write(MPR121_MHDR, 0x01);
-      write(MPR121_NHDR, 0x01);
-      write(MPR121_NCLR, 0x0E);
-      write(MPR121_FDLR, 0x00);
-   
-      write(MPR121_MHDF, 0x01);
-      write(MPR121_NHDF, 0x05);
-      write(MPR121_NCLF, 0x01);
-      write(MPR121_FDLF, 0x00);
-   
-      write(MPR121_NHDT, 0x00);
-      write(MPR121_NCLT, 0x00);
-      write(MPR121_FDLT, 0x00);
-   
-      write(MPR121_DEBOUNCE, 0);
-      write(MPR121_CONFIG1, 0x10); // default, 16uA charge current
-      write(MPR121_CONFIG2, 0x20); // 0.5uS encoding, 1ms period
-   
-      write(MPR121_ECR, 0x8F);  // start with first 5 bits of baseline tracking
+ 
+      // Auto Configuration
+      write(auto_config0, 0x1B);         
+      write(auto_config_upper, 0xC9);   	
+      write(auto_config_lower, 0x82); 
+      write(auto_config_target, 0xB5);
+
+      // Measurement electrodes and proximity detection electrode 
+      // configurations and set to Run Mode
+      write(ecr, 0x84);
    }
 
    template <typename Port, std::size_t timeout>
    void mpr121<Port, timeout>::set_thresholds(std::uint8_t touch, std::uint8_t release)
    {
-      for (uint8_t i=0; i<12; i++) 
+      using namespace mpr121_constants;
+      for (uint8_t i = 0; i != 12; i++)
       {
-         write(MPR121_TOUCHTH_0 + 2*i, touch);
-         write(MPR121_RELEASETH_0 + 2*i, release);
+         write(touch_threshold + 2*i, touch);
+         write(release_threshold + 2*i, release);
       }
    }
 
    template <typename Port, std::size_t timeout>
    std::uint16_t mpr121<Port, timeout>::filtered(std::uint8_t t) const
    {
-      if (t > 12) 
-         return 0;
-      return read16(MPR121_FILTDATA_0L + t*2);
+      using namespace mpr121_constants;
+      return (t > 12)? 0 : read16(filter_data + t*2);
    }
     
    template <typename Port, std::size_t timeout>
    std::uint16_t mpr121<Port, timeout>::baseline(std::uint8_t t) const
    {
-      if (t > 12) 
-         return 0;
-      uint16_t bl = read8(MPR121_BASELINE_0 + t);
-      return (bl << 2);
+      using namespace mpr121_constants;
+      return (t > 12)? 0 : read8(baseline + t) << 2;
    }
     
    template <typename Port, std::size_t timeout>
    uint16_t mpr121<Port, timeout>::touched() const
    {
-      uint16_t t = read16(MPR121_TOUCHSTATUS_L);
-      return t & 0x0FFF;
+      using namespace mpr121_constants;
+      return read16(touch_status) & 0x0FFF;
    }
 }}
 

@@ -58,6 +58,6 @@ void start()
       cnv.draw_string(status1, 0, 0, font::small);
       cnv.draw_string(status2, 0, 15, font::small);
       cnv.refresh();
-      delay_ms(100);
+      delay_ms(10);
    }
 }
