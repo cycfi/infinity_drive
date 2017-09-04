@@ -21,7 +21,6 @@ namespace cycfi { namespace infinity
 #endif
 
 #ifdef NUCLEO_F446RE
-
 # ifndef CYCFI_INFINITY_BOARD
    // Standard STM32F446 Nucleo-64 board
    using main_led_type = output_pin<port::porta + 5>;
@@ -29,7 +28,11 @@ namespace cycfi { namespace infinity
    // Modified STM32F446 Nucleo-64 board (avoids conflicts with the DAC)
    using main_led_type = output_pin<port::portc + 5>;
 # endif
+
+   using main_button_type = input_pin<port::portc + 13, port::pull_up>;
+
 #endif
+
 }}
 
 #endif

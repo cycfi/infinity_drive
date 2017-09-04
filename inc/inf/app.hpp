@@ -25,6 +25,10 @@ inline irq_not_handled irq(Key)
 // Interrupt handler keys
 ////////////////////////////////////////////////////////////////////////////
 
+// External Interrupts
+template <std::size_t id>
+struct exti_task {};
+
 // Timers
 template <std::size_t id>
 struct timer_task {};

@@ -111,9 +111,10 @@ namespace cycfi { namespace infinity
    >
    struct output_pin
    {
-      static constexpr uint16_t bit = N % 16;
-      static constexpr uint16_t port = N / 16;
-      static constexpr uint32_t mask = 1 << bit;
+      static constexpr size_t    n = N;
+      static constexpr uint16_t  bit = N % 16;
+      static constexpr uint16_t  port = N / 16;
+      static constexpr uint32_t  mask = 1 << bit;
 
       // there are only 9 ports
       static_assert(port < 9, "Invalid port");
@@ -219,19 +220,28 @@ namespace cycfi { namespace infinity
       pull_up = LL_GPIO_PULL_UP,
       pull_down = LL_GPIO_PULL_DOWN
    };
+
+   enum class port_edge
+   {
+      rising, 
+      falling
+   };
    
    namespace port
    {
       auto constexpr pull_up = port_input_type::pull_up;
       auto constexpr pull_down = port_input_type::pull_down;
+      auto constexpr rising = port_edge::rising;
+      auto constexpr falling = port_edge::falling;
    }
 
    template <std::size_t N, port_input_type type = port_input_type::normal>
    struct input_pin
    {
-      static constexpr uint16_t bit = N % 16;
-      static constexpr uint16_t port = N / 16;
-      static constexpr uint32_t mask = 1 << bit;
+      static constexpr size_t    n = N;
+      static constexpr uint16_t  bit = N % 16;
+      static constexpr uint16_t  port = N / 16;
+      static constexpr uint32_t  mask = 1 << bit;
 
       // there are only 8 ports
       static_assert(port < 8, "Invalid port");
@@ -248,6 +258,35 @@ namespace cycfi { namespace infinity
 
          // Configure pull-up/down resistor
          LL_GPIO_SetPinPull(&gpio(), mask, uint32_t(type));
+      }
+
+      void enable_interrupt(std::size_t priority = 0)
+      {
+         // Connect External Line to the GPIO
+         LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);                  
+         LL_SYSCFG_SetEXTISource(detail::exti_port<port>(), detail::exti_id<bit>()); 
+         
+         // Configure NVIC to handle external interrupt
+         NVIC_SetPriority(detail::exti_irq<bit>(), priority);
+         NVIC_EnableIRQ(detail::exti_irq<bit>());
+      }
+
+      void start(port_edge edge)
+      {
+         LL_EXTI_EnableIT_0_31(detail::exti_src<bit>());
+         if (edge == port_edge::rising)
+            LL_EXTI_EnableRisingTrig_0_31(detail::exti_src<bit>());
+         else
+            LL_EXTI_EnableFallingTrig_0_31(detail::exti_src<bit>());
+      }
+
+      void stop(port_edge edge)
+      {
+         LL_EXTI_DisableIT_0_31(detail::exti_src<port>());
+         if (edge == port_edge::rising)
+            LL_EXTI_DisableRisingTrig_0_31(detail::exti_src<port>());
+         else
+            LL_EXTI_DisableFallingTrig_0_31(detail::exti_src<port>());
       }
 
       GPIO_TypeDef& gpio() const
