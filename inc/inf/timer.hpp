@@ -71,34 +71,14 @@ namespace cycfi { namespace infinity
       }
 
       template <typename F>
-      struct peripheral_config : peripheral_base
+      auto config(F task)
       {
-         using peripheral_base::operator();
-
-         peripheral_config(F task, self_type& self)
-          : task(task)
-          , self(self)
-         {}
-
-         peripheral_config& config()
-         { 
-            self.enable_interrupt();
-            return *this; 
-         }
-
-         void operator()(identity<self_type> const&)
+         enable_interrupt();
+         return [task](auto base) 
+            -> task_config<self_type, decltype(base), F>
          {
-            task();
-         }
-
-         F task;
-         self_type& self;
-      };
-
-      template <typename F>
-      peripheral_config<F> operator()(F task)
-      {
-         return peripheral_config<F>{task, *this};
+            return {base, task};
+         };
       }
 
    private:

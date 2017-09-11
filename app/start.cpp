@@ -17,19 +17,29 @@ namespace inf = cycfi::infinity;
 using namespace inf::port;
 using inf::main_led_type;
 
+///////////////////////////////////////////////////////////////////////////////
+// Peripherals
 main_led_type main_led;
 constexpr uint32_t base_freq = 10000;
 inf::timer<3> tmr(base_freq, 1); // 1Hz
 
+///////////////////////////////////////////////////////////////////////////////
+// Our timer task
 void timer_task()
 {
    main_led = !main_led;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Application configuration makes sure there are no peripheral conflicts 
+// and attaches IRQ tasks, if there are any. The config variable should
+// be a global variable in global scope.
 auto config = inf::config(
-   tmr(timer_task)
+   tmr.config(timer_task)
 );
 
+///////////////////////////////////////////////////////////////////////////////
+// The main loop
 void start()
 {
    tmr.start();
