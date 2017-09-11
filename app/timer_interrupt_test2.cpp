@@ -3,51 +3,50 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#include <inf/support.hpp>
+#include <inf/timer.hpp>
 #include <inf/pin.hpp>
-#include <inf/app.hpp>
+#include <inf/config.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Interrupt button test. The main button, is configured with a pull-up
-// to vcc (hence normally 1). The button is also configured to fire up an
-// interrupt on the falling edge (when the button is pressed, it transitions
-// from 1 to 0). An exti_task is setup to handle this interrupt. The task
-// simply toggles the main LED.
+// Toggle led port using timers and interrupts. This test uses a timer to
+// toggle pin PC3 at a rate of 100kHz. The clock frequency is set to 200kHz,
+// but since the toggling of the pin happens to halve this frequency, you'll
+// see a frequency of 100kHz.
+//
+// Setup connect an oscilloscope probe to pin PC3 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
 using namespace inf::port;
+using inf::output_pin;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
-inf::main_led_type led;
-inf::main_button_type btn;
+output_pin<portc + 3> pin; // portc, pin 3
+inf::timer<3> tmr;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our button task
-void button_task()
+// Our timer task
+void timer_task()
 {
-   led = !led;
+   pin = !pin;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration.
-auto config = inf::config(
-   led.setup(),
-   btn.setup(button_task, 10)
-);   
+constexpr uint32_t base_freq = 1000000;
+constexpr uint32_t frequency = 200000;
 
-///////////////////////////////////////////////////////////////////////////////
-// The main loop
+auto config = inf::config(
+   pin.setup(),
+   tmr.setup(base_freq, frequency, timer_task) // calls timer_task every 200kHz
+);
+
 void start()
 {
-   led = off;
-   btn.start(falling_edge); // call button_task on the falling edge
-   
-   // toggle LED
+   tmr.start();
    while (true)
-   {
-   }
+      ;
 }
 
 // The actual "C" interrupt handlers are defined here:

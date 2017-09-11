@@ -8,15 +8,14 @@
 #include <inf/app.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Interrupt button test. The main button, is configured with a pull-up
-// to vcc (hence normally 1). The button is also configured to fire up an
-// interrupt on the falling edge (when the button is pressed, it transitions
-// from 1 to 0). An exti_task is setup to handle this interrupt. The task
-// simply toggles the main LED.
+// Simplest button test. We poll the main button (which is configured
+// with a pull-up to vcc, hence normally 1). The main led is turned ON
+// if the button is pushed, otherwise the main led is turned OFF.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
 using namespace inf::port;
+using inf::delay_ms;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
@@ -24,17 +23,10 @@ inf::main_led_type led;
 inf::main_button_type btn;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our button task
-void button_task()
-{
-   led = !led;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Configuration.
 auto config = inf::config(
    led.setup(),
-   btn.setup(button_task, 10)
+   btn.setup()
 );   
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,13 +34,11 @@ auto config = inf::config(
 void start()
 {
    led = off;
-   btn.start(falling_edge); // call button_task on the falling edge
-   
+
    // toggle LED
    while (true)
    {
+      delay_ms(30);
+      led = !btn;
    }
 }
-
-// The actual "C" interrupt handlers are defined here:
-#include <inf/irq.hpp>

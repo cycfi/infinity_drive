@@ -127,7 +127,7 @@ namespace cycfi { namespace infinity
       using self_type = output_pin;
       using inverse_type = inverse_pin<output_pin>;
       using peripheral_id = io_pin_id<N>;
-
+      
       output_pin() = default;
       output_pin(output_pin const&) = default;
 
@@ -229,9 +229,12 @@ namespace cycfi { namespace infinity
    {
       auto constexpr pull_up = port_input_type::pull_up;
       auto constexpr pull_down = port_input_type::pull_down;
-      auto constexpr rising = port_edge::rising;
-      auto constexpr falling = port_edge::falling;
+      auto constexpr rising_edge = port_edge::rising;
+      auto constexpr falling_edge = port_edge::falling;
    }
+
+   template <std::size_t N>
+   struct exti_id {};
 
    template <std::size_t N, port_input_type type = port_input_type::normal>
    struct input_pin
@@ -246,8 +249,12 @@ namespace cycfi { namespace infinity
 
       using self_type = input_pin;
       using peripheral_id = io_pin_id<N>;
+      using interrupt_id = exti_id<bit>;
       
-      input_pin()
+      input_pin() = default;
+      input_pin(input_pin const&) = default;
+
+      void init()
       {
          // Enable GPIO peripheral clock
     	  detail::enable_port_clock<port>();
@@ -257,6 +264,28 @@ namespace cycfi { namespace infinity
 
          // Configure pull-up/down resistor
          LL_GPIO_SetPinPull(&gpio(), mask, uint32_t(type));
+      }
+
+      auto setup()
+      {
+         init();
+         return [](auto base) 
+            -> basic_config<peripheral_id, decltype(base)>
+         {
+            return {base};
+         };
+      }
+
+      template <typename F>
+      auto setup(F task, std::size_t priority = 0)
+      {
+         init();
+         enable_interrupt();
+         return [task](auto base) 
+            -> task_config<interrupt_id, decltype(base), F>
+         {
+            return {base, task};
+         };
       }
 
       void enable_interrupt(std::size_t priority = 0)

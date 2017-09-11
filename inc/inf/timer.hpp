@@ -75,7 +75,9 @@ namespace cycfi { namespace infinity
       }
 
       template <typename F>
-      auto setup(uint32_t clock_frequency, uint32_t frequency, F task)
+      auto setup(
+         uint32_t clock_frequency, uint32_t frequency, 
+         F task, std::size_t priority = 0)
       {
          init(clock_frequency, frequency);
          enable_interrupt();

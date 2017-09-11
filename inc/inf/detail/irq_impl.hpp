@@ -12,7 +12,6 @@
 
 #include <inf/pin.hpp>
 #include <inf/timer.hpp>
-#include <inf/app.hpp>
 #include <type_traits>
 
 #if defined(STM32F4)
@@ -35,7 +34,9 @@ namespace cycfi { namespace infinity { namespace detail
 
       // If the interrupt task is not handled anyway, this will
       // be compiled away by the compiler
-      if (!std::is_same<decltype(irq(exti_task<N>{})), irq_not_handled>::value)
+      if (!std::is_same<decltype(
+            ::config(identity<cycfi::infinity::exti_id<N>>{})
+         ), cycfi::infinity::irq_not_handled>::value)
       {         
          // Manage Flags
          if (LL_EXTI_IsActiveFlag_0_31(detail::exti_src<N>()) != RESET)
@@ -44,7 +45,7 @@ namespace cycfi { namespace infinity { namespace detail
             LL_EXTI_ClearFlag_0_31(detail::exti_src<N>());
       
             // Handle exti task
-            irq(exti_task<N>{});
+            ::config(identity<cycfi::infinity::exti_id<N>>{});
          }
       }
    }

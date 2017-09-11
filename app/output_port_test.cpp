@@ -26,6 +26,8 @@ auto config = inf::config(
    main_led.setup()
 );
 
+///////////////////////////////////////////////////////////////////////////////
+// The main loop
 void start()
 {
    main_led = off;
