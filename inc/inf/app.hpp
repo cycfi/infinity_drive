@@ -29,9 +29,9 @@ inline irq_not_handled irq(Key)
 template <std::size_t id>
 struct exti_task {};
 
-// Timers
-template <std::size_t id>
-struct timer_task {};
+//// Timers
+//template <std::size_t id>
+//struct timer_task {};
 
 // ADC
 template <std::size_t id>

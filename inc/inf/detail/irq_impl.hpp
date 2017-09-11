@@ -60,7 +60,7 @@ namespace cycfi { namespace infinity { namespace detail
          LL_TIM_ClearFlag_UPDATE(&timer);
       }
       // call timer_task
-      irq(timer_task<N>{});
+      ::config(identity<cycfi::infinity::timer<N>>{});
    }
 }}}
 

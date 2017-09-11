@@ -8,6 +8,7 @@
 
 #include <inf/pin.hpp>
 #include <inf/support.hpp>
+#include <inf/config.hpp>
 #include <inf/detail/timer_impl.hpp>
 #include <stm32f4xx_ll_tim.h>
 
@@ -19,6 +20,7 @@ namespace cycfi { namespace infinity
    template <std::size_t id_>
    struct timer
    {
+      using self_type = timer<id_>;
       static constexpr std::size_t id = id_;
       static_assert(detail::check_valid_timer(id), "Invalid Timer id");
 
@@ -66,6 +68,37 @@ namespace cycfi { namespace infinity
       void stop()
       {
          LL_TIM_DisableCounter(get_timer());
+      }
+
+      template <typename F>
+      struct peripheral_config : peripheral_base
+      {
+         using peripheral_base::operator();
+
+         peripheral_config(F task, self_type& self)
+          : task(task)
+          , self(self)
+         {}
+
+         peripheral_config& config()
+         { 
+            self.enable_interrupt();
+            return *this; 
+         }
+
+         void operator()(identity<self_type> const&)
+         {
+            task();
+         }
+
+         F task;
+         self_type& self;
+      };
+
+      template <typename F>
+      peripheral_config<F> operator()(F task)
+      {
+         return peripheral_config<F>{task, *this};
       }
 
    private:

@@ -3,40 +3,40 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#include <inf/support.hpp>
+#include <inf/timer.hpp>
 #include <inf/pin.hpp>
 #include <inf/app.hpp>
+#include <inf/config.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Interrupt button test. The main button, is configured with a pull-up
-// to vcc (hence normally 1). The button is also configured to fire up an
-// interrupt on the falling edge (when the button is pressed, it transitions
-// from 1 to 0). An exti_task is setup to handle this interrupt. The task
-// simply toggles the main LED.
+// Toggle led test using timers and interrupts. This test uses a timer to
+// toggle the led at a rate of 1 per second. No setup required.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
 using namespace inf::port;
+using inf::main_led_type;
 
-inf::main_led_type led;
-inf::main_button_type btn;
-constexpr auto btn_n = inf::main_button_type::bit;
+main_led_type main_led;
+constexpr uint32_t base_freq = 10000;
+inf::timer<3> tmr(base_freq, 1); // 1Hz
 
-void irq(exti_task<btn_n>)
+void timer_task()
 {
-   led = !led;
+   main_led = !main_led;
 }
+
+auto config = inf::config(
+   tmr(timer_task)
+);
 
 void start()
 {
-   btn.enable_interrupt(10);
-   btn.start(falling);
-
+   tmr.start();
+   main_led = on;
    while (true)
-   {
-   }
+      ;
 }
 
 // The actual "C" interrupt handlers are defined here:
 #include <inf/irq.hpp>
-

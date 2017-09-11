@@ -54,6 +54,12 @@ namespace cycfi { namespace infinity
    template <uint64_t i>
    using uint64_ = std::integral_constant<std::uint64_t, i>;
 
+   template <typename T>
+   struct identity
+   {
+      using type = T;
+   };
+
    ////////////////////////////////////////////////////////////////////////////
    // Clock initialization
    ////////////////////////////////////////////////////////////////////////////
