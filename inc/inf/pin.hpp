@@ -7,6 +7,8 @@
 #define CYCFI_INFINITY_PIN_HPP_DECEMBER_20_2015
 
 #include <inf/detail/pin_impl.hpp>
+#include <inf/config.hpp>
+#include <inf/support.hpp>
 
 namespace cycfi { namespace infinity
 {
@@ -101,6 +103,9 @@ namespace cycfi { namespace infinity
       constexpr off_type off = {};
    }
 
+   template <std::size_t N>
+   struct output_pin_id {};
+
    ////////////////////////////////////////////////////////////////////////////
    // output_pin
    ////////////////////////////////////////////////////////////////////////////
@@ -119,10 +124,14 @@ namespace cycfi { namespace infinity
       // there are only 9 ports
       static_assert(port < 9, "Invalid port");
 
-      typedef output_pin self_type;
-      typedef inverse_pin<output_pin> inverse_type;
+      using self_type = output_pin;
+      using inverse_type = inverse_pin<output_pin>;
+      using peripheral_id = output_pin_id<N>;
 
-      void setup()
+      output_pin() = default;
+      output_pin(output_pin const&) = default;
+
+      void init()
       {
          // Enable GPIO peripheral clock
          detail::enable_port_clock<port>();
@@ -140,25 +149,14 @@ namespace cycfi { namespace infinity
          LL_GPIO_SetPinPull(&gpio(), mask, LL_GPIO_PULL_NO);
       }
 
-      output_pin()
+      auto setup()
       {
-         setup();
-      }
-
-      output_pin(on_type)
-      {
-         setup();
-         ref() |= mask;
-      }
-
-      output_pin(off_type)
-      {
-         setup();
-         ref() &= ~mask;
-      }
-
-      output_pin(output_pin const&)
-      {
+         init();
+         return [](auto base) 
+            -> basic_config<peripheral_id, decltype(base)>
+         {
+            return {base};
+         };
       }
 
       GPIO_TypeDef& gpio() const

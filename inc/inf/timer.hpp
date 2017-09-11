@@ -24,7 +24,11 @@ namespace cycfi { namespace infinity
       static constexpr std::size_t id = id_;
       static_assert(detail::check_valid_timer(id), "Invalid Timer id");
 
-      timer(uint32_t clock_frequency, uint32_t frequency)
+      timer() = default;
+      timer(timer const&) = delete;
+      timer& operator=(timer const&) = delete;
+      
+      void init(uint32_t clock_frequency, uint32_t frequency)
       {
          detail::system_clock_config();
          
@@ -71,8 +75,9 @@ namespace cycfi { namespace infinity
       }
 
       template <typename F>
-      auto config(F task)
+      auto setup(uint32_t clock_frequency, uint32_t frequency, F task)
       {
+         init(clock_frequency, frequency);
          enable_interrupt();
          return [task](auto base) 
             -> task_config<self_type, decltype(base), F>

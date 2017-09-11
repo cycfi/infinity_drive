@@ -7,9 +7,23 @@
 #define CYCFI_INFINITY_CONFIG_HPP_SEPTEMBER_11_2017
 
 #include <type_traits>
+#include <inf/support.hpp>
 
 namespace cycfi { namespace infinity
 {
+   ///////////////////////////////////////////////////////////////////////////////
+   // Application configuration makes sure there are no peripheral conflicts 
+   // and attaches IRQ tasks, if there are any. The config variable should
+   // be a global variable in global scope.
+   //
+   // Example:
+   //
+   //    auto config = inf::config(
+   //       tmr = timer_task
+   //    );
+   //
+   ///////////////////////////////////////////////////////////////////////////////
+
    struct irq_not_handled {};
    struct peripheral_base_id {};
    
