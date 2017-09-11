@@ -3,37 +3,48 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#include <inf/support.hpp>
+#include <inf/timer.hpp>
 #include <inf/pin.hpp>
-#include <inf/app.hpp>
+#include <inf/config.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Simplest toggle the led test. This test uses simple delay to toggle
-// the led at a rate of 1 per second. No setup required.
+// Toggle led test using timers and interrupts. This test uses a timer to
+// toggle the led at a rate of 1 per second. No setup required.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
 using namespace inf::port;
-using inf::delay_ms;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
 inf::main_led_type main_led;
+inf::timer<3> tmr;
+
+///////////////////////////////////////////////////////////////////////////////
+// Our timer task
+void timer_task()
+{
+   main_led = !main_led;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration.
+constexpr uint32_t base_freq = 10000;
+
 auto config = inf::config(
-   main_led.setup()
+   main_led.setup(),
+   tmr.setup(base_freq, 1, timer_task) // calls timer_task every 1Hz
 );
 
+///////////////////////////////////////////////////////////////////////////////
+// The main loop
 void start()
 {
-   main_led = off;
-
-   // toggle LED
+   tmr.start();
+   main_led = on;
    while (true)
-   {
-      delay_ms(1000);
-      main_led = !main_led;
-   }
+      ;
 }
+
+// The actual "C" interrupt handlers are defined here:
+#include <inf/irq.hpp>

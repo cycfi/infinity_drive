@@ -12,6 +12,7 @@
 
 #include <inf/pin.hpp>
 #include <inf/timer.hpp>
+#include <inf/app.hpp>
 #include <type_traits>
 
 #if defined(STM32F4)

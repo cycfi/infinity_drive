@@ -5,44 +5,46 @@
 =============================================================================*/
 #include <inf/timer.hpp>
 #include <inf/pin.hpp>
-#include <inf/app.hpp>
 #include <inf/config.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Toggle led test using timers and interrupts. This test uses a timer to
-// toggle the led at a rate of 1 per second. No setup required.
+// Toggle led port using timers and interrupts. This test uses a timer to
+// toggle pin PC3 at a rate of 100kHz. The clock frequency is set to 200kHz,
+// but since the toggling of the pin happens to halve this frequency, you'll
+// see a frequency of 100kHz.
+//
+// Setup connect an oscilloscope probe to pin PC3 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
 using namespace inf::port;
+using inf::output_pin;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
-inf::main_led_type main_led;
+output_pin<portc + 3> pin; // portc, pin 3
 inf::timer<3> tmr;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our timer task
 void timer_task()
 {
-   main_led = !main_led;
+   pin = !pin;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration.
-constexpr uint32_t base_freq = 10000;
+constexpr uint32_t base_freq = 1000000;
+constexpr uint32_t frequency = 200000;
 
 auto config = inf::config(
-   main_led.setup(),
-   tmr.setup(base_freq, 1, timer_task) // calls timer_task every 1Hz
+   pin.setup(),
+   tmr.setup(base_freq, frequency, timer_task) // calls timer_task every 200kHz
 );
 
-///////////////////////////////////////////////////////////////////////////////
-// The main loop
 void start()
 {
    tmr.start();
-   main_led = on;
    while (true)
       ;
 }

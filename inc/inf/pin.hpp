@@ -104,7 +104,7 @@ namespace cycfi { namespace infinity
    }
 
    template <std::size_t N>
-   struct output_pin_id {};
+   struct io_pin_id {};
 
    ////////////////////////////////////////////////////////////////////////////
    // output_pin
@@ -126,7 +126,7 @@ namespace cycfi { namespace infinity
 
       using self_type = output_pin;
       using inverse_type = inverse_pin<output_pin>;
-      using peripheral_id = output_pin_id<N>;
+      using peripheral_id = io_pin_id<N>;
 
       output_pin() = default;
       output_pin(output_pin const&) = default;
@@ -244,8 +244,9 @@ namespace cycfi { namespace infinity
       // there are only 8 ports
       static_assert(port < 8, "Invalid port");
 
-      typedef input_pin self_type;
-
+      using self_type = input_pin;
+      using peripheral_id = io_pin_id<N>;
+      
       input_pin()
       {
          // Enable GPIO peripheral clock
