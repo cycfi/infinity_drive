@@ -36,19 +36,20 @@ namespace cycfi { namespace infinity
       }
    };
 
-   template <typename T>
-   constexpr bool has_unique_id()
+   template <typename T, typename ID>
+   struct has_unique_id
    {
-      return has_unique_id<typename T::base_type>() && 
-         !std::is_same<typename T::id, typename T::base_type::id>::value
+      static bool const value = 
+         has_unique_id<typename T::base_type, ID>::value && 
+         !std::is_same<typename T::id, ID>::value
          ;
-   }
+   };
 
-   template <>
-   constexpr bool has_unique_id<peripheral_base>()
+   template <typename ID>
+   struct has_unique_id<peripheral_base, ID>
    {
-      return true;
-   }
+      static bool const value = true;
+   };
 
    template <typename ID, typename Base>
    struct basic_config : Base
@@ -56,6 +57,9 @@ namespace cycfi { namespace infinity
       using id = ID;
       using base_type = Base;
       using Base::operator();
+
+      static_assert(has_unique_id<base_type, id>::value,
+         "Error. Duplicate peripheral IDs.");
 
       basic_config(Base base)
        : Base(base)
@@ -68,6 +72,9 @@ namespace cycfi { namespace infinity
       using id = ID;
       using base_type = Base;
       using Base::operator();
+
+      static_assert(has_unique_id<base_type, id>::value,
+         "Error. Duplicate peripheral IDs.");
 
       task_config(Base base, F task)
        : Base(base)
@@ -91,9 +98,7 @@ namespace cycfi { namespace infinity
    template <typename T, typename... Rest>
    inline auto config(T cfg, Rest... rest)
    {
-      auto r = cfg(config(rest...));
-      static_assert(has_unique_id<decltype(r)>(), "Error. Duplicate peripheral IDs.");
-      return r;
+      return cfg(config(rest...));
    }
 }} 
 

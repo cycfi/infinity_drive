@@ -257,7 +257,7 @@ namespace cycfi { namespace infinity
       void init()
       {
          // Enable GPIO peripheral clock
-    	  detail::enable_port_clock<port>();
+    	   detail::enable_port_clock<port>();
 
          // Configure input mode
          LL_GPIO_SetPinMode(&gpio(), mask, LL_GPIO_MODE_INPUT);
@@ -266,13 +266,18 @@ namespace cycfi { namespace infinity
          LL_GPIO_SetPinPull(&gpio(), mask, uint32_t(type));
       }
 
+      template <typename Base>
+      using cfg1_type = basic_config<peripheral_id, Base>;
+
+      template <typename Base, typename F>
+      using cfg2_type = task_config<interrupt_id, Base, F>;
+
       auto setup()
       {
          init();
-         return [](auto base) 
-            -> basic_config<peripheral_id, decltype(base)>
+         return [](auto base)
          {
-            return {base};
+            return cfg1_type<decltype(base)>{base};
          };
       }
 
@@ -281,10 +286,11 @@ namespace cycfi { namespace infinity
       {
          init();
          enable_interrupt();
-         return [task](auto base) 
-            -> task_config<interrupt_id, decltype(base), F>
+
+         return [task](auto base)
          {
-            return {base, task};
+            auto base_2 = cfg1_type<decltype(base)>{base};
+            return cfg2_type<decltype(base_2), F>{base_2, task};
          };
       }
 
