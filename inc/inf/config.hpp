@@ -66,6 +66,12 @@ namespace cycfi { namespace infinity
       {}
    };
 
+   template <typename ID, typename Base>
+   inline basic_config<ID, Base> make_basic_config(Base base)
+   {
+      return {base};
+   }
+
    template <typename ID, typename Base, typename F>
    struct task_config : Base
    {
@@ -88,6 +94,13 @@ namespace cycfi { namespace infinity
 
       F task;
    };
+
+   template <typename ID, typename Base, typename F>
+   inline task_config<ID, Base, F>
+   make_task_config(Base base, F task)
+   {
+      return {base, task};
+   }
 
    template <typename T>
    inline auto config(T cfg)

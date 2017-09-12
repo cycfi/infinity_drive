@@ -103,6 +103,10 @@ namespace cycfi { namespace infinity
       constexpr off_type off = {};
    }
 
+   // IO Pin IDs (io_pin_id) are used to ensure there are no IO port
+   // clashes (see config.hpp). The N template parameter is the same
+   // as the output or input pin's N parameter which uniquely identifies
+   // the port.
    template <std::size_t N>
    struct io_pin_id {};
 
@@ -233,6 +237,10 @@ namespace cycfi { namespace infinity
       auto constexpr falling_edge = port_edge::falling;
    }
 
+   // External interrupt IDs (exti_id) are used to ensure there  
+   // are no input ports interrupt (exti) callback clashes
+   // (see config.hpp). With STM32, there are 16 possible unique
+   // external interrupts.
    template <std::size_t N>
    struct exti_id {};
 
@@ -266,18 +274,12 @@ namespace cycfi { namespace infinity
          LL_GPIO_SetPinPull(&gpio(), mask, uint32_t(type));
       }
 
-      template <typename Base>
-      using cfg1_type = basic_config<peripheral_id, Base>;
-
-      template <typename Base, typename F>
-      using cfg2_type = task_config<interrupt_id, Base, F>;
-
       auto setup()
       {
          init();
          return [](auto base)
          {
-            return cfg1_type<decltype(base)>{base};
+            return make_basic_config<peripheral_id>(base);
          };
       }
 
@@ -289,8 +291,8 @@ namespace cycfi { namespace infinity
 
          return [task](auto base)
          {
-            auto base_2 = cfg1_type<decltype(base)>{base};
-            return cfg2_type<decltype(base_2), F>{base_2, task};
+            auto cfg1 = make_basic_config<peripheral_id>(base);
+            return make_task_config<interrupt_id>(cfg1, task);
          };
       }
 
