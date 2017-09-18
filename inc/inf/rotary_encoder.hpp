@@ -58,6 +58,11 @@ namespace cycfi { namespace infinity
          };
       }
 
+      void start(port_edge edge = port::falling_edge)
+      {
+         pin_a.start(edge);
+      }
+
    private:
    
       pin_a_type pin_a;

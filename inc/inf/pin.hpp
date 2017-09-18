@@ -307,7 +307,7 @@ namespace cycfi { namespace infinity
          NVIC_EnableIRQ(detail::exti_irq<bit>());
       }
 
-      void start(port_edge edge)
+      void start(port_edge edge = port::falling_edge)
       {
          LL_EXTI_EnableIT_0_31(detail::exti_src<bit>());
          if (edge == port_edge::rising)
