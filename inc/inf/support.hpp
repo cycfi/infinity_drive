@@ -8,13 +8,10 @@
 
 #include <type_traits>
 #include <cstdint>
+#include <cstring>
 #include <system_stm32f4xx.h>
 #include <stm32f4xx_ll_utils.h>
-
-extern "C"
-{
-   extern volatile uint32_t timer_delay; // maintained by SysTick_Handler
-}
+#include <stm32f4xx_hal.h>
 
 namespace cycfi { namespace infinity
 {
@@ -79,6 +76,14 @@ namespace cycfi { namespace infinity
    inline void delay_ms(uint32_t ms)
    {
 	   LL_mDelay(ms);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Returns the current system tick, configured as milliseconds.
+   ////////////////////////////////////////////////////////////////////////////
+   inline auto millis()
+   {
+	   return HAL_GetTick();
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -187,6 +192,45 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    constexpr float pi = 3.1415926535897f;
    constexpr float _2pi = pi * 2.0f;
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Arduino-like map function
+   ////////////////////////////////////////////////////////////////////////////
+   template <typename T>
+   static T map(T x, T in_min, T in_max, T out_min, T out_max)
+   {
+      return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Quick itoa implementation
+   ////////////////////////////////////////////////////////////////////////////
+   inline void reverse(char s[])
+   {
+      int i, j;   
+      for (i = 0, j = std::strlen(s)-1; i<j; i++, j--) 
+      {
+         char c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+      }
+   }
+   
+   inline void itoa(int n, char s[])
+   {
+      int i, sign;
+   
+      if ((sign = n) < 0)           // record sign
+         n = -n;                    // make n positive
+      i = 0;
+      do {                          // generate digits in reverse order
+         s[i++] = n % 10 + '0';     // get next digit
+      } while ((n /= 10) > 0);      // delete it
+      if (sign < 0)
+         s[i++] = '-';
+      s[i] = '\0';
+      reverse(s);
+   }  
    
    ////////////////////////////////////////////////////////////////////////////
    // fast tan approximation (from http://www.musicdsp.org/)
