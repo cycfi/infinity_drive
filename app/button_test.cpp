@@ -23,7 +23,7 @@ inf::main_led_type led;
 inf::main_button_type btn;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Configuration.
+// Configuration
 auto config = inf::config(
    led.setup(),
    btn.setup()

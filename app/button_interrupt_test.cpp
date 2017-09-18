@@ -31,7 +31,7 @@ void button_task()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Configuration.
+// Configuration
 auto config = inf::config(
    led.setup(),
    btn.setup(button_task, 10)

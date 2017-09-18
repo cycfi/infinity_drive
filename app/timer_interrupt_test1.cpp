@@ -28,7 +28,7 @@ void timer_task()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Configuration.
+// Configuration
 constexpr uint32_t base_freq = 10000;
 
 auto config = inf::config(

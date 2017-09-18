@@ -10,7 +10,7 @@ namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
    // pid controller. No frills Proportional–integral–derivative controller.
-   // The base class Base is expected to supply the required PID parameters.
+   // The base class Config is expected to supply the required PID parameters.
    //
    // Example usage:
    //
@@ -28,13 +28,13 @@ namespace cycfi { namespace infinity
    // constant expressions.
    //
    ////////////////////////////////////////////////////////////////////////////
-   template <typename Base>
+   template <typename Config>
    struct pid
    {
-      float static constexpr kp = Base::p;            // Proportional gain
-      float static constexpr ki = Base::i;            // Integral gain
-      float static constexpr kd = Base::d;            // derivative gain
-      float static constexpr dt = 1.0f / Base::sps;   // Time interval
+      float static constexpr kp = Config::p;          // Proportional gain
+      float static constexpr ki = Config::i;          // Integral gain
+      float static constexpr kd = Config::d;          // derivative gain
+      float static constexpr dt = 1.0f / Config::sps; // Time interval
 
       float operator()(double set_point, double process_val)
       {

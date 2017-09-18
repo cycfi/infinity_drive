@@ -33,7 +33,7 @@ void timer_task()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Configuration.
+// Configuration
 constexpr uint32_t base_freq = 1000000;
 constexpr uint32_t frequency = 200000;
 

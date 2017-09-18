@@ -7,7 +7,8 @@
 #define CYCFI_INFINITY_I2C_HPP_AUGUST_16_2017
 
 #include <inf/detail/i2c_impl.hpp>
-#include <inf/detail/pin_impl.hpp>
+#include <inf/pin.hpp>
+#include <inf/config.hpp>
 #include <cstdint>
 
 namespace cycfi { namespace infinity
@@ -20,12 +21,24 @@ namespace cycfi { namespace infinity
    {
       static_assert(detail::valid_scl_pin<scl_pin_>(), "Invalid SCL pin");
       static_assert(detail::valid_sda_pin<sda_pin_>(), "Invalid SDA pin");
-
+      
       static constexpr std::size_t scl_pin = scl_pin_;
       static constexpr std::size_t sda_pin = sda_pin_;
       static constexpr std::size_t id = detail::scl_pin<scl_pin>::i2c_id;
-      
-      i2c_master();
+      using scl_peripheral_id = io_pin_id<scl_pin>;
+      using sda_peripheral_id = io_pin_id<sda_pin>;
+
+      void init();
+
+      auto setup()
+      {
+         init();
+         return [](auto base)
+         {
+            auto cfg1 = make_basic_config<scl_peripheral_id>(base);
+            return make_basic_config<sda_peripheral_id>(cfg1);
+         };
+      }
 
       void write(
          std::uint32_t addr, std::uint8_t const* data,
@@ -60,7 +73,7 @@ namespace cycfi { namespace infinity
    // i2c implementation
    ////////////////////////////////////////////////////////////////////////////
    template <std::size_t scl_pin, std::size_t sda_pin>
-   inline i2c_master<scl_pin, sda_pin>::i2c_master()
+   inline void i2c_master<scl_pin, sda_pin>::init()
    {
       static constexpr auto scl_port = scl_pin / 16;
       static constexpr auto sda_port = sda_pin / 16;
