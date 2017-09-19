@@ -6,6 +6,9 @@
 #if !defined(CYCFI_INFINITY_DAC_HPP_FEBRUARY_6_2016)
 #define CYCFI_INFINITY_DAC_HPP_FEBRUARY_6_2016
 
+#include <inf/config.hpp>
+#include <inf/pin.hpp>
+
 #if defined(STM32F4)
 # include <stm32f4xx.h>
 # include <stm32f4xx_ll_dac.h>
@@ -27,11 +30,15 @@ namespace cycfi { namespace infinity
       static constexpr uint32_t dac_channel = 
          (Channel == 0) ? LL_DAC_CHANNEL_1 : LL_DAC_CHANNEL_2;
       
+      using dac_peripheral_id = io_pin_id<
+         port::porta+(Channel == 0) ? 4 : 5>
+      ;
+         
    public:
 
       static_assert(Channel >=0 && Channel <= 1, "Invalid DAC Channel");
 
-      dac(uint16_t init_val = 2048)
+      void init(uint16_t init_val = 2048)
       {
          detail::system_clock_config();
 
@@ -62,6 +69,15 @@ namespace cycfi { namespace infinity
          // Start the DAC
          start();
          (*this)(init_val);
+      }
+
+      auto setup(uint16_t init_val = 2048)
+      {
+         init(init_val);
+         return [](auto base)
+         {
+            return make_basic_config<dac_peripheral_id>(base);
+         };
       }
 
       void start()

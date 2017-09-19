@@ -42,6 +42,8 @@ auto config = inf::config(
    tmr.setup(base_freq, frequency, timer_task) // calls timer_task every 200kHz
 );
 
+///////////////////////////////////////////////////////////////////////////////
+// The main loop
 void start()
 {
    tmr.start();
