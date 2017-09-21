@@ -9,27 +9,4 @@
 #include <inf/pin.hpp>
 #include <inf/detail/app_impl.hpp>
 
-////////////////////////////////////////////////////////////////////////////
-// The interrupt handler. By default, this does nothing
-// Specialize this for specific interrupt handlers.
-////////////////////////////////////////////////////////////////////////////
-struct irq_not_handled {};
-
-template <typename Key>
-inline irq_not_handled irq(Key)
-{
-	return {};
-}
-
-////////////////////////////////////////////////////////////////////////////
-// Interrupt handler keys
-////////////////////////////////////////////////////////////////////////////
-
-// ADC
-template <std::size_t id>
-struct adc_conversion_half_complete {};
-
-template <std::size_t id>
-struct adc_conversion_complete {};
-
 #endif

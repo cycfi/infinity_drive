@@ -92,6 +92,11 @@ namespace cycfi { namespace infinity
          task();
       }
 
+      void operator()(ID const&)
+      {
+         task();
+      }
+
       F task;
    };
 

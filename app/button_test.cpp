@@ -11,6 +11,7 @@
 // Simplest button test. We poll the main button (which is configured
 // with a pull-up to vcc, hence normally 1). The main led is turned ON
 // if the button is pushed, otherwise the main led is turned OFF.
+// No setup required.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;

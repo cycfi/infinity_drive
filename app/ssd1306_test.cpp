@@ -11,7 +11,9 @@
 #include <inf/ssd1306.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// OLED ssd1306 test. Connect the oled I2C SCL to portb+10 and SDA to portb+3.
+// OLED ssd1306 test. 
+//
+// Setup: Connect the oled I2C SCL to PB10 and SDA to PB3.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;

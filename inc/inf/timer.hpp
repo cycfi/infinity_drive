@@ -74,6 +74,18 @@ namespace cycfi { namespace infinity
          LL_TIM_DisableCounter(get_timer());
       }
 
+      auto setup(
+         uint32_t clock_frequency, uint32_t frequency, 
+         std::size_t priority = 0)
+      {
+         init(clock_frequency, frequency);
+         enable_interrupt();
+         return [](auto base) 
+         {
+            return make_basic_config<self_type>(base);
+         };
+      }
+
       template <typename F>
       auto setup(
          uint32_t clock_frequency, uint32_t frequency, 
@@ -82,9 +94,8 @@ namespace cycfi { namespace infinity
          init(clock_frequency, frequency);
          enable_interrupt();
          return [task](auto base) 
-            -> task_config<self_type, decltype(base), F>
          {
-            return {base, task};
+            return make_task_config<self_type>(base, task);
          };
       }
 

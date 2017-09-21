@@ -12,6 +12,7 @@
 
 #include <inf/pin.hpp>
 #include <inf/timer.hpp>
+#include <inf/adc.hpp>
 #include <type_traits>
 
 #if defined(STM32F4)
@@ -110,13 +111,13 @@ extern "C"
       if (LL_DMA_IsActiveFlag_TC##STREAM(DMA2) == 1)                           \
       {                                                                        \
          LL_DMA_ClearFlag_TC##STREAM(DMA2);                                    \
-         irq(adc_conversion_complete<ID>{});                                   \
+         ::config(cycfi::infinity::adc_conversion_complete<ID>{});             \
       }                                                                        \
                                                                                \
       if (LL_DMA_IsActiveFlag_HT##STREAM(DMA2) == 1)                           \
       {                                                                        \
          LL_DMA_ClearFlag_HT##STREAM(DMA2);                                    \
-         irq(adc_conversion_half_complete<ID>{});                              \
+         ::config(cycfi::infinity::adc_conversion_half_complete<ID>{});        \
       }                                                                        \
                                                                                \
       if (LL_DMA_IsActiveFlag_TE##STREAM(DMA2) == 1)                           \

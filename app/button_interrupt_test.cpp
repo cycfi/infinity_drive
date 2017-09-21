@@ -12,7 +12,7 @@
 // to vcc (hence normally 1). The button is also configured to fire up an
 // interrupt on the falling edge (when the button is pressed, it transitions
 // from 1 to 0). An exti_task is setup to handle this interrupt. The task
-// simply toggles the main LED.
+// simply toggles the main LED. No setup required.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;

@@ -13,10 +13,12 @@
 #include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Rotary encoder test. Connect the rotary encoder quadrature A and B pins to 
-// portc+8 and portc+9. The pins must be active low and hardware debounced. 
-// Connect the ssd1306 oled I2C SCL to portb+10 and SDA to portb+3 to see 
-// the actual value of the encoder go from 0 to 50 (initialized to 50).
+// Rotary encoder test. 
+// 
+// Setup: Connect the rotary encoder quadrature A and B pins to PC8 and 
+//        PC9. The pins must be active low and hardware debounced. Connect 
+//        the ssd1306 oled I2C SCL to PB10 and SDA to PB3 to see the 
+//        actual value of the encoder go from 0 to 50 (initialized to 50).
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
@@ -43,8 +45,6 @@ auto config = inf::config(
 
 ///////////////////////////////////////////////////////////////////////////////
 // The main loop
-float value = 0;
-
 void start()
 {
    oled_type cnv{i2c};

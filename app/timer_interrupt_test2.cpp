@@ -13,7 +13,7 @@
 // but since the toggling of the pin happens to halve this frequency, you'll
 // see a frequency of 100kHz.
 //
-// Setup connect an oscilloscope probe to pin PC3 
+// Setup: connect an oscilloscope probe to pin PC3 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
