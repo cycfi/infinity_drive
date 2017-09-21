@@ -74,10 +74,10 @@ void timer_task()
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
 auto config = inf::config(
-      clock.setup(adc_clock_rate, sampling_rate),
-      adc.setup(clock, conversion_half_complete, conversion_complete),
-      adc.enable_channels<0>(),
-      dac.setup()
+   clock.setup(adc_clock_rate, sampling_rate, timer_task),
+   adc.setup(clock, conversion_half_complete, conversion_complete),
+   adc.enable_channels<0>(),
+   dac.setup()
 );
 
 ///////////////////////////////////////////////////////////////////////////////
