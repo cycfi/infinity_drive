@@ -50,7 +50,7 @@ inline void conversion_complete()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Configuration.
+// Configuration
 auto config = inf::config(
    i2c.setup(),
    clock.setup(2000000, sampling_rate),
@@ -59,7 +59,7 @@ auto config = inf::config(
 );
 
 ///////////////////////////////////////////////////////////////////////////////
-// The main loop
+// The main loop.
 void start()
 {
    oled_type cnv{i2c};

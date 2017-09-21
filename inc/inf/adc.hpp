@@ -94,7 +94,7 @@ namespace cycfi { namespace infinity
       }
 
       template <std::size_t tid, typename F1, typename F2>
-      auto setup(timer<tid> const& tmr, F1 complete_task, F2 half_complete_task)
+      auto setup(timer<tid> const& tmr, F1 half_complete_task, F2 complete_task)
       {
          init(tmr);
          return [complete_task, half_complete_task](auto base)

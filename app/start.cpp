@@ -1,82 +1,94 @@
 /*=============================================================================
-   Copyright (c) 2014-2017 Cycfi Research. All rights reserved.
+   Copyright (c) 2015-2017 Cycfi Research. All rights reserved.
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
+#include <inf/adc.hpp>
+#include <inf/dac.hpp>
 #include <inf/support.hpp>
 #include <inf/pin.hpp>
 #include <inf/app.hpp>
-#include <inf/i2c.hpp>
-#include <inf/canvas.hpp>
-#include <inf/adc.hpp>
-#include <inf/ssd1306.hpp>
-#include <inf/fx.hpp>
-#include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Test the adc. 
-// 
-// Setup: Connect a 3.3v voltage divider using a potentiometer to pin   
-//        PA4. Connect the ssd1306 oled I2C SCL to PB10 and SDA to 
-//        PB3 and see the ADC value change when you move the pot.
+// ADC and DAC test. We read the signal from ADC channel 0 (pin PA0)
+// and send it out through the DAC (pin PA4). The ADC is buffered. The DAC
+// output will be delayed by 1024 samples (the buffer size). With a sampling 
+// rate of 32kHz, the delay will be 16ms. This delay is computed as:
+//
+//    ((1/32000) * 1024) / 2
+//
+// We divide by two because the ADC calls our processing routine twice.
+// First when it finishes sampling half the buffer size:
+//
+//    conversion_half_complete
+//
+// and then again when it concludes the entire conversion for the entire 
+// buffer:
+//
+//    conversion_complete
+//
+// Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
+// pin PA4 to an oscilloscope to see the waveform. 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
-using namespace inf::monochrome;
 using namespace inf::port;
 
 using inf::delay_ms;
-using canvas_type = inf::mono_canvas<128, 32>;
-using i2c_type = inf::i2c_master<portb+10, portb+3>;
-using oled_type = inf::ssd1306<i2c_type, canvas_type>;
 
-constexpr int sampling_rate = 16000;
+constexpr int sampling_rate = 32000;
+constexpr uint32_t adc_clock_rate = 2000000;
+constexpr unsigned buffer_size = 1024;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
-i2c_type i2c;
+using adc_type = inf::adc<1, 1, buffer_size>;
+
+// The main clock
 inf::timer<2> clock;
-inf::adc<1, 1> adc;
+
+// The ADC
+adc_type adc;
+adc_type::buffer_iterator_type out = adc.begin();
+
+// The DAC
+inf::dac<0> dac;
 
 ///////////////////////////////////////////////////////////////////////////////
-// ADC conversion complete task
-volatile int32_t adc_val = 0;
-inf::one_pole_lp lp{10.0f, sampling_rate}; // 10Hz low pass filter
+// Callbacks
+inline void conversion_half_complete()
+{
+   out = adc.begin();
+}
 
 inline void conversion_complete()
 {
-   for (int i = 0; i < 8; ++i)
-      adc_val = lp(adc[i][0]);
+   out = adc.middle();
+}
+
+void timer_task()
+{
+   dac((*out++)[0]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Configuration.
+// Configuration
 auto config = inf::config(
-   i2c.setup(),
-   clock.setup(2000000, sampling_rate),
-   adc.setup(clock, conversion_complete),
-   adc.enable_channels<4>()
+      clock.setup(adc_clock_rate, sampling_rate),
+      adc.setup(clock, conversion_half_complete, conversion_complete),
+      adc.enable_channels<0>(),
+      dac.setup()
 );
 
 ///////////////////////////////////////////////////////////////////////////////
 // The main loop
 void start()
 {
-   oled_type cnv{i2c};
    adc.start();
    clock.start();
 
    while (true)
-   {
-      char out[sizeof(int)*8+1];
-      inf::itoa(adc_val, out);
-
-      cnv.clear();
-      cnv.draw_string(out, 15, 15, font::medium);
-      cnv.refresh();
-
-      delay_ms(10);
-   }
+      ;
 }
 
 // The actual "C" interrupt handlers are defined here:
