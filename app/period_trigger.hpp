@@ -12,8 +12,6 @@ namespace cycfi { namespace infinity
    template <uint32_t sps>
    struct period_trigger
    {
-      static constexpr float threshold = 0.03;
-
       float operator()(float s)
       {
          // Automatic gain control
@@ -42,10 +40,10 @@ namespace cycfi { namespace infinity
          return _state;
       }
 
-      agc<sps>			_agc;
-      peak_trigger      _pos_peak;
-      peak_trigger      _neg_peak;
-      float             _state = {0.0f};
+      agc<sps>		  _agc;
+      peak_trigger  _pos_peak;
+      peak_trigger  _neg_peak;
+      float         _state = {0.0f};
    };
 }}
 

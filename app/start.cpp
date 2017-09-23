@@ -4,7 +4,7 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include <inf/multi_processor.hpp>
-#include "agc.hpp"
+#include "period_trigger.hpp"
 #include <inf/app.hpp>
 #include <inf/support.hpp>
 
@@ -22,7 +22,7 @@ static constexpr auto clock = 64000;
 static constexpr auto sps_div = 4;
 static constexpr auto sps = clock / sps_div;
 
-struct my_processor : inf::agc<sps>
+struct my_processor : inf::period_trigger<sps>
 {
    static constexpr auto oversampling = sps_div;
    static constexpr auto adc_id = 1;
