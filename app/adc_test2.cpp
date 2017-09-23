@@ -20,12 +20,12 @@
 // We divide by two because the ADC calls our processing routine twice.
 // First when it finishes sampling half the buffer size:
 //
-//    adc_conversion_half_complete
+//    conversion_half_complete
 //
 // and then again when it concludes the entire conversion for the entire 
 // buffer:
 //
-//    adc_conversion_complete
+//    conversion_complete
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
 // pin PA4 to an oscilloscope to see the waveform. 
@@ -39,46 +39,56 @@ using inf::delay_ms;
 constexpr int sampling_rate = 32000;
 constexpr uint32_t adc_clock_rate = 2000000;
 constexpr unsigned buffer_size = 1024;
+
+///////////////////////////////////////////////////////////////////////////////
+// Peripherals
 using adc_type = inf::adc<1, 1, buffer_size>;
 
 // The main clock
-inf::timer<2> clock(adc_clock_rate, sampling_rate);
+inf::timer<2> clock;
 
 // The ADC
-adc_type adc(clock);
+adc_type adc;
 adc_type::buffer_iterator_type out = adc.begin();
 
 // The DAC
 inf::dac<0> dac;
 
-void start()
-{
-   // channel 0, porta pin 0
-   adc.enable_channel<0, 1>();
-
-   adc.start();
-   clock.start();
-   clock.enable_interrupt();
-
-   while (true)
-   {
-      delay_ms(500);
-   }
-}
-
-inline void irq(adc_conversion_half_complete<1>)
+///////////////////////////////////////////////////////////////////////////////
+// Callbacks
+inline void conversion_half_complete()
 {
    out = adc.begin();
 }
 
-inline void irq(adc_conversion_complete<1>)
+inline void conversion_complete()
 {
    out = adc.middle();
 }
 
-void irq(timer_task<2>)
+void timer_task()
 {
    dac((*out++)[0]);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Configuration
+auto config = inf::config(
+   clock.setup(adc_clock_rate, sampling_rate, timer_task),
+   adc.setup(clock, conversion_half_complete, conversion_complete),
+   adc.enable_channels<0>(),
+   dac.setup()
+);
+
+///////////////////////////////////////////////////////////////////////////////
+// The main loop
+void start()
+{
+   adc.start();
+   clock.start();
+
+   while (true)
+      ;
 }
 
 // The actual "C" interrupt handlers are defined here:
