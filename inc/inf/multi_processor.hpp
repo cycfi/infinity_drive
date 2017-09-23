@@ -110,16 +110,42 @@ namespace cycfi { namespace infinity
       );
 
       multi_channel_processor()
-       : _clock(adc_clock_rate, sampling_rate)
-       , _adc(_clock)
-       , _out(_obuff.end())
+       : _out(_obuff.end())
        , _ocount(0)
       {}
 
+      template <std::size_t... channels>
+      auto config()
+      {         
+         // Config the timer (clock)
+         auto cfg1 = _clock.setup(
+            adc_clock_rate, 
+            sampling_rate, 
+            [this]() { this->irq_timer_task(); }
+         );
+
+         // Config the ADC
+         auto cfg2 = _adc.setup(
+               _clock,
+               [this]() { this->irq_conversion_half_complete(); },
+               [this]() { this->irq_conversion_complete(); }
+            );
+
+         // Config the ADC channels
+         auto cfg3 = _adc.template enable_channels<channels...>();
+
+         // Config the DACs
+         auto cfg4 = _dac_l.setup();
+         auto cfg5 = _dac_r.setup();
+         
+         return [=](auto base)
+         {
+            return cfg1(cfg2(cfg3(cfg4(cfg5(base)))));
+         };
+      }
+
       void start()
       {
-         Base::setup_channels(_adc);
-
          _adc.start();
          _clock.start();
          _clock.enable_interrupt();
@@ -189,24 +215,6 @@ namespace cycfi { namespace infinity
       // output count (for downsampling)
       int _ocount;
    };
-
-///////////////////////////////////////////////////////////////////////////////
-#define INF_PROCESSOR_IRQ(ADC_ID, TIMER_ID, proc)                             \
-   inline void irq(adc_conversion_half_complete<ADC_ID>)                      \
-   {                                                                          \
-      proc.irq_conversion_half_complete();                                    \
-   }                                                                          \
-                                                                              \
-   inline void irq(adc_conversion_complete<ADC_ID>)                           \
-   {                                                                          \
-      proc.irq_conversion_complete();                                         \
-   }                                                                          \
-                                                                              \
-   inline void irq(timer_task<TIMER_ID>)                                      \
-   {                                                                          \
-      proc.irq_timer_task();                                                  \
-   }                                                                          \
-   /***/
 
 }}
 
