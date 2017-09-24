@@ -5,7 +5,6 @@
 #define CYCFI_INFINITY_PERIOD_TRIGGER_HPP_FEBRUARY_11_2016
 
 #include <inf/fx.hpp>
-#include "agc.hpp"
 
 namespace cycfi { namespace infinity
 {
@@ -26,29 +25,32 @@ namespace cycfi { namespace infinity
    // Multiple triggers are caused by overtones overpowering the fundamental 
    // frequency. These harmonics typically occur as local positive or negative 
    // peaks close to the intensity of the highest peak.
+   //
+   // Note: for best results, use an automatic gain control (see agc.hpp) 
+   // before the period_trigger. Use the AGCs gate as the 'gated' argument. 
+   // Example:
+   //
+   //    auto result = _trig(_agc(s), _agc.gated());
+   //
+   // where s is the sample input, _trig is the period_trigger and _agc
+   // is the automatic gain control.
+   //
    ////////////////////////////////////////////////////////////////////////////
-   template <uint32_t sps>
    struct period_trigger
    {
-      float operator()(float s)
+      float operator()(float s, bool gated = true)
       {
-         // Automatic gain control
-         s = _agc(s);
-
-         //return _pos_peak(s);
-
          // Detect the peaks
          auto pos = _pos_peak(s);
          auto neg = _neg_peak(-s);
 
          if (pos)
             _state = 1.0f;
-         else if (neg || _agc.gated())
+         else if (neg || gated)
             _state = 0.0f;         
          return _state;
       }
 
-      agc<sps>		  _agc;
       peak_trigger  _pos_peak = {0.995};
       peak_trigger  _neg_peak = {0.995};
       float         _state = {0.0f};
