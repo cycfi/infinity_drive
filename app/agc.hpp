@@ -29,12 +29,12 @@ namespace cycfi { namespace infinity
    {
       static constexpr float l_threshold = 0.02f;
       static constexpr float h_threshold = 0.1f;
-
+      
       float operator()(float s)
       {
          // DC block
          s = _dc_block(s);
-
+         
          // Update the envelope follower
          auto env = _env_follow(std::abs(s));
 
@@ -59,8 +59,8 @@ namespace cycfi { namespace infinity
 
       window_comparator _noise_gate = { l_threshold, h_threshold };
       envelope_follower _env_follow = {/* decay */ 0.999f};
-      dc_block _dc_block = { 10.0f /* hz */, sps };
-      float _gain = { 1.0f };
+      dc_block          _dc_block = { 10.0f /* hz */, sps };
+      float             _gain = { 1.0f };
    };
 }}
 

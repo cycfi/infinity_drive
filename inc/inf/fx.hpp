@@ -150,7 +150,7 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct peak_trigger
    {
-      peak_trigger(float r = 0.001f)
+      peak_trigger(float r = 0.999f)
        : ef(r), cmp(0.002f)
       {}
 
