@@ -38,6 +38,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/adc.cpp</locationURI>
 		</link>
 		<link>
+			<name>src/agc.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/app/agc.hpp</locationURI>
+		</link>
+		<link>
 			<name>src/canvas.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/canvas.cpp</locationURI>
@@ -51,6 +56,11 @@
 			<name>src/main.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/main.cpp</locationURI>
+		</link>
+		<link>
+			<name>src/period_trigger.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/app/period_trigger.hpp</locationURI>
 		</link>
 		<link>
 			<name>src/start.cpp</name>

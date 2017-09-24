@@ -34,7 +34,6 @@ namespace cycfi { namespace infinity
    //
    // where s is the sample input, _trig is the period_trigger and _agc
    // is the automatic gain control.
-   //
    ////////////////////////////////////////////////////////////////////////////
    struct period_trigger
    {
@@ -45,20 +44,15 @@ namespace cycfi { namespace infinity
          auto neg = _neg_peak(-s);
 
          // Set the state
-         if (active)
-         {
-            if (pos)
-               _state = 1;
-            else if (neg)
-               _state = 0;
-         }
-         else
-         {
+         if (!active || neg)
             _state = 0;
-         }
-       
+         else if (pos)
+            _state = 1;
+
          return _state;
       }
+
+      bool state() const { return _state; }
 
       peak_trigger  _pos_peak = {0.995};
       peak_trigger  _neg_peak = {0.995};
