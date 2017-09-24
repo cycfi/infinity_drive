@@ -38,22 +38,23 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct period_trigger
    {
-      float operator()(float s, bool active = true)
+      bool operator()(float s, bool active = true)
       {
          // Detect the peaks
          auto pos = _pos_peak(s);
          auto neg = _neg_peak(-s);
 
+         // Set the state
          if (active)
          {
             if (pos)
-               _state = 1.0f;
+               _state = 1;
             else if (neg)
-               _state = 0.0f;
+               _state = 0;
          }
          else
          {
-            _state = 0.0f;
+            _state = 0;
          }
        
          return _state;
@@ -61,7 +62,7 @@ namespace cycfi { namespace infinity
 
       peak_trigger  _pos_peak = {0.995};
       peak_trigger  _neg_peak = {0.995};
-      float         _state = {0.0f};
+      bool          _state = 0;
    };
 }}
 
