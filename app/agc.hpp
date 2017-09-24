@@ -47,7 +47,7 @@ namespace cycfi { namespace infinity
          return s * _gain;
       }
 
-      bool gated() const
+      bool active() const
       {
          return _noise_gate();
       }

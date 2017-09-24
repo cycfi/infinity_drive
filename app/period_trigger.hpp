@@ -27,10 +27,10 @@ namespace cycfi { namespace infinity
    // peaks close to the intensity of the highest peak.
    //
    // Note: for best results, use an automatic gain control (see agc.hpp) 
-   // before the period_trigger. Use the AGCs gate as the 'gated' argument. 
+   // before the period_trigger. Use the AGCs gate as the 'active' argument. 
    // Example:
    //
-   //    auto result = _trig(_agc(s), _agc.gated());
+   //    auto result = _trig(_agc(s), _agc.active());
    //
    // where s is the sample input, _trig is the period_trigger and _agc
    // is the automatic gain control.
@@ -38,16 +38,24 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct period_trigger
    {
-      float operator()(float s, bool gated = true)
+      float operator()(float s, bool active = true)
       {
          // Detect the peaks
          auto pos = _pos_peak(s);
          auto neg = _neg_peak(-s);
 
-         if (pos)
-            _state = 1.0f;
-         else if (neg || gated)
-            _state = 0.0f;         
+         if (active)
+         {
+            if (pos)
+               _state = 1.0f;
+            else if (neg)
+               _state = 0.0f;
+         }
+         else
+         {
+            _state = 0.0f;
+         }
+       
          return _state;
       }
 

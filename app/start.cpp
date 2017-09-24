@@ -34,7 +34,7 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      out[0] = _trig(_agc(s), _agc.gated());
+      out[0] = _trig(_agc(s), _agc.active());
       out[1] = s;
    }
 
