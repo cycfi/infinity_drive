@@ -87,6 +87,7 @@ namespace cycfi { namespace infinity
       }
 
       uint32_t freq() const                     { return _freq; }
+      uint32_t phase() const                    { return _phase; }
 
       void freq(uint32_t freq)                  { _freq = freq; }
       void freq(double freq, uint32_t sps)      { _freq = osc_freq(freq, sps); }
@@ -94,7 +95,6 @@ namespace cycfi { namespace infinity
       void period(double samples)               { _freq = osc_period(samples); }
       void period(double period_, uint32_t sps) { _freq = osc_period(period_, sps); }
 
-      uint32_t phase() const                    { return _phase; }
       void phase(uint32_t phase)                { _phase = phase; }
 
    private:
@@ -104,19 +104,50 @@ namespace cycfi { namespace infinity
    };
 
    ////////////////////////////////////////////////////////////////////////////
+   // basic synthesizer
+   ////////////////////////////////////////////////////////////////////////////
+   class basic_synth
+   {
+   public:
+
+      basic_synth(uint32_t freq)
+       : base(freq)
+      {}
+
+      basic_synth(float freq, uint32_t sps)
+       : base(freq, sps)
+      {}
+
+      uint32_t freq() const                     { return base.freq(); }
+      uint32_t phase() const                    { return base.phase(); }
+
+      void freq(uint32_t freq)                  { base.freq(freq); }
+      void freq(uint32_t freq, uint32_t sps)    { base.freq(freq, sps); }
+
+      void period(double samples)               { base.period(samples); }
+      void period(double period_, uint32_t sps) { base.period(period_, sps); }
+
+      void phase(uint32_t phase)                { base.freq(phase); }
+
+   protected:
+
+      accum base;
+   };
+
+   ////////////////////////////////////////////////////////////////////////////
    // pulse synthesizer (this is not bandwidth limited)
    ////////////////////////////////////////////////////////////////////////////
-   class pulse
+   class pulse : public basic_synth
    {
    public:
 
       pulse(uint32_t freq, uint32_t width)
-       : base(freq)
+       : basic_synth(freq)
        , width(width)
       {}
 
       pulse(float freq, float width, uint32_t sps)
-       : base(osc_freq(freq, sps))
+       : basic_synth(freq, sps)
        , width(width * int_max<uint32_t>())
       {}
 
@@ -125,90 +156,63 @@ namespace cycfi { namespace infinity
          return base() > width ? 1.0f : -1.0f;
       }
 
-      uint32_t freq() const { return base.freq(); }
-      uint32_t phase() const { return base.phase(); }
-
-      void freq(uint32_t freq) { base.freq(freq); }
-      void freq(uint32_t freq, uint32_t sps) { base.freq(freq, sps); }
-      void phase(uint32_t phase) { base.freq(phase); }
-
    private:
 
-      accum base;
       uint32_t width;
    };
 
    ////////////////////////////////////////////////////////////////////////////
    // sin wave synthesizer
    ////////////////////////////////////////////////////////////////////////////
-   class sin
+   class sin : public basic_synth
    {
    public:
 
       sin(uint32_t freq)
-       : base(freq)
+       : basic_synth(freq)
       {}
 
       sin(float freq, uint32_t sps)
-       : base(osc_freq(freq, sps))
+       : basic_synth(freq, sps)
       {}
 
       float operator()()
       {
          return detail::sin_gen(base());
       }
-
-      uint32_t freq() const { return base.freq(); }
-      uint32_t phase() const { return base.phase(); }
-
-      void freq(uint32_t freq) { base.freq(freq); }
-      void freq(uint32_t freq, uint32_t sps) { base.freq(freq, sps); }
-      void phase(uint32_t phase) { base.phase(phase); }
-
-   private:
-
-      accum base;
    };
 
    ////////////////////////////////////////////////////////////////////////////
    // two operator FM synth
    ////////////////////////////////////////////////////////////////////////////
-   class fm
+   class fm : public basic_synth
    {
    public:
 
       fm(uint32_t mfreq, float mgain_, uint32_t cfreq)
-       : mbase(mfreq)
+       : basic_synth(cfreq)
+       , mbase(mfreq)
        , mgain(fxp(mgain_) * 32767)
-       , cbase(cfreq)
       {
       }
 
       fm(float mfreq, float mgain_, float cfreq, uint32_t sps)
-       : mbase(mfreq, sps)
+       : basic_synth(cfreq, sps)
+       , mbase(mfreq, sps)
        , mgain(fxp(mgain_) * 32767)
-       , cbase(cfreq, sps)
       {
       }
 
       float operator()()
       {
          int32_t modulator_out = detail::sin_gen(mbase()) * mgain;
-         return detail::sin_gen(cbase() + modulator_out);
+         return detail::sin_gen(base() + modulator_out);
       }
-
-      uint32_t freq() const { return cbase.freq(); }
-      uint32_t phase() const { return cbase.phase(); }
-
-      void freq(uint32_t freq) { cbase.freq(freq); }
-      void freq(uint32_t freq, uint32_t sps) { cbase.freq(freq, sps); }
-      void phase(uint32_t phase) { cbase.freq(phase); }
 
    private:
 
       accum mbase;   // modulator phase synth
       int32_t mgain; // modulator gain (1.31 bit fixed point)
-      accum cbase;   // carrier phase synth
    };
 }}
 
