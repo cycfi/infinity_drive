@@ -33,7 +33,8 @@ struct my_processor
    static constexpr auto channels = 1;
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
-
+   static constexpr auto start_phase = inf::osc_phase(inf::pi / 4);
+   
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
       auto agc_out = _agc(s);
@@ -46,8 +47,7 @@ struct my_processor
          auto period = _count - _nstart;
          if (period)
          {
-            //_synth.phase(start_phase);
-            _synth.phase(0);
+            _synth.phase(start_phase);
             _synth.period(period);
          }
          _nstart = _count;
@@ -55,7 +55,7 @@ struct my_processor
       ++_count;
       
       out[0] = agc_out;
-      out[1] = _synth();
+      out[1] = _synth() * 0.8; // don't let it saturate
    }
 
    inf::agc<sps>        _agc;

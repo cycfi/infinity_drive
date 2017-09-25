@@ -127,7 +127,7 @@ namespace cycfi { namespace infinity
       void period(double samples)               { base.period(samples); }
       void period(double period_, uint32_t sps) { base.period(period_, sps); }
 
-      void phase(uint32_t phase)                { base.freq(phase); }
+      void phase(uint32_t phase)                { base.phase(phase); }
 
    protected:
 
