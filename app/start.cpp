@@ -31,14 +31,18 @@ struct my_processor
    static constexpr auto timer_id = 2;
    static constexpr auto channels = 1;
    static constexpr auto sampling_rate = clock;
-   static constexpr auto buffer_size = 8;
+   static constexpr auto buffer_size = 1024;
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      out[0] = _trig(_agc(s), _agc.active());
-      out[1] = s;
+      auto agc_out = _agc(s);
+      auto trig_out = _trig(agc_out, _agc.active());
+
+      out[0] = agc_out;
+      out[1] = trig_out;
    }
 
+   inf::one_pole_lp     _lp = {1000.0f, sps};
    inf::agc<sps>        _agc;
    inf::period_trigger  _trig;
 };

@@ -49,6 +49,13 @@ namespace cycfi { namespace infinity
          auto pos = _pos_peak(s);
          auto neg = _neg_peak(-s);
 
+         // if (pos)
+         //    return +1;
+         // else if (neg)
+         //    return -1;
+         // else
+         //    return 0;
+
          // Set the state
          if (neg)
             _state = 0;
@@ -59,8 +66,8 @@ namespace cycfi { namespace infinity
 
       bool state() const { return _state; }
 
-      peak_trigger  _pos_peak = {0.995};
-      peak_trigger  _neg_peak = {0.995};
+      peak_trigger  _pos_peak = {0.99995};
+      peak_trigger  _neg_peak = {0.99995};
       bool          _state = 0;
    };
 }}
