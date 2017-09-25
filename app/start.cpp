@@ -42,7 +42,6 @@ struct my_processor
       out[1] = trig_out;
    }
 
-   inf::one_pole_lp     _lp = {1000.0f, sps};
    inf::agc<sps>        _agc;
    inf::period_trigger  _trig;
 };
