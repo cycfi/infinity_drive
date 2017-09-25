@@ -8,6 +8,7 @@
 #include "agc.hpp"
 #include <inf/app.hpp>
 #include <inf/support.hpp>
+#include <inf/synth.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Period Trigger test. Generates square pulses that correspond the period
@@ -36,14 +37,32 @@ struct my_processor
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
       auto agc_out = _agc(s);
-      auto trig_out = _trig(agc_out, _agc.active());
+      bool prev_state = _trig.state();
+      bool state = _trig(agc_out, _agc.active());
 
+      if (prev_state != state && state)
+      {
+         // update the synth frequency and phase
+         auto period = _count - _nstart;
+         if (period)
+         {
+            //_synth.phase(start_phase);
+            _synth.phase(0);
+            _synth.period(period);
+         }
+         _nstart = _count;
+      }
+      ++_count;
+      
       out[0] = agc_out;
-      out[1] = trig_out;
+      out[1] = _synth();
    }
 
    inf::agc<sps>        _agc;
    inf::period_trigger  _trig;
+   inf::sin             _synth = {0.0, sps};
+   uint32_t             _count = 0;
+   uint32_t             _nstart = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;
