@@ -23,6 +23,26 @@ namespace cycfi { namespace infinity
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   // osc_period: given period and samples per second (sps),
+   // calculate the fixed point frequency that the phase accumulator
+   // (see below) requires.
+   ////////////////////////////////////////////////////////////////////////////
+   constexpr uint32_t osc_period(double period, uint32_t sps)
+   {
+      return int_max<uint32_t>() / (sps * period);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   // osc_period: given period in terms of number of samples,
+   // calculate the fixed point frequency that the phase accumulator
+   // (see below) requires. Argument samples can be fractional.
+   ////////////////////////////////////////////////////////////////////////////
+   constexpr uint32_t osc_period(double samples)
+   {
+      return int_max<uint32_t>() / samples;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    // osc_phase: given phase (in radians), calculate the fixed point phase
    // that the phase accumulator (see below) requires. phase runs from
    // 0 to uint32_max (0 to 2pi)
@@ -66,12 +86,16 @@ namespace cycfi { namespace infinity
          return _phase < _freq;
       }
 
-      uint32_t freq() const { return _freq; }
-      uint32_t phase() const { return _phase; }
+      uint32_t freq() const                     { return _freq; }
 
-      void freq(uint32_t freq) { _freq = freq; }
-      void freq(uint32_t freq, uint32_t sps) { _freq = osc_freq(freq, sps); }
-      void phase(uint32_t phase) { _phase = phase; }
+      void freq(uint32_t freq)                  { _freq = freq; }
+      void freq(double freq, uint32_t sps)      { _freq = osc_freq(freq, sps); }
+
+      void period(double samples)               { _freq = osc_period(samples); }
+      void period(double period_, uint32_t sps) { _freq = osc_period(period_, sps); }
+
+      uint32_t phase() const                    { return _phase; }
+      void phase(uint32_t phase)                { _phase = phase; }
 
    private:
 
