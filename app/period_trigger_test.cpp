@@ -10,7 +10,8 @@
 #include <inf/support.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// AGC test. Tests the AGC (automatic gain control).
+// Period Trigger test. Generates square pulses that correspond the period
+// of a waveform.
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
 // pin PA4 to an oscilloscope to see the waveform. 

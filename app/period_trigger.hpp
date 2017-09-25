@@ -39,16 +39,21 @@ namespace cycfi { namespace infinity
    {
       bool operator()(float s, bool active = true)
       {
+         if (!active)
+         {
+            _state = 0;
+            return _state;            
+         }
+
          // Detect the peaks
          auto pos = _pos_peak(s);
          auto neg = _neg_peak(-s);
 
          // Set the state
-         if (!active || neg)
+         if (neg)
             _state = 0;
          else if (pos)
             _state = 1;
-
          return _state;
       }
 
