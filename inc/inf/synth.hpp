@@ -79,7 +79,7 @@ namespace cycfi { namespace infinity
          _phase += _freq;
          return val;
       }
-
+      
       bool is_phase_start() const
       {
          // return true if we are at the start phase
@@ -96,6 +96,9 @@ namespace cycfi { namespace infinity
       void period(double period_, uint32_t sps) { _freq = osc_period(period_, sps); }
 
       void phase(uint32_t phase)                { _phase = phase; }
+
+      void incr()                               { _phase += _freq; }
+      void decr()                               { _phase -= _freq; }
 
    private:
 
@@ -128,6 +131,9 @@ namespace cycfi { namespace infinity
       void period(double period_, uint32_t sps) { base.period(period_, sps); }
 
       void phase(uint32_t phase)                { base.phase(phase); }
+
+      void incr()                               { base.incr(); }
+      void decr()                               { base.decr(); }
 
    protected:
 

@@ -21,7 +21,7 @@ namespace cycfi { namespace infinity
       static constexpr float hysteresis = 0.002f;
       static constexpr float drop = 0.80f;
       
-      peak_trigger(float r = 0.999f)
+      peak_trigger(float r)
        : ef(r), cmp(hysteresis)
       {}
 
@@ -63,6 +63,8 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct period_trigger
    {
+      static constexpr float dead_zone = 0.5;
+
       int operator()(float s, bool active = true)
       {
          if (!active)
@@ -70,6 +72,10 @@ namespace cycfi { namespace infinity
             _state = 0;
             return _state;
          }
+
+         // kill dead-zone
+         if (s < dead_zone && s > -dead_zone)
+            s = 0.0f;
 
          // Detect the peaks
          auto pos = _pos_peak(s);
@@ -92,8 +98,8 @@ namespace cycfi { namespace infinity
 
       bool state() const { return _state; }
 
-      peak_trigger   _pos_peak = {0.995};
-      peak_trigger   _neg_peak = {0.995};
+      peak_trigger   _pos_peak = {0.999};
+      peak_trigger   _neg_peak = {0.999};
       int            _state = 0;
    };
 }}

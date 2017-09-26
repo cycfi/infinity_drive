@@ -38,8 +38,8 @@ struct my_processor
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
       auto agc_out = _agc(s);
-      bool prev_state = _trig.state();
-      bool state = _trig(agc_out, _agc.active());
+      int prev_state = _trig.state();
+      int state = _trig(agc_out, _agc.active());
 
       if (prev_state != state && state)
       {
@@ -47,8 +47,12 @@ struct my_processor
          auto period = _count - _nstart;
          if (period)
          {
-            _synth.phase(start_phase);
-            _synth.period(period);
+            _synth.period(_period_lp(period));
+            int32_t ph_diff = _synth.phase() - start_phase;
+            if (ph_diff > 0)
+               _synth.decr();
+            else if (ph_diff < 0)
+               _synth.incr();
          }
          _nstart = _count;
       }
@@ -61,6 +65,7 @@ struct my_processor
    inf::agc<sps>        _agc;
    inf::period_trigger  _trig;
    inf::sin             _synth = {0.0, sps};
+   inf::one_pole_lp     _period_lp = {0.8};
    uint32_t             _count = 0;
    uint32_t             _nstart = 0;
 };
