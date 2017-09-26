@@ -9,6 +9,32 @@
 namespace cycfi { namespace infinity
 {
    ////////////////////////////////////////////////////////////////////////////
+   // The peak_trigger generates pulses that coincide with the peaks of a
+   // waveform. This is accomplished by sending the signal through an envelope
+   // follower and comparing the (slightly attenuated) result with the 
+   // original signal using a schmitt_trigger.
+   //
+   // The result is a bool corresponding to the peaks.
+   ////////////////////////////////////////////////////////////////////////////
+   struct peak_trigger
+   {
+      static constexpr float hysteresis = 0.002f;
+      static constexpr float drop = 0.80f;
+      
+      peak_trigger(float r = 0.999f)
+       : ef(r), cmp(hysteresis)
+      {}
+
+      bool operator()(float s)
+      {
+         return cmp(s, ef(s) * drop);
+      }
+
+      envelope_follower ef;
+      schmitt_trigger cmp;
+   };
+
+   ////////////////////////////////////////////////////////////////////////////
    // Period trigger
    //
    // The peak trigger employs two peak_trigger, each detecting positive and 
@@ -37,12 +63,12 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct period_trigger
    {
-      bool operator()(float s, bool active = true)
+      int operator()(float s, bool active = true)
       {
          if (!active)
          {
             _state = 0;
-            return _state;            
+            return _state;
          }
 
          // Detect the peaks
@@ -66,9 +92,9 @@ namespace cycfi { namespace infinity
 
       bool state() const { return _state; }
 
-      peak_trigger  _pos_peak = {0.99995};
-      peak_trigger  _neg_peak = {0.99995};
-      bool          _state = 0;
+      peak_trigger   _pos_peak = {0.995};
+      peak_trigger   _neg_peak = {0.995};
+      int            _state = 0;
    };
 }}
 

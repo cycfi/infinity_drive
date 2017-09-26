@@ -141,29 +141,6 @@ namespace cycfi { namespace infinity
    };
 
    ////////////////////////////////////////////////////////////////////////////
-   // The peak_trigger generates pulses that coincide with the peaks of a
-   // waveform. This is accomplished by sending the signal through an envelope
-   // follower and comparing the result with the original signal (slightly
-   // attenuated) using a schmitt_trigger.
-   //
-   // The result is a bool corresponding to the peaks.
-   ////////////////////////////////////////////////////////////////////////////
-   struct peak_trigger
-   {
-      peak_trigger(float r = 0.999f)
-       : ef(r), cmp(0.002f)
-      {}
-
-      bool operator()(float s)
-      {
-         return cmp(s, ef(s) * 0.70f);
-      }
-
-      envelope_follower ef;
-      schmitt_trigger cmp;
-   };
-
-   ////////////////////////////////////////////////////////////////////////////
    // clip a signal to range -m...+m
    ////////////////////////////////////////////////////////////////////////////
    struct clip
