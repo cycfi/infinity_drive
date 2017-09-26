@@ -27,8 +27,8 @@ namespace cycfi { namespace infinity
    template <std::uint32_t sps>
    struct agc
    {
-      static constexpr float l_threshold = 0.02f;
-      static constexpr float h_threshold = 0.1f;
+      static constexpr float l_threshold = 0.005f;
+      static constexpr float h_threshold = 0.05f;
       
       float operator()(float s)
       {
