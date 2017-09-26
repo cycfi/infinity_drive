@@ -81,13 +81,6 @@ namespace cycfi { namespace infinity
          auto pos = _pos_peak(s);
          auto neg = _neg_peak(-s);
 
-         // if (pos)
-         //    return +1;
-         // else if (neg)
-         //    return -1;
-         // else
-         //    return 0;
-
          // Set the state
          if (neg)
             _state = 0;

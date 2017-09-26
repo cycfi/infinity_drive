@@ -48,10 +48,10 @@ struct my_processor
          if (period)
          {
             _synth.period(_period_lp(period));
-            int32_t ph_diff = _synth.phase() - start_phase;
-            if (ph_diff > 0)
+            int32_t phase_diff = _synth.phase() - start_phase;
+            if (phase_diff > 0)
                _synth.decr();
-            else if (ph_diff < 0)
+            else if (phase_diff < 0)
                _synth.incr();
          }
          _nstart = _count;
