@@ -1,8 +1,8 @@
 /*=============================================================================
   Copyright (c) Cycfi Research, Inc.
 =============================================================================*/
-#if !defined(CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_FEBRUARY_16_2016)
-#define CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_FEBRUARY_16_2016
+#if !defined(CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_SEPTEMBER_27_2017)
+#define CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_SEPTEMBER_27_2017
 
 #include <inf/fx.hpp>
 #include <inf/synth.hpp>
@@ -11,6 +11,14 @@
 
 namespace cycfi { namespace infinity
 {
+   ////////////////////////////////////////////////////////////////////////////
+   // freq_locked_synth
+   //
+   // The freq_locked_synth looks at the input audio and extracts the 
+   // fundamental frequency and phase from the waveform and uses these
+   // information to set the frequency and phase of a synthesiser, provided
+   // by the client.
+   ////////////////////////////////////////////////////////////////////////////
    template <typename Synth, std::uint32_t sps>
    struct freq_locked_synth
    {
@@ -21,18 +29,21 @@ namespace cycfi { namespace infinity
 
       float operator()(float s, uint32_t ticks)
       {
-         auto agc_out = _agc(s);
          bool was_active = _agc.active();
+         auto agc_out = _agc(s);
          int prev_state = _trig.state();
          bool is_active = _agc.active();
-         int state = _trig(agc_out, is_active);
-         bool onset = !was_active && is_active;
 
          if (!is_active)
          {
+            _synth.period(0);
+            _synth.phase(0);
             _time_from_onset = 0;
             return 0.0f;
          }
+
+         int state = _trig(agc_out, is_active);
+         bool onset = !was_active && is_active;
    
          if (prev_state != state && state)
          {
