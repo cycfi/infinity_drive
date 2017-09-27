@@ -48,6 +48,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/canvas.cpp</locationURI>
 		</link>
 		<link>
+			<name>src/freq_locked_synth.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/app/freq_locked_synth.hpp</locationURI>
+		</link>
+		<link>
 			<name>src/i2c.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/i2c.cpp</locationURI>

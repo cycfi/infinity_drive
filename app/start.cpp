@@ -4,11 +4,10 @@
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #include <inf/multi_processor.hpp>
-#include "period_trigger.hpp"
-#include "agc.hpp"
 #include <inf/app.hpp>
 #include <inf/support.hpp>
 #include <inf/synth.hpp>
+#include "freq_locked_synth.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Period Trigger test. Generates square pulses that correspond the period
@@ -37,37 +36,17 @@ struct my_processor
    
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      auto agc_out = _agc(s);
-      int prev_state = _trig.state();
-      int state = _trig(agc_out, _agc.active());
-
-      if (prev_state != state && state)
-      {
-         // update the synth frequency and phase
-         auto period = _count - _nstart;
-         if (period)
-         {
-            _synth.period(_period_lp(period));
-            int32_t phase_diff = _synth.phase() - start_phase;
-            if (phase_diff > 0)
-               _synth.decr();
-            else if (phase_diff < 0)
-               _synth.incr();
-         }
-         _nstart = _count;
-      }
-      ++_count;
+      auto fls_out = _fls(s, _ticks++);
       
-      out[0] = agc_out;
-      out[1] = _synth() * 0.8; // don't let it saturate
+      out[0] = s;
+      out[1] = fls_out * 0.8;  // don't let it saturate
    }
 
-   inf::agc<sps>        _agc;
-   inf::period_trigger  _trig;
-   inf::sin             _synth = {0.0, sps};
-   inf::one_pole_lp     _period_lp = {0.8};
-   uint32_t             _count = 0;
-   uint32_t             _nstart = 0;
+   using fls_type = inf::freq_locked_synth<inf::sin, sps>;
+
+   inf::sin    _synth = {0.0, sps};
+   fls_type    _fls = {_synth, start_phase};
+   uint32_t    _ticks = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;
