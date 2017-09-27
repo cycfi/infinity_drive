@@ -121,6 +121,7 @@ namespace cycfi { namespace infinity
        : base(freq, sps)
       {}
 
+      bool is_phase_start() const               { return base.is_phase_start(); }
       uint32_t freq() const                     { return base.freq(); }
       uint32_t phase() const                    { return base.phase(); }
 

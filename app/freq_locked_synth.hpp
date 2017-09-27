@@ -20,8 +20,12 @@ namespace cycfi { namespace infinity
    // by the client.
    ////////////////////////////////////////////////////////////////////////////
    template <typename Synth, std::uint32_t sps>
-   struct freq_locked_synth
+   class freq_locked_synth
    {
+   public:
+
+      enum { stop, wait, run };
+
       freq_locked_synth(Synth& synth_, uint32_t start_phase_)
        : _synth(synth_)
        , _start_phase(start_phase_)
@@ -38,7 +42,8 @@ namespace cycfi { namespace infinity
          {
             _synth.period(0);
             _synth.phase(0);
-            _time_from_onset = 0;
+            _edges_from_onset = 0;
+            _phase = stop;
             return 0.0f;
          }
 
@@ -51,11 +56,13 @@ namespace cycfi { namespace infinity
             {
                // update the synth frequency and phase
                auto period = ticks - _edge_start;
-               if (_time_from_onset < 10)
+               if (_edges_from_onset < 10)
                {
                   _period_lp.y = period;
                   _synth.period(period);
                   _synth.phase(_start_phase);
+                  if (_phase != run && _edges_from_onset <= 1)
+                     _phase = wait;
                }
                else
                {
@@ -66,20 +73,33 @@ namespace cycfi { namespace infinity
                   else if (phase_diff < 0)
                      _synth.incr();
                }
-               ++_time_from_onset;
+               ++_edges_from_onset;
             }
             _edge_start = ticks;
          }
-         return _synth();
+
+         // auto prev_phase = _synth.phase();
+         auto synth_out = _synth();
+         if (_phase == wait)
+         {
+            if (_synth.is_phase_start())
+            	_phase = run;
+            else      
+               return 0.0f;               
+         }
+         return synth_out;
       }
+
+   private:
 
       agc<sps>          _agc;
       period_trigger    _trig;
       Synth&            _synth;
-      one_pole_lp  		_period_lp = {0.8};
+      one_pole_lp  		_period_lp = {0.4};
       uint32_t          _edge_start = 0;
       uint32_t          _start_phase;
-      uint32_t          _time_from_onset = 0;
+      uint32_t          _edges_from_onset = 0;
+      int               _phase = stop;
    };
 }}
 

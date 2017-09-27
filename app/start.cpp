@@ -32,7 +32,7 @@ struct my_processor
    static constexpr auto channels = 1;
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
-   static constexpr auto start_phase = inf::osc_phase(inf::pi / 4);
+   static constexpr auto start_phase = inf::osc_phase(inf::pi / 2);
    
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
