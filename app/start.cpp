@@ -36,10 +36,10 @@ struct my_processor
    
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      auto fls_out = _fls(s, _ticks++);
+      auto synth_out = _fls(s, _ticks++);
       
       out[0] = s;
-      out[1] = fls_out * 0.8;  // don't let it saturate
+      out[1] = synth_out * 0.8;  // don't let it saturate
    }
 
    using fls_type = inf::freq_locked_synth<inf::sin, sps>;
