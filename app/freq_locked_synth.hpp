@@ -8,6 +8,7 @@
 #include <inf/synth.hpp>
 #include "agc.hpp"
 #include "period_trigger.hpp"
+#include <cmath>
 
 namespace cycfi { namespace infinity
 {
@@ -19,7 +20,7 @@ namespace cycfi { namespace infinity
    // information to set the frequency and phase of a synthesiser, provided
    // by the client.
    ////////////////////////////////////////////////////////////////////////////
-   template <typename Synth, std::uint32_t sps>
+   template <typename Synth, std::uint32_t sps, std::uint32_t latency>
    class freq_locked_synth
    {
    public:
@@ -55,19 +56,25 @@ namespace cycfi { namespace infinity
             if (!onset)
             {
                // update the synth frequency and phase
-               auto period = ticks - _edge_start;
+               float period = ticks - _edge_start;
+               if (_edges_from_onset < 10)
+                  _period_lp.y = period;
+               else
+                  period = _period_lp(period);
+               
+               _synth.period(period);
+               std::size_t samples_delay = (std::ceil(latency / period) * period) - latency;
+               auto target_phase = _start_phase - (samples_delay * _synth.freq());
+
                if (_edges_from_onset < 10)
                {
-                  _period_lp.y = period;
-                  _synth.period(period);
-                  _synth.phase(_start_phase);
+                  _synth.phase(target_phase);
                   if (_phase != run && _edges_from_onset <= 1)
                      _phase = wait;
                }
                else
                {
-                  _synth.period(_period_lp(period));
-                  int32_t phase_diff = _synth.phase() - _start_phase;
+                  int32_t phase_diff = _synth.phase() - target_phase;
                   if (phase_diff > 0)
                      _synth.decr();
                   else if (phase_diff < 0)

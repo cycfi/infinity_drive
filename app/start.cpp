@@ -32,6 +32,7 @@ struct my_processor
    static constexpr auto channels = 1;
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
+   static constexpr auto latency = buffer_size / sps_div;
    static constexpr auto start_phase = inf::osc_phase(inf::pi / 2);
    
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
@@ -42,7 +43,7 @@ struct my_processor
       out[1] = synth_out * 0.8;  // don't let it saturate
    }
 
-   using fls_type = inf::freq_locked_synth<inf::sin, sps>;
+   using fls_type = inf::freq_locked_synth<inf::sin, sps, latency>;
 
    inf::sin    _synth = {0.0, sps};
    fls_type    _fls = {_synth, start_phase};
