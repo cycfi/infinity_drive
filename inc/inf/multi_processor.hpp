@@ -137,10 +137,17 @@ namespace cycfi { namespace infinity
          // Config the DACs
          auto cfg4 = _dac_l.setup();
          auto cfg5 = _dac_r.setup();
-         
+
+#ifdef INFINITY_PROFILER
+         auto cfg6 = _profile_pin.setup();
+#endif
          return [=](auto base)
          {
+#ifdef INFINITY_PROFILER
+            return cfg1(cfg2(cfg3(cfg4(cfg5(cfg6(base))))));
+#else
             return cfg1(cfg2(cfg3(cfg4(cfg5(base)))));
+#endif
          };
       }
 
@@ -163,22 +170,36 @@ namespace cycfi { namespace infinity
       {
          _out = _obuff.middle();
 
+#ifdef INFINITY_PROFILER
+         _profile_pin = 1;
+#endif
          // process channels and place them in the output buffer
          Base::process(
             _obuff.begin(), _obuff.middle(), _adc.begin(),
             [](std::uint32_t sample) { return convert(sample); }
          );
+
+#ifdef INFINITY_PROFILER
+         _profile_pin = 0;
+#endif
       }
 
       void irq_conversion_complete()
       {
          _out = _obuff.begin();
 
+#ifdef INFINITY_PROFILER
+         _profile_pin = 1;
+#endif
          // process channels and place them in the output buffer
          Base::process(
             _obuff.middle(), _obuff.end(), _adc.middle(),
             [](std::uint32_t sample) { return convert(sample); }
          );
+
+#ifdef INFINITY_PROFILER
+         _profile_pin = 0;
+#endif
       }
 
       void irq_timer_task()
@@ -214,6 +235,11 @@ namespace cycfi { namespace infinity
 
       // output count (for downsampling)
       int _ocount;
+
+#ifdef INFINITY_PROFILER
+      // For profiling
+      main_test_pin_type _profile_pin;
+#endif
    };
 
 }}

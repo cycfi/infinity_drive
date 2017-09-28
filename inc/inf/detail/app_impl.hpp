@@ -33,6 +33,8 @@ namespace cycfi { namespace infinity
 
 #endif
 
+using main_test_pin_type = output_pin<port::porta + 15>;
+
 }}
 
 #endif
