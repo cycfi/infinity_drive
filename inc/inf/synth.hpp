@@ -73,11 +73,21 @@ namespace cycfi { namespace infinity
        , _phase(0)
       {}
 
+      // synthesize at offset 0
       uint32_t operator()()
       {
          auto val = _phase;
          _phase += _freq;
          return val;
+      }
+
+      // synthesize at given offset --delays or advances the
+      // position by offset number of samples.
+      uint32_t operator()(int32_t offset)
+      {
+         auto val = _phase;
+         _phase += _freq;
+         return val + (offset * _freq);
       }
       
       bool is_phase_start() const
@@ -163,6 +173,11 @@ namespace cycfi { namespace infinity
          return base() > width ? 1.0f : -1.0f;
       }
 
+      float operator()(int32_t offset)
+      {
+         return base(offset) > width ? 1.0f : -1.0f;
+      }
+
    private:
 
       uint32_t width;
@@ -186,6 +201,11 @@ namespace cycfi { namespace infinity
       float operator()()
       {
          return detail::sin_gen(base());
+      }
+
+      float operator()(int32_t offset)
+      {
+         return detail::sin_gen(base(offset));
       }
    };
 
@@ -214,6 +234,12 @@ namespace cycfi { namespace infinity
       {
          int32_t modulator_out = detail::sin_gen(mbase()) * mgain;
          return detail::sin_gen(base() + modulator_out);
+      }
+
+      float operator()(int32_t offset)
+      {
+         int32_t modulator_out = detail::sin_gen(mbase(offset)) * mgain;
+         return detail::sin_gen(base(offset) + modulator_out);
       }
 
    private:
