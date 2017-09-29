@@ -57,13 +57,13 @@ namespace cycfi { namespace infinity
             {
                // update the synth frequency and phase
                float period = ticks - _edge_start;
-               if (_edges_from_onset < 10)
+               if (_edges_from_onset <= 1)
                   _period_lp.y = period;
                else
                   period = _period_lp(period);
                
                _synth.period(period);
-               std::size_t samples_delay = (std::ceil(latency / period) * period) - latency;
+               std::size_t samples_delay = period - fmod(latency, period);
                auto target_phase = _start_phase - (samples_delay * _synth.freq());
 
                if (_edges_from_onset < 10)
