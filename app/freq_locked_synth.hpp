@@ -18,7 +18,9 @@ namespace cycfi { namespace infinity
    // The freq_locked_synth looks at the input audio and extracts the
    // fundamental frequency and phase from the waveform and uses these
    // information to set the frequency and phase of a synthesiser, provided
-   // by the client.
+   // by the client. The freq_locked_synth generates phase accurate
+   // synthesized output required for polyphonic sustain.
+   //
    ////////////////////////////////////////////////////////////////////////////
    template <typename Synth, std::uint32_t sps, std::uint32_t latency>
    class freq_locked_synth
@@ -69,7 +71,7 @@ namespace cycfi { namespace infinity
                }
 
                _synth.period(period);
-               std::size_t samples_delay = period - fmod(latency, period);
+               std::size_t samples_delay = period - std::fmod(latency, period);
                auto target_phase = _start_phase - (samples_delay * _synth.freq());
 
                if (_edges_from_onset == 0)
@@ -81,7 +83,6 @@ namespace cycfi { namespace infinity
             _edge_start = ticks;
          }
 
-         // auto prev_phase = _synth.phase();
          auto synth_out = _synth();
          if (_stage == wait)
          {

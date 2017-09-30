@@ -14,7 +14,7 @@
 // of a waveform.
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-// pin PA4 to an oscilloscope to see the waveform. 
+// pins PA4 and PA5 to an oscilloscope to see the input and output waveforms.
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
 
@@ -35,9 +35,8 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      auto r = _agc(s);
-      out[0] = _trig(r, _agc.active());
-      out[1] = r * 0.8; // don't let the DAC saturate
+      out[0] = _trig(_agc(s), _agc.active());
+      out[1] = s;
    }
 
    inf::agc<sps>        _agc;
