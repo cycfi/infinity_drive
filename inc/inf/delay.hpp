@@ -75,7 +75,7 @@ namespace cycfi { namespace infinity
    };
 
    ////////////////////////////////////////////////////////////////////////////
-   // single_delay: a basic class for implementing singe delays
+   // single_delay: a basic class for implementing single delays
    ////////////////////////////////////////////////////////////////////////////
    template <
       typename T
