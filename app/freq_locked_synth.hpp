@@ -72,18 +72,10 @@ namespace cycfi { namespace infinity
                std::size_t samples_delay = period - fmod(latency, period);
                auto target_phase = _start_phase - (samples_delay * _synth.freq());
 
-               if (_edges_from_onset < 10)
-               {
+               if (_edges_from_onset == 0)
                   _synth.phase(target_phase);
-               }
                else
-               {
-                  int32_t phase_diff = _synth.phase() - target_phase;
-                  if (phase_diff > 0)
-                     _synth.decr();
-                  else if (phase_diff < 0)
-                     _synth.incr();
-               }
+                  _synth.sync_phase(target_phase);
                ++_edges_from_onset;
             }
             _edge_start = ticks;
