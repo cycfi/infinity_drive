@@ -35,8 +35,9 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      out[0] = _trig(_agc(s), _agc.active());
-      out[1] = s;
+      auto r = _agc(s);
+      out[0] = _trig(r, _agc.active());
+      out[1] = r * 0.8; // don't let the DAC saturate
    }
 
    inf::agc<sps>        _agc;
