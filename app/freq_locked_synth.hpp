@@ -1,5 +1,7 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright (c) 2014-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_SEPTEMBER_27_2017)
 #define CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_SEPTEMBER_27_2017

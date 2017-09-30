@@ -1,5 +1,7 @@
 /*=============================================================================
-  Copyright (c) Cycfi Research, Inc.
+   Copyright (c) 2014-2017 Cycfi Research. All rights reserved.
+
+   Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
 #if !defined(CYCFI_INFINITY_PERIOD_TRIGGER_HPP_FEBRUARY_11_2016)
 #define CYCFI_INFINITY_PERIOD_TRIGGER_HPP_FEBRUARY_11_2016
@@ -22,16 +24,16 @@ namespace cycfi { namespace infinity
       static constexpr float drop = 0.80f;
 
       peak_trigger(float r)
-       : ef(r), cmp(hysteresis)
+       : _ef(r), _cmp(hysteresis)
       {}
 
       bool operator()(float s)
       {
-         return cmp(s, ef(s) * drop);
+         return _cmp(s, _ef(s) * drop);
       }
 
-      envelope_follower ef;
-      schmitt_trigger cmp;
+      envelope_follower _ef;
+      schmitt_trigger   _cmp;
    };
 
    ////////////////////////////////////////////////////////////////////////////
