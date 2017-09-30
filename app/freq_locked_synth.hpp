@@ -15,7 +15,7 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // freq_locked_synth
    //
-   // The freq_locked_synth looks at the input audio and extracts the 
+   // The freq_locked_synth looks at the input audio and extracts the
    // fundamental frequency and phase from the waveform and uses these
    // information to set the frequency and phase of a synthesiser, provided
    // by the client.
@@ -44,13 +44,13 @@ namespace cycfi { namespace infinity
             _synth.period(0);
             _synth.phase(0);
             _edges_from_onset = 0;
-            _phase = stop;
+            _stage = stop;
             return 0.0f;
          }
 
          int state = _trig(agc_out, is_active);
          bool onset = !was_active && is_active;
-   
+
          if (prev_state != state && state)
          {
             if (!onset)
@@ -58,10 +58,16 @@ namespace cycfi { namespace infinity
                // update the synth frequency and phase
                float period = ticks - _edge_start;
                if (_edges_from_onset <= 1)
+               {
                   _period_lp.y = period;
+                  if (_stage != run)
+                     _stage = wait;
+               }
                else
+               {
                   period = _period_lp(period);
-               
+               }
+
                _synth.period(period);
                std::size_t samples_delay = period - fmod(latency, period);
                auto target_phase = _start_phase - (samples_delay * _synth.freq());
@@ -69,8 +75,6 @@ namespace cycfi { namespace infinity
                if (_edges_from_onset < 10)
                {
                   _synth.phase(target_phase);
-                  if (_phase != run && _edges_from_onset <= 1)
-                     _phase = wait;
                }
                else
                {
@@ -87,12 +91,12 @@ namespace cycfi { namespace infinity
 
          // auto prev_phase = _synth.phase();
          auto synth_out = _synth();
-         if (_phase == wait)
+         if (_stage == wait)
          {
             if (_synth.is_phase_start())
-            	_phase = run;
-            else      
-               return 0.0f;               
+            	_stage = run;
+            else
+               return 0.0f;
          }
          return synth_out;
       }
@@ -106,7 +110,7 @@ namespace cycfi { namespace infinity
       uint32_t          _edge_start = 0;
       uint32_t          _start_phase;
       uint32_t          _edges_from_onset = 0;
-      int               _phase = stop;
+      int               _stage = stop;
    };
 }}
 
