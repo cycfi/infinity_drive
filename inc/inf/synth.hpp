@@ -89,7 +89,7 @@ namespace cycfi { namespace infinity
          _phase += _freq;
          return val + (offset * _freq);
       }
-      
+
       bool is_phase_start() const
       {
          // return true if we are at the start phase
@@ -109,6 +109,20 @@ namespace cycfi { namespace infinity
 
       void incr()                               { _phase += _freq; }
       void decr()                               { _phase -= _freq; }
+
+      template <int k>
+      void sync_phase(uint32_t phase)
+      {
+         // Slowly sync the phase to target phase.
+         // (note: the divide will be optimized by the compiler
+         // as long as k is a power of 2)
+         _phase = phase - (_phase / k) + (phase / k);
+      }
+
+      void sync_phase(uint32_t phase)
+      {
+         sync_phase<64>(phase);
+      }
 
    private:
 
@@ -142,6 +156,10 @@ namespace cycfi { namespace infinity
       void period(double period_, uint32_t sps) { base.period(period_, sps); }
 
       void phase(uint32_t phase)                { base.phase(phase); }
+
+      template <int k>
+      void sync_phase(uint32_t phase)           { base.sync_phase<k>(phase); }
+      void sync_phase(uint32_t phase)           { base.sync_phase(phase); }
 
       void incr()                               { base.incr(); }
       void decr()                               { base.decr(); }
