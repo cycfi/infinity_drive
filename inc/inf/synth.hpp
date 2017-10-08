@@ -260,6 +260,9 @@ namespace cycfi { namespace infinity
          return detail::sin_gen(base(offset) + modulator_out);
       }
 
+      float modulator_gain() const        { return mgain / 32767.0f; }
+      void  modulator_gain(float mgain_)  { mgain = fxp(mgain_) * 32767; }
+
    private:
 
       accum mbase;   // modulator phase synth
