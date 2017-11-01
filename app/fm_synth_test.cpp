@@ -18,7 +18,7 @@
 // This test generates an 440Hz sine wave FM modulated by a 110Hz sine wave.
 // The modulation amount is controlled by a rotary encoder.
 //
-// Setup: Connect pin PA4 to an oscilloscope to see the generated sine wave.
+// Setup: Connect pin PA4 to an oscilloscope to see the generated waveform.
 //        Connect the rotary encoder quadrature A and B pins to PC8 and
 //        PC9. The pins must be active low and hardware debounced. Connect
 //        the ssd1306 oled I2C SCL to PB10 and SDA to PB3 to see the
