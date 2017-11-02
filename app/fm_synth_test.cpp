@@ -41,6 +41,7 @@ constexpr uint32_t sps = 100000;
 constexpr float initial_modulator_gain = 0.2;
 
 inf::fm synth(440.0, initial_modulator_gain, 110.0, sps);
+inf::one_pole_lp mod_lp{10.0f, sps}; // modulator param-change filter (10Hz)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
@@ -53,6 +54,9 @@ encoder_type enc;
 // Our timer task
 void timer_task()
 {
+   // Update the synth modulator gain
+   synth.modulator_gain(mod_lp(enc()));
+
    // We generate a 12 bit signal, but we do not want to saturate the
    // DAC output buffer (the buffer is not rail-to-rail), so we limit
    // the signal to 0.9.
@@ -90,10 +94,7 @@ void start()
       cnv.draw_string(out, 15, 15, font::medium);
       cnv.refresh();
 
-      // Update the synth modulator gain
-      synth.modulator_gain(enc());
-
-      delay_ms(10);
+      delay_ms(1);
    }
 }
 

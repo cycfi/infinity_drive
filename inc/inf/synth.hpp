@@ -7,6 +7,7 @@
 #define CYCFI_INFINITY_SYNTH_HPP_DECEMBER_24_2015
 
 #include <inf/support.hpp>
+#include <inf/fx.hpp>
 #include <inf/detail/sin_table.hpp>
 #include <cstdint>
 
