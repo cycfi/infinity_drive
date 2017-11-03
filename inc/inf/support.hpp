@@ -20,7 +20,7 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    template <bool b>
    using bool_ = std::integral_constant<bool, b>;
-   
+
    template <int i>
    using int_ = std::integral_constant<int, i>;
 
@@ -176,10 +176,10 @@ namespace cycfi { namespace infinity
    {
       return (m < n)? smallest_pow2(n, m << 1) : m;
    }
-   
+
    template <typename T>
    constexpr bool is_pow2(T n)
-   {   
+   {
       return (n & (n - 1)) == 0;
    }
 
@@ -202,36 +202,49 @@ namespace cycfi { namespace infinity
       return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
    }
 
-   ////////////////////////////////////////////////////////////////////////////
-   // Quick itoa implementation
-   ////////////////////////////////////////////////////////////////////////////
    inline void reverse(char s[])
    {
-      int i, j;   
-      for (i = 0, j = std::strlen(s)-1; i<j; i++, j--) 
+      int i, j;
+      for (i = 0, j = std::strlen(s)-1; i<j; i++, j--)
       {
          char c = s[i];
          s[i] = s[j];
          s[j] = c;
       }
    }
-   
-   inline void itoa(int n, char s[])
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Quick to_string implementation.
+   //
+   //    n: integer to convert, scaled it by frac if you need
+   //       fractional digits.
+   //    s: the output string. should hold enough chars to represent
+   //       the digits.
+   //    frac: number of decimal places.
+   //
+   //    For example, if n: 1234 and frac: 2, the result is 12.34
+   ////////////////////////////////////////////////////////////////////////////
+   inline void to_string(int n, char s[], int frac = 0)
    {
       int i, sign;
-   
+
       if ((sign = n) < 0)           // record sign
          n = -n;                    // make n positive
       i = 0;
-      do {                          // generate digits in reverse order
+      do                            // generate digits in reverse order
+      {
+         if (frac && i == frac)
+            s[i++] = '.';
          s[i++] = n % 10 + '0';     // get next digit
-      } while ((n /= 10) > 0);      // delete it
+      }
+      while ((n /= 10) > 0);        // delete it
+
       if (sign < 0)
          s[i++] = '-';
       s[i] = '\0';
       reverse(s);
-   }  
-   
+   }
+
    ////////////////////////////////////////////////////////////////////////////
    // fast tan approximation (from http://www.musicdsp.org/)
    ////////////////////////////////////////////////////////////////////////////
@@ -246,21 +259,21 @@ namespace cycfi { namespace infinity
        r *= x;
        return r;
    }
-   
+
    ////////////////////////////////////////////////////////////////////////////
    // fast exp approximation (from http://www.musicdsp.org/)
    ////////////////////////////////////////////////////////////////////////////
    constexpr float fast_exp(float x)
    {
-      return 
-         (362880.f + x * 
-            (362880.f + x * 
-               (181440.f + x * 
-                  (60480.f + x * 
-                     (15120.f + x * 
-                        (3024.f + x * 
-                           (504.f + x * 
-                              (72.f + x * 
+      return
+         (362880.f + x *
+            (362880.f + x *
+               (181440.f + x *
+                  (60480.f + x *
+                     (15120.f + x *
+                        (3024.f + x *
+                           (504.f + x *
+                              (72.f + x *
                                  (9.f + x)
          )))))))) * 2.75573192e-6f;
    }
@@ -268,13 +281,13 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // linear interpolation: Interpolates a value linearly between y1 and y2
    // given mu. If mu is 0, the result is y1. If mu is 1, then the result is
-   // y2. 
+   // y2.
    ////////////////////////////////////////////////////////////////////////////
    constexpr float linear_interpolate(float y1, float y2, float mu)
    {
       return y1 + mu * (y2 - y1);
    }
-   
+
    ////////////////////////////////////////////////////////////////////////////
    // Fast reciprocal. See http://tinyurl.com/lgmnsyg. We want to avoid
    // multiplication. So instead of 1.0f/val, we use this function which
