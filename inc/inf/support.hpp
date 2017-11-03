@@ -228,16 +228,25 @@ namespace cycfi { namespace infinity
    {
       int i, sign;
 
-      if ((sign = n) < 0)           // record sign
-         n = -n;                    // make n positive
+      if ((sign = n) < 0)                 // record sign
+         n = -n;                          // make n positive
       i = 0;
-      do                            // generate digits in reverse order
+      while (true)                        // generate digits in reverse order
       {
          if (frac && i == frac)
             s[i++] = '.';
-         s[i++] = n % 10 + '0';     // get next digit
+         s[i++] = n % 10 + '0';           // get next digit
+
+         if ((n /= 10) == 0)
+         {
+            if (i <= frac)
+            {
+               s[i++] = '.';
+               s[i++] = '0';
+            }
+            break;
+         }
       }
-      while ((n /= 10) > 0);        // delete it
 
       if (sign < 0)
          s[i++] = '-';
