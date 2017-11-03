@@ -13,11 +13,11 @@
 #include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Rotary encoder test. 
-// 
-// Setup: Connect the rotary encoder quadrature A and B pins to PC8 and 
-//        PC9. The pins must be active low and hardware debounced. Connect 
-//        the ssd1306 oled I2C SCL to PB10 and SDA to PB3 to see the 
+// Rotary encoder test.
+//
+// Setup: Connect the rotary encoder quadrature A and B pins to PC8 and
+//        PC9. The pins must be active low and hardware debounced. Connect
+//        the ssd1306 oled I2C SCL to PB10 and SDA to PB3 to see the
 //        actual value of the encoder go from 0 to 50 (initialized to 50).
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@ using encoder_type = inf::rotary_encoder<portc+8, portc+9, 24 /*steps*/>;
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
 i2c_type i2c;
-encoder_type enc;
+encoder_type enc{0.0001};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration.
@@ -50,12 +50,12 @@ void start()
    oled_type cnv{i2c};
    enc(0.5);
    enc.start();
-      
+
    while (true)
    {
-      char out[sizeof(int)*8+1];
-      int value = enc() * 100.0f;
-      inf::itoa(value, out);
+      char out[8];
+      int value = enc() * 10000.0f;
+      inf::to_string(value, out, 2);
 
       cnv.clear();
       cnv.draw_string(out, 15, 15, font::medium);
