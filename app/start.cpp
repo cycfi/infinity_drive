@@ -65,6 +65,7 @@ inf::encoder_param<encoder_type> phase_enc{enc, 0, -180, 360, 0.1};
 
 enum class mode_enum : char
 {
+   // none,
    frequency,
    modulation,
    phase
@@ -82,6 +83,7 @@ void set_mode()
 {
    switch (mode)
    {
+      default:
       case mode_enum::frequency:
          frequency_enc.deactivate();
          modulation_enc.activate();
@@ -109,6 +111,8 @@ void generate()
       case mode_enum::frequency:
          freq_lp(frequency_enc());
          synth.freq(freq_lp(), sps);
+         synth.freq(freq_lp(), sps);
+         synth.modulator().freq(freq_lp() * 4, sps);
          ref_synth.freq(freq_lp(), sps);
          break;
       case mode_enum::modulation:
@@ -172,7 +176,7 @@ void display(oled_type& cnv, char const* str, int val)
 void start()
 {
    oled_type cnv{i2c};
-   enc(initial_modulator_gain);
+   // enc(initial_modulator_gain);
    enc.start();
    tmr.start();
    mode_btn.start(rising_edge);  // call button_task on the rising edge

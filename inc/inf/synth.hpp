@@ -263,6 +263,8 @@ namespace cycfi { namespace infinity
 
       float modulator_gain() const        { return mgain / 32767.0f; }
       void  modulator_gain(float mgain_)  { mgain = fxp(mgain_) * 32767; }
+      accum& modulator()                  { return mbase; }
+      accum const& modulator() const      { return mbase; }
 
    private:
 
