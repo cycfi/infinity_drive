@@ -29,7 +29,7 @@ namespace cycfi { namespace infinity
       static constexpr float fast_rotations = 1.0f;
       static constexpr float fast_incr = 1.0f / (fast_rotations * steps);
 
-      rotary_encoder(float incr)
+      rotary_encoder(float incr = fast_incr / 2.0f)
        : incr(incr) {}
 
       void operator()(float value_)
@@ -40,6 +40,16 @@ namespace cycfi { namespace infinity
       float operator()() const
       {
          return value;
+      }
+
+      float increment() const
+      {
+         return incr;
+      }
+
+      void increment(float incr_) const
+      {
+         incr = incr_;
       }
 
       void on_edge()
