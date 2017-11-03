@@ -33,6 +33,11 @@ namespace cycfi { namespace infinity
          return y = s + a * (y - s);
       }
 
+      float operator()() const
+      {
+         return y;
+      }
+
       float y;
       float a;
    };
