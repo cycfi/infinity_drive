@@ -241,6 +241,8 @@ namespace cycfi { namespace infinity
          {
             if (i <= frac)
             {
+               while (i != frac)
+                  s[i++] = '0';
                s[i++] = '.';
                s[i++] = '0';
             }

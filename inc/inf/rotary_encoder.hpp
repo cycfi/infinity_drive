@@ -47,7 +47,7 @@ namespace cycfi { namespace infinity
          return incr;
       }
 
-      void increment(float incr_) const
+      void increment(float incr_)
       {
          incr = incr_;
       }
@@ -62,7 +62,12 @@ namespace cycfi { namespace infinity
          if (elapsed < 5)
             return;
 
-         float scaled_incr = (elapsed > 100)? incr : fast_incr;
+         // float scaled_incr = (elapsed > 100)? incr : fast_incr;
+         // float scaled_incr = (elapsed > 100)? incr : fast_incr;
+         float scaled_incr =(elapsed < 20)?
+            fast_incr :
+            incr * std::max<float>(1.0f, (1000.0f * fast_inverse(elapsed)))
+         ;
 
          if (pin_b)
          {
@@ -105,6 +110,48 @@ namespace cycfi { namespace infinity
       float value = 0.0f;
       float incr;
       std::uint32_t time = 0.0f;
+   };
+
+   template <typename T>
+   class encoder_param
+   {
+   public:
+
+      encoder_param(T& encoder, float init, float offset, float scale, float incr)
+       : encoder(encoder)
+       , value(init)
+       , offset(offset)
+       , scale(scale)
+       , incr(incr / scale)
+      {}
+
+      void activate()
+      {
+         encoder(value);
+         encoder.increment(incr);
+         active = true;
+      }
+
+      void deactivate()
+      {
+         value = encoder();
+         encoder.increment();
+         active = false;
+      }
+
+      float operator()() const
+      {
+         return offset + ((active? encoder() : value) * scale);
+      }
+
+   private:
+
+      T& encoder;
+      float value;
+      float offset;
+      float scale;
+      float incr;
+      bool active = false;
    };
 }}
 
