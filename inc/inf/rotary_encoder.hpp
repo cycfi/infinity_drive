@@ -119,7 +119,7 @@ namespace cycfi { namespace infinity
 
       encoder_param(T& encoder, float init, float offset, float scale, float incr)
        : encoder(encoder)
-       , value(init)
+       , value((init - offset) / scale)
        , offset(offset)
        , scale(scale)
        , incr(incr / scale)
