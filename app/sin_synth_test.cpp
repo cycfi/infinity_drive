@@ -26,7 +26,7 @@ using namespace inf::port;
 // Our synthesizer
 constexpr uint32_t sps = 100000;
 
-q::sin synth(1000.0, sps);
+auto synth = q::sin(1000.0, sps);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals

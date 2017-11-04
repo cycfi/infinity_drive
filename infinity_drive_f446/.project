@@ -68,6 +68,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/synth.hpp</locationURI>
 		</link>
 		<link>
+			<name>q/synth_base.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/synth_base.hpp</locationURI>
+		</link>
+		<link>
 			<name>src/adc.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/adc.cpp</locationURI>
