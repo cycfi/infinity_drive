@@ -74,12 +74,12 @@ namespace cycfi { namespace infinity
 
                _synth.period(period);
                std::size_t samples_delay = period - std::fmod(latency, period);
-               auto target_phase = _start_phase - (samples_delay * _synth.freq());
+               // auto target_phase = _start_phase - (samples_delay * _synth.freq());
 
-               if (_edges_from_onset == 0)
-                  _synth.phase(target_phase);
-               else
-                  _synth.sync_phase(target_phase);
+               // if (_edges_from_onset == 0)
+               //    _synth.phase(target_phase);
+               // else
+               //    _synth.sync_phase(target_phase);
                ++_edges_from_onset;
             }
             _edge_start = ticks;
