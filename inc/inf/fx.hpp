@@ -38,6 +38,12 @@ namespace cycfi { namespace infinity
          return y;
       }
 
+      leaky_integrator& operator=(float y_)
+      {
+         y = y_;
+         return *this;
+      }
+
       float y;
       float a;
    };
@@ -66,6 +72,12 @@ namespace cycfi { namespace infinity
       float operator()() const
       {
          return y;
+      }
+
+      one_pole_lp& operator=(float y_)
+      {
+         y = y_;
+         return *this;
       }
 
       float y, a;
@@ -101,6 +113,12 @@ namespace cycfi { namespace infinity
       float operator()() const
       {
          return y;
+      }
+
+      envelope_follower& operator=(float y_)
+      {
+         y = y_;
+         return *this;
       }
 
       float y, r;
@@ -139,6 +157,12 @@ namespace cycfi { namespace infinity
       bool operator()() const
       {
          return y > 0.0f;
+      }
+
+      schmitt_trigger& operator=(float y_)
+      {
+         y = y_;
+         return *this;
       }
 
       float y;
@@ -200,6 +224,12 @@ namespace cycfi { namespace infinity
          return (y += g * s);
       }
 
+      integrator& operator=(float y_)
+      {
+         y = y_;
+         return *this;
+      }
+
       float y, g;
    };
 
@@ -259,6 +289,12 @@ namespace cycfi { namespace infinity
          return y;
       }
 
+      window_comparator& operator=(bool y_)
+      {
+         y = y_;
+         return *this;
+      }
+
       float l, h;
       bool y;
    };
@@ -288,6 +324,12 @@ namespace cycfi { namespace infinity
          y = s - x + r * y;
          x = s;
          return y;
+      }
+
+      dc_block& operator=(bool y_)
+      {
+         y = y_;
+         return *this;
       }
 
       float r, x, y;
