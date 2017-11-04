@@ -1,0 +1,3 @@
+[submodule "q"]
+	path = q
+	url = git@github.com:cycfi/Q.git
