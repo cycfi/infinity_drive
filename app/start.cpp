@@ -5,8 +5,8 @@
 =============================================================================*/
 #include <inf/timer.hpp>
 #include <inf/pin.hpp>
-#include <inf/synth.hpp>
-#include <inf/fx.hpp>
+#include <q/synth.hpp>
+#include <q/fx.hpp>
 #include <inf/app.hpp>
 #include <inf/dac.hpp>
 #include <inf/i2c.hpp>
@@ -26,6 +26,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
+namespace q = cycfi::q;
 using namespace inf::port;
 using namespace inf::monochrome;
 
@@ -42,12 +43,12 @@ constexpr uint32_t sps = 20000;
 constexpr float initial_modulator_gain = 0.0;
 constexpr float initial_frequency = 110.0;
 
-inf::fm synth(440.0, initial_modulator_gain, initial_frequency, sps);
-inf::sin ref_synth(initial_frequency, sps);
+q::fm synth(440.0, initial_modulator_gain, initial_frequency, sps);
+q::sin ref_synth(initial_frequency, sps);
 
-inf::one_pole_lp freq_lp{10.0f, sps};  // frequency param-change filter (10Hz)
-inf::one_pole_lp mod_lp{10.0f, sps};   // modulator param-change filter (10Hz)
-inf::one_pole_lp phase_lp{10.0f, sps}; // phase param-change filter (10Hz)
+q::one_pole_lp freq_lp{10.0f, sps};    // frequency param-change filter (10Hz)
+q::one_pole_lp mod_lp{10.0f, sps};     // modulator param-change filter (10Hz)
+q::one_pole_lp phase_lp{10.0f, sps};   // phase param-change filter (10Hz)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals

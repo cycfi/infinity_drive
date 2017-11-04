@@ -33,6 +33,36 @@
 			<locationURI>PARENT-1-PROJECT_LOC/inc/inf</locationURI>
 		</link>
 		<link>
+			<name>q</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>q/.DS_Store</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/.DS_Store</locationURI>
+		</link>
+		<link>
+			<name>q/detail</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>q/fx.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/fx.hpp</locationURI>
+		</link>
+		<link>
+			<name>q/support.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/support.hpp</locationURI>
+		</link>
+		<link>
+			<name>q/synth.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/synth.hpp</locationURI>
+		</link>
+		<link>
 			<name>src/adc.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/adc.cpp</locationURI>
@@ -76,6 +106,11 @@
 			<name>src/system_clock_config.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/system_clock_config.cpp</locationURI>
+		</link>
+		<link>
+			<name>q/detail/sin_table.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/detail/sin_table.hpp</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

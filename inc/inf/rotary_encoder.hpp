@@ -7,6 +7,7 @@
 #define CYCFI_INFINITY_ROTARY_ECNODER_HPP_SEPTEMBER_13_2017
 
 #include <inf/pin.hpp>
+#include <q/support.hpp>
 
 namespace cycfi { namespace infinity
 {
@@ -66,7 +67,7 @@ namespace cycfi { namespace infinity
          // float scaled_incr = (elapsed > 100)? incr : fast_incr;
          float scaled_incr =(elapsed < 20)?
             fast_incr :
-            incr * std::max<float>(1.0f, (1000.0f * fast_inverse(elapsed)))
+            incr * std::max<float>(1.0f, (1000.0f * q::fast_inverse(elapsed)))
          ;
 
          if (pin_b)
