@@ -5,8 +5,8 @@
 =============================================================================*/
 #include <inf/timer.hpp>
 #include <inf/pin.hpp>
-#include <inf/synth.hpp>
-#include <inf/fx.hpp>
+#include <q/synth.hpp>
+#include <q/fx.hpp>
 #include <inf/app.hpp>
 #include <inf/dac.hpp>
 #include <inf/i2c.hpp>
@@ -26,6 +26,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
+namespace q = cycfi::q;
 using namespace inf::port;
 using namespace inf::monochrome;
 
@@ -39,14 +40,15 @@ using mode_button_type = inf::input_pin<portc + 10, pull_up>;
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
 constexpr uint32_t sps = 20000;
-constexpr float initial_modulator_gain = 0.2;
+constexpr float initial_modulator_gain = 0.0;
+constexpr float initial_frequency = 110.0;
 
-inf::fm synth(440.0, initial_modulator_gain, 110.0, sps);
-inf::sin ref_synth(110.0, sps);
+q::fm synth(440.0, initial_modulator_gain, initial_frequency, sps);
+q::sin ref_synth(initial_frequency, sps);
 
-inf::one_pole_lp freq_lp{10.0f, sps};  // frequency param-change filter (10Hz)
-inf::one_pole_lp mod_lp{10.0f, sps};   // modulator param-change filter (10Hz)
-inf::one_pole_lp phase_lp{10.0f, sps}; // phase param-change filter (10Hz)
+q::one_pole_lp freq_lp{10.0f, sps};    // frequency param-change filter (10Hz)
+q::one_pole_lp mod_lp{10.0f, sps};     // modulator param-change filter (10Hz)
+q::one_pole_lp phase_lp{10.0f, sps};   // phase param-change filter (10Hz)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
@@ -58,12 +60,22 @@ encoder_type enc;
 mode_button_type mode_btn;
 
 ///////////////////////////////////////////////////////////////////////////////
+inf::encoder_param<encoder_type> frequency_enc{enc, initial_frequency, 50, 1950, 0.1};
+inf::encoder_param<encoder_type> modulation_enc{enc, initial_modulator_gain, 0, 1, 0.0001};
+inf::encoder_param<encoder_type> phase_enc{enc, 0, -180, 360, 0.1};
+
 enum class mode_enum : char
 {
+   // none,
    frequency,
    modulation,
    phase
 };
+
+// mode_enum operator++(mode_enum& mode)
+// {
+
+// }
 
 mode_enum mode = mode_enum::frequency;
 
@@ -72,13 +84,20 @@ void set_mode()
 {
    switch (mode)
    {
+      default:
       case mode_enum::frequency:
+         frequency_enc.deactivate();
+         modulation_enc.activate();
          mode = mode_enum::modulation;
          break;
       case mode_enum::modulation:
+         modulation_enc.deactivate();
+         phase_enc.activate();
          mode = mode_enum::phase;
          break;
       case mode_enum::phase:
+         phase_enc.deactivate();
+         frequency_enc.activate();
          mode = mode_enum::frequency;
          break;
    }
@@ -91,16 +110,18 @@ void generate()
    switch (mode)
    {
       case mode_enum::frequency:
-         freq_lp(50.0f + (enc() * 1950.0f));
+         freq_lp(frequency_enc());
          synth.freq(freq_lp(), sps);
+         synth.freq(freq_lp(), sps);
+         synth.modulator().freq(freq_lp() * 4, sps);
          ref_synth.freq(freq_lp(), sps);
          break;
       case mode_enum::modulation:
          // Update the synth modulator gain
-         synth.modulator_gain(mod_lp(enc()));
+         synth.modulator_gain(mod_lp(modulation_enc()));
          break;
       case mode_enum::phase:
-         phase_lp(-180.0f + (enc() * 360.0f));
+         phase_lp(phase_enc());
          break;
    }
 
@@ -156,10 +177,17 @@ void display(oled_type& cnv, char const* str, int val)
 void start()
 {
    oled_type cnv{i2c};
-   enc(initial_modulator_gain);
+   // enc(initial_modulator_gain);
    enc.start();
    tmr.start();
    mode_btn.start(rising_edge);  // call button_task on the rising edge
+
+   phase_enc.activate();
+   modulation_enc.activate();
+   frequency_enc.activate();
+
+   freq_lp.y = initial_frequency;
+   mod_lp.y = initial_modulator_gain;
 
    while (true)
    {

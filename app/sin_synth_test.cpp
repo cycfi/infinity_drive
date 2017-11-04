@@ -5,10 +5,10 @@
 =============================================================================*/
 #include <inf/timer.hpp>
 #include <inf/pin.hpp>
-#include <inf/synth.hpp>
-#include <inf/fx.hpp>
 #include <inf/app.hpp>
 #include <inf/dac.hpp>
+#include <q/synth.hpp>
+#include <q/fx.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // This test generates a 1kHz sine wave and outputs the signal using
@@ -19,13 +19,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
+namespace q = cycfi::q;
 using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
 constexpr uint32_t sps = 100000;
 
-inf::sin synth(1000.0, sps);
+q::sin synth(1000.0, sps);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
@@ -37,7 +38,7 @@ inf::timer<3> tmr;
 void timer_task()
 {
    // We generate a 12 bit signal, but we do not want to saturate the
-   // DAC output buffer (the buffer is not rail-to-rail), so we limit 
+   // DAC output buffer (the buffer is not rail-to-rail), so we limit
    // the signal to 0.9.
    uint16_t val = (0.9f * synth() * 2047) + 2048;
    dac(val);

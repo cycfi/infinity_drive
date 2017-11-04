@@ -48,6 +48,11 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>q/fixed_point.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/fixed_point.hpp</locationURI>
+		</link>
+		<link>
 			<name>q/fx.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/fx.hpp</locationURI>
