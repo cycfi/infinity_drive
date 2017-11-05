@@ -11,9 +11,9 @@
 #include <q/fx.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// This test generates two 1kHz sine waves, one shifted 90 degrees and outputs
-// the signal using the dacs. This is done using a timer interrupt set to
-// trigger at 100kHz kHz.
+// This test generates an 440Hz sine wave FM modulated by a 110Hz sine wave
+// (mfactor = 4.0). A reference sine wave is also generated to sync the
+// scope with.
 //
 // Setup: connect pin PA4 and PA5 to an oscilloscope to see the generated
 // waveforms.
@@ -25,16 +25,17 @@ using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
-constexpr uint32_t sps = 100000;
+constexpr uint32_t sps = 40000;
 
-auto synth1 = q::sin(1000.0, sps);
-auto synth2 = q::sin(1000.0, sps, q::pi / 2); // 90 degree shift
+auto synth1 = q::fm(440.0, 0.2, 4.0, sps);
+auto synth2 = q::sin(440.0, sps);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
 inf::dac<0> dac1;
 inf::dac<1> dac2;
 inf::timer<3> tmr;
+inf::output_pin<portc + 12> tpin;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our timer task
@@ -44,7 +45,9 @@ void timer_task()
    // DAC output buffer (the buffer is not rail-to-rail), so we limit
    // the signals to 0.8.
 
+   tpin = 1;
    dac1((0.8f * synth1() * 2047) + 2048);
+   tpin = 0;
    dac2((0.8f * synth2() * 2047) + 2048);
 }
 
@@ -53,9 +56,10 @@ void timer_task()
 constexpr uint32_t tmr_freq = 80000000;
 
 auto config = inf::config(
+   tpin.setup(),
    dac1.setup(),
    dac2.setup(),
-   tmr.setup(tmr_freq, sps, timer_task)   // calls timer_task every 100kHz
+   tmr.setup(tmr_freq, sps, timer_task)   // calls timer_task every 40kHz
 );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,7 +68,17 @@ void start()
 {
    tmr.start();
    while (true)
-      ;
+   {
+      constexpr q::phase_t incr{0.001};
+      constexpr q::phase_t max{0.5};
+      constexpr q::phase_t zero{0.0};
+
+      auto g = synth1.mgain() + incr;
+      if (g >= max)
+         g = zero;
+      synth1.mgain(g);
+      inf::delay_ms(10);
+   }
 }
 
 // The actual "C" interrupt handlers are defined here:

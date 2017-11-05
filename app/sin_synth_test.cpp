@@ -11,11 +11,12 @@
 #include <q/fx.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-// This test generates a 1kHz sine wave and outputs the signal using
-// the dac. This is done using a timer interrupt set to trigger at
-// 78125 kHz (80000000 / 1024).
+// This test generates two 1kHz sine waves, one shifted 90 degrees and outputs
+// the signal using the dacs. This is done using a timer interrupt set to
+// trigger at 100kHz kHz.
 //
-// Setup: connect pin PA4 to an oscilloscope to see the generated sine wave.
+// Setup: connect pin PA4 and PA5 to an oscilloscope to see the generated
+// waveforms.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
@@ -26,22 +27,25 @@ using namespace inf::port;
 // Our synthesizer
 constexpr uint32_t sps = 100000;
 
-auto synth = q::sin(1000.0, sps);
+auto synth1 = q::sin(1000.0, sps);
+auto synth2 = q::sin(1000.0, sps, q::pi / 2); // 90 degree shift
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
-inf::dac<0> dac;
+inf::dac<0> dac1;
+inf::dac<1> dac2;
 inf::timer<3> tmr;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our timer task
 void timer_task()
 {
-   // We generate a 12 bit signal, but we do not want to saturate the
+   // We generate a 12 bit signals, but we do not want to saturate the
    // DAC output buffer (the buffer is not rail-to-rail), so we limit
-   // the signal to 0.9.
-   uint16_t val = (0.9f * synth() * 2047) + 2048;
-   dac(val);
+   // the signals to 0.8.
+
+   dac1((0.8f * synth1() * 2047) + 2048);
+   dac2((0.8f * synth2() * 2047) + 2048);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,7 +53,8 @@ void timer_task()
 constexpr uint32_t tmr_freq = 80000000;
 
 auto config = inf::config(
-   dac.setup(),
+   dac1.setup(),
+   dac2.setup(),
    tmr.setup(tmr_freq, sps, timer_task)   // calls timer_task every 100kHz
 );
 
