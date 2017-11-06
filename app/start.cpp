@@ -70,7 +70,7 @@ void start()
    while (true)
    {
       constexpr q::phase_t incr{0.001};
-      constexpr q::phase_t max{0.5};
+      constexpr q::phase_t max = q::phase_t::max();
       constexpr q::phase_t zero{0.0};
 
       auto g = synth1.mgain() + incr;
