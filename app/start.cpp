@@ -40,14 +40,15 @@ using mode_button_type = inf::input_pin<portc + 10, pull_up>;
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
 constexpr uint32_t sps = 40000;
-constexpr float initial_modulator_gain = 0.0;
+constexpr float initial_modulator_gain = 0.2;
 constexpr float initial_frequency = 110.0;
+constexpr float initial_factor = 4.0;
 
 q::one_pole_lp freq_lp{10.0f, sps};    // frequency param-change filter (10Hz)
 q::one_pole_lp mod_lp{10.0f, sps};     // modulator param-change filter (10Hz)
 q::one_pole_lp factor_lp{10.0f, sps};  // factor param-change filter (10Hz)
 
-auto synth = q::fm(initial_frequency, 0.2, 4.0, sps);
+auto synth = q::fm(initial_frequency, initial_modulator_gain, initial_factor, sps);
 auto ref_synth = q::sin(initial_frequency, sps);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -67,7 +68,7 @@ inf::encoder_param<encoder_type>
    modulation_enc{enc, initial_modulator_gain, 0, 1, 0.0001};
 
 inf::encoder_param<encoder_type>
-   factor_enc{enc, 0, -8, 16, 0.01};
+   factor_enc{enc, initial_factor, 0, 8, 0.001};
 
 enum class mode_enum : char
 {
@@ -106,33 +107,31 @@ void set_mode()
 // Generate the DAC out
 void generate()
 {
-//   switch (mode)
-//   {
-//      case mode_enum::frequency:    // Update the synth frequency
-//         {
-//            auto freq = freq_lp(frequency_enc());
-//            synth.freq(q::osc_freq(freq, sps));
-//            ref_synth.freq(q::osc_freq(freq, sps));
-//         }
-//         break;
-//
-//      case mode_enum::modulation:   // Update the synth modulator gain
-//         {
-//            mod_lp(modulation_enc());
-//            synth.mgain(mod_lp());
-//         }
-//         break;
-//
-//      case mode_enum::factor:
-//         {
-//            factor_lp(factor_enc());
-//            auto factor = factor_lp();
-//            if (factor < 0)
-//               factor = 1.0f / factor;
-//            synth.mfactor(factor);
-//         }
-//         break;
-//   }
+  switch (mode)
+  {
+     case mode_enum::frequency:    // Update the synth frequency
+        {
+           auto freq = freq_lp(frequency_enc());
+           synth.freq(q::osc_freq(freq, sps));
+           ref_synth.freq(q::osc_freq(freq, sps));
+        }
+        break;
+
+     case mode_enum::modulation:   // Update the synth modulator gain
+        {
+           mod_lp(modulation_enc());
+           auto mgain = q::fm_gain(mod_lp());
+           synth.mgain(mgain);
+        }
+        break;
+
+     case mode_enum::factor:
+        {
+           factor_lp(factor_enc());
+           synth.mfactor(factor_lp());
+        }
+        break;
+  }
 
    // We generate a 12 bit signal, but we do not want to saturate the
    // DAC output buffer (the buffer is not rail-to-rail), so we limit
@@ -162,7 +161,7 @@ auto config = inf::config(
 
 ///////////////////////////////////////////////////////////////////////////////
 // Display
-void display(oled_type& cnv, char const* str, int val)
+void display(oled_type& cnv, char const* str, int val, int frac)
 {
    cnv.clear();
    cnv.draw_string(str, 15, 8, font::medium);
@@ -170,7 +169,7 @@ void display(oled_type& cnv, char const* str, int val)
    if (val < 99999)
    {
       char out[8];
-      inf::to_string(val, out, 1);
+      inf::to_string(val, out, frac);
       cnv.draw_string(out, 70, 8, font::medium);
    }
    else
@@ -199,13 +198,13 @@ void start()
       switch (mode)
       {
          case mode_enum::frequency:
-            display(cnv, "Freq", std::round(frequency_enc() * 10.0f));
+            display(cnv, "Freq", std::round(frequency_enc() * 10.0f), 1);
             break;
          case mode_enum::modulation:
-            display(cnv, "Mod", std::round(modulation_enc() * 1000.0f));
+            display(cnv, "Mod", std::round(modulation_enc() * 1000.0f), 1);
             break;
          case mode_enum::factor:
-            display(cnv, "Factor", std::round(factor_enc() * 10.0f));
+            display(cnv, "Factor", std::round(factor_enc() * 1000.0f), 3);
             break;
       }
       delay_ms(10);
