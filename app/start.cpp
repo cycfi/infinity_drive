@@ -109,28 +109,28 @@ void generate()
 {
   switch (mode)
   {
-     case mode_enum::frequency:    // Update the synth frequency
-        {
-           auto freq = freq_lp(frequency_enc());
-           synth.freq(q::osc_freq(freq, sps));
-           ref_synth.freq(q::osc_freq(freq, sps));
-        }
-        break;
+      case mode_enum::frequency:    // Update the synth frequency
+      {
+         auto freq = freq_lp(frequency_enc());
+         synth.freq(q::osc_freq(freq, sps));
+         ref_synth.freq(q::osc_freq(freq, sps));
+      }
+      break;
 
-     case mode_enum::modulation:   // Update the synth modulator gain
-        {
-           mod_lp(modulation_enc());
-           auto mgain = q::fm_gain(mod_lp());
-           synth.mgain(mgain);
-        }
-        break;
+      case mode_enum::modulation:   // Update the FM modulator gain
+      {
+         mod_lp(modulation_enc());
+         auto mgain = q::fm_gain(mod_lp());
+         synth.mgain(mgain);
+      }
+      break;
 
-     case mode_enum::factor:
-        {
-           factor_lp(factor_enc());
-           synth.mfactor(factor_lp());
-        }
-        break;
+      case mode_enum::factor:       // Update the FM frequency factor
+      {
+         factor_lp(factor_enc());
+         synth.mfactor(factor_lp());
+      }
+      break;
   }
 
    // We generate a 12 bit signal, but we do not want to saturate the
