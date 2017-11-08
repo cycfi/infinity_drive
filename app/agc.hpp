@@ -6,11 +6,13 @@
 #if !defined(INFINITY_AGC_HPP_MAY_22_2017)
 #define INFINITY_AGC_HPP_MAY_22_2017
 
-#include <inf/fx.hpp>
-#include <inf/support.hpp>
+#include <q/fx.hpp>
+#include <q/support.hpp>
 
 namespace cycfi { namespace infinity
 {
+   namespace q = cycfi::q;
+
    ////////////////////////////////////////////////////////////////////////////
    // Automatic gain control
    //
@@ -21,7 +23,7 @@ namespace cycfi { namespace infinity
    //       3) Noise gate: Suppresses the output when the signal drops below
    //          a certain threshold.
    //       4) Automatic gain control: Attempts to maintain a constant
-   //          amplitude by dynamically applying gain. The lower the signal 
+   //          amplitude by dynamically applying gain. The lower the signal
    //          level (detected by the envelope follower), the higher the gain.
    ////////////////////////////////////////////////////////////////////////////
    template <std::uint32_t sps>
@@ -29,12 +31,12 @@ namespace cycfi { namespace infinity
    {
       static constexpr float l_threshold = 0.005f;
       static constexpr float h_threshold = 0.05f;
-      
+
       float operator()(float s)
       {
          // DC block
          s = _dc_block(s);
-         
+
          // Update the envelope follower
          auto env = _env_follow(std::abs(s));
 
@@ -43,7 +45,7 @@ namespace cycfi { namespace infinity
 				return 0;
 
          // Automatic gain control
-         _gain = fast_inverse(env);
+         _gain = q::fast_inverse(env);
          return s * _gain;
       }
 
@@ -57,10 +59,10 @@ namespace cycfi { namespace infinity
          return _env_follow();
       }
 
-      window_comparator _noise_gate = { l_threshold, h_threshold };
-      envelope_follower _env_follow = {/* decay */ 0.999f};
-      dc_block          _dc_block = { 10.0f /* hz */, sps };
-      float             _gain = { 1.0f };
+      q::window_comparator _noise_gate = { l_threshold, h_threshold };
+      q::envelope_follower _env_follow = {/* decay */ 0.999f};
+      q::dc_block          _dc_block = { 10.0f /* hz */, sps };
+      float                _gain = { 1.0f };
    };
 }}
 

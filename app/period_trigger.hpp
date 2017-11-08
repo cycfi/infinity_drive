@@ -6,7 +6,7 @@
 #if !defined(CYCFI_INFINITY_PERIOD_TRIGGER_HPP_FEBRUARY_11_2016)
 #define CYCFI_INFINITY_PERIOD_TRIGGER_HPP_FEBRUARY_11_2016
 
-#include <inf/fx.hpp>
+#include <q/fx.hpp>
 
 namespace cycfi { namespace infinity
 {
@@ -32,8 +32,8 @@ namespace cycfi { namespace infinity
          return _cmp(s, _ef(s) * drop);
       }
 
-      envelope_follower _ef;
-      schmitt_trigger   _cmp;
+      q::envelope_follower _ef;
+      q::schmitt_trigger   _cmp;
    };
 
    ////////////////////////////////////////////////////////////////////////////

@@ -6,7 +6,7 @@
 #include <inf/multi_processor.hpp>
 #include <inf/app.hpp>
 #include <inf/support.hpp>
-#include <inf/synth.hpp>
+#include <q/synth.hpp>
 #include "freq_locked_synth.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,7 @@
 // pins PA4 and PA5 to an oscilloscope to see the input and output waveforms.
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
+namespace q = cycfi::q;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our multi-processor
@@ -46,9 +47,10 @@ struct my_processor
       out[1] = synth_out * 0.8;  // don't let it saturate
    }
 
-   using fls_type = inf::freq_locked_synth<inf::sin, sps, latency>;
+   using sin_synth = decltype(q::sin(1.0, sps, 0.0));
+   using fls_type = inf::freq_locked_synth<sin_synth, sps, latency>;
 
-   inf::sin    _synth = {0.0, sps};
+   sin_synth   _synth = {0.0, sps, 0.0};
    fls_type    _fls = {_synth, start_phase};
    uint32_t    _ticks = 0;
 };

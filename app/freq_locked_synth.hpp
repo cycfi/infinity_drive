@@ -6,14 +6,16 @@
 #if !defined(CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_SEPTEMBER_27_2017)
 #define CYCFI_INFINITY_FREQ_LOCKED_SYNTH_HPP_SEPTEMBER_27_2017
 
-#include <inf/fx.hpp>
-#include <inf/synth.hpp>
+#include <q/fx.hpp>
+#include <q/synth.hpp>
 #include "agc.hpp"
 #include "period_trigger.hpp"
 #include <cmath>
 
 namespace cycfi { namespace infinity
 {
+   namespace q = cycfi::q;
+
    ////////////////////////////////////////////////////////////////////////////
    // freq_locked_synth
    //
@@ -74,7 +76,7 @@ namespace cycfi { namespace infinity
 
                _synth.period(period);
                std::size_t samples_delay = period - std::fmod(latency, period);
-               // auto target_phase = _start_phase - (samples_delay * _synth.freq());
+               auto target_phase = _start_phase - (samples_delay * _synth.freq());
 
                // if (_edges_from_onset == 0)
                //    _synth.phase(target_phase);
@@ -88,7 +90,7 @@ namespace cycfi { namespace infinity
          auto synth_out = _synth();
          if (_stage == wait)
          {
-            if (_synth.is_phase_start())
+            if (_synth.is_start())
             	_stage = run;
             else
                return 0.0f;
@@ -101,7 +103,7 @@ namespace cycfi { namespace infinity
       agc<sps>          _agc;
       period_trigger    _trig;
       Synth&            _synth;
-      one_pole_lp  		_period_lp = {0.4};
+      q::one_pole_lp    _period_lp = {0.4};
       uint32_t          _edge_start = 0;
       uint32_t          _start_phase;
       uint32_t          _edges_from_onset = 0;

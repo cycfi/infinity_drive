@@ -101,7 +101,7 @@ namespace cycfi { namespace infinity
       static constexpr auto half_resolution = resolution / 2;
       static constexpr auto oversampling = Base::oversampling;
 
-      static_assert(is_pow2(buffer_size),
+      static_assert(q::is_pow2(buffer_size),
          "buffer_size must be a power of 2, except 0"
       );
 
