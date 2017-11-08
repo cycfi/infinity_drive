@@ -37,7 +37,7 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
    static constexpr auto latency = buffer_size / sps_div;
-   static constexpr auto start_phase = inf::osc_phase(inf::pi / 2);
+   static constexpr auto start_phase = q::osc_phase(q::pi / 2);
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
@@ -50,7 +50,7 @@ struct my_processor
    using sin_synth = decltype(q::sin(1.0, sps, 0.0));
    using fls_type = inf::freq_locked_synth<sin_synth, sps, latency>;
 
-   sin_synth   _synth = {0.0, sps, 0.0};
+   sin_synth   _synth = q::sin(0.0, sps, 0.0);
    fls_type    _fls = {_synth, start_phase};
    uint32_t    _ticks = 0;
 };
