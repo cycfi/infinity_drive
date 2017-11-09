@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
 namespace q = cycfi::q;
+using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our multi-processor
@@ -37,7 +38,7 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
    static constexpr auto latency = buffer_size / sps_div;
-   static constexpr auto start_phase = q::osc_phase(q::pi / 2);
+   static constexpr auto start_phase = q::osc_phase(0); // (q::pi / 2);
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
@@ -60,8 +61,8 @@ inf::multi_channel_processor<inf::processor<my_processor>> proc;
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
 auto config = inf::config(
-      proc.config<0>()
-   );
+   proc.config<0>()
+);
 
 ///////////////////////////////////////////////////////////////////////////////
 // The main loop

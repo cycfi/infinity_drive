@@ -78,11 +78,9 @@ namespace cycfi { namespace infinity
                std::size_t samples_delay = period - std::fmod(latency, period);
                auto target_phase = _start_phase - (samples_delay * _synth.freq());
 
-               // if (_edges_from_onset == 0)
-               //    _synth.phase(target_phase);
-               // else
-               //    _synth.sync_phase(target_phase);
-               ++_edges_from_onset;
+               q::signed_phase_t phase_diff = target_phase - _synth.phase();
+               auto shift = _synth.freq() * (phase_diff / q::pow2<float>(32));
+               _synth.shift(shift);
             }
             _edge_start = ticks;
          }
@@ -103,7 +101,7 @@ namespace cycfi { namespace infinity
       agc<sps>          _agc;
       period_trigger    _trig;
       Synth&            _synth;
-      q::one_pole_lp    _period_lp = {0.4};
+      q::one_pole_lp    _period_lp = {0.6};
       uint32_t          _edge_start = 0;
       uint32_t          _start_phase;
       uint32_t          _edges_from_onset = 0;
