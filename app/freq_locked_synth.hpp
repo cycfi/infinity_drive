@@ -96,6 +96,11 @@ namespace cycfi { namespace infinity
          return synth_out;
       }
 
+      float envelope() const
+      {
+         return _agc.envelope();
+      }
+
    private:
 
       agc<sps>          _agc;
