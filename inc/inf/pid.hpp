@@ -16,9 +16,9 @@ namespace cycfi { namespace infinity
    //
    //    struct my_pid
    //    {
-   //       float static constexpr kp = 0.1f;         // Proportional gain
-   //       float static constexpr ki = 0.5f;         // Integral gain
-   //       float static constexpr kd = 0.01f;        // derivative gain
+   //       float static constexpr p = 0.1f;          // Proportional gain
+   //       float static constexpr i = 0.5f;          // Integral gain
+   //       float static constexpr d = 0.01f;         // derivative gain
    //       float static constexpr sps = 100.0f;      // 100 Hz
    //    };
    //
