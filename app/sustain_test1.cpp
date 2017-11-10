@@ -191,16 +191,9 @@ void start()
       }
 
       // Set the sustain level
-      if (level_enc() != 0.0f)
-      {
-         constexpr q::clip clamp{ 1.0f };
-         proc._level += level_pid(level_enc()/8, proc._fls.envelope());
-         proc._level = clamp(proc._level);
-      }
-      else
-      {
-         proc._level = 0.0f;
-      }
+      constexpr q::clip clamp{ 1.0f };
+      proc._level += level_pid(level_enc()/8, proc._fls.envelope());
+      proc._level = clamp(proc._level);
 
       delay_ms(10);
    }
