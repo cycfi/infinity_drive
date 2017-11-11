@@ -113,6 +113,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/app/start.cpp</locationURI>
 		</link>
 		<link>
+			<name>src/sustainer.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/app/sustainer.hpp</locationURI>
+		</link>
+		<link>
 			<name>src/system_clock_config.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/system_clock_config.cpp</locationURI>

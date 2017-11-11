@@ -8,7 +8,8 @@
 #include <inf/support.hpp>
 #include <inf/pid.hpp>
 #include <q/synth.hpp>
-#include "freq_locked_synth.hpp"
+
+#include "sustainer.hpp"
 #include "ui.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,19 +45,17 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      auto synth_out = _fls(s, _ticks++);
+      auto synth_out = _sustainer(s, _sample_clock++);
 
-      out[0] = s;
-      out[1] = synth_out * _level;
+      out[0] = synth_out * _level;
+      out[1] = s;
    }
 
-   using sin_synth = decltype(q::sin(1.0, sps, 0.0));
-   using fls_type = inf::freq_locked_synth<sin_synth, sps, latency>;
+   using sustainer_type = inf::sustainer<sps, latency>;
 
-   sin_synth   _synth = q::sin(0.0, sps, 0.0);
-   fls_type    _fls = {_synth, start_phase};
-   uint32_t    _ticks = 0;
-   float       _level = 0;
+   sustainer_type _sustainer;
+   uint32_t       _sample_clock = 0;
+   float          _level = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;
@@ -91,7 +90,7 @@ void start()
       ui.refresh();
 
       // Set the sustain level
-      proc._level += level_pid(ui.level(), proc._fls.envelope());
+      proc._level += level_pid(ui.level(), proc._sustainer.envelope());
       if (proc._level > 1.0f)
          proc._level = 1.0f;
       else if (proc._level < 0.0f)

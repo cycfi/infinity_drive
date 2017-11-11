@@ -39,7 +39,7 @@ namespace cycfi { namespace infinity
        , _start_phase(start_phase_)
       {}
 
-      float operator()(float s, uint32_t ticks)
+      float operator()(float s, uint32_t sample_clock)
       {
          bool was_active = _agc.active();
          auto agc_out = _agc(s);
@@ -63,7 +63,7 @@ namespace cycfi { namespace infinity
             if (!onset)
             {
                // update the synth frequency and phase
-               float period = ticks - _edge_start;
+               float period = sample_clock - _edge_start;
                if (_edges_from_onset <= 1)
                {
                   _period_lp.y = period;
@@ -83,7 +83,7 @@ namespace cycfi { namespace infinity
                auto shift = _synth.freq() * (phase_diff / q::pow2<float>(32));
                _synth.shift(shift);
             }
-            _edge_start = ticks;
+            _edge_start = sample_clock;
          }
 
          auto synth_out = _synth();
@@ -116,7 +116,8 @@ namespace cycfi { namespace infinity
 
       struct agc_config
       {
-         static constexpr float low_threshold = 0.01f;
+         static constexpr float max_gain = 50.0f;
+         static constexpr float low_threshold = 0.005f;
          static constexpr float high_threshold = 0.05f;
       };
 

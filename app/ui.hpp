@@ -3,6 +3,9 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
+#if !defined(CYCFI_INFINITY_UI_HPP_NOVEMBER_11_2017)
+#define CYCFI_INFINITY_UI_HPP_NOVEMBER_11_2017
+
 #include <inf/i2c.hpp>
 #include <inf/canvas.hpp>
 #include <inf/ssd1306.hpp>
@@ -11,8 +14,9 @@
 
 namespace cycfi { namespace infinity
 {
-   ///////////////////////////////////////////////////////////////////////////////
+   ////////////////////////////////////////////////////////////////////////////
    // Infinity UI
+   ////////////////////////////////////////////////////////////////////////////
    class ui
    {
       static constexpr auto portb = port::portb;
@@ -148,3 +152,5 @@ namespace cycfi { namespace infinity
       cnv->refresh();
    }
 }}
+
+#endif
