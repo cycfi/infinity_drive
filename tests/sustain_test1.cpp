@@ -15,11 +15,7 @@
 #include "freq_locked_synth.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Frequency-Locked Synthesizer test
-//
-// The freq_locked_synth looks at the input audio and extracts the
-// fundamental frequency and phase from the waveform and uses these
-// information to set the frequency and phase of a sine-wave synthesiser.
+// Frequency-Locked Synthesizer sustain test with PID
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
 // pins PA4 and PA5 to an oscilloscope to see the input and output waveforms.
@@ -47,7 +43,7 @@ inf::encoder_param<encoder_type>
    level_enc{enc, 0.5, 0, 1, 0.001};
 
 inf::encoder_param<encoder_type>
-   modulation_enc{enc, 0, 0, 1, 0.001};
+   phase_enc{enc, 0, -1, 2, 0.0001};
 
 inf::encoder_param<encoder_type>
    factor_enc{enc, 0, 0, 8, 0.001};
@@ -55,7 +51,7 @@ inf::encoder_param<encoder_type>
 enum class mode_enum : char
 {
    level,
-   modulation,
+   phase,
    factor
 };
 
@@ -69,11 +65,11 @@ void set_mode()
       default:
       case mode_enum::level:
          level_enc.deactivate();
-         modulation_enc.activate();
-         mode = mode_enum::modulation;
+         phase_enc.activate();
+         mode = mode_enum::phase;
          break;
-      case mode_enum::modulation:
-         modulation_enc.deactivate();
+      case mode_enum::phase:
+         phase_enc.deactivate();
          factor_enc.activate();
          mode = mode_enum::factor;
          break;
@@ -172,7 +168,7 @@ void start()
    mode_btn.start(rising_edge);  // call button_task on the rising edge
 
    factor_enc.activate();
-   modulation_enc.activate();
+   phase_enc.activate();
    level_enc.activate();
 
    while (true)
@@ -182,8 +178,9 @@ void start()
          case mode_enum::level:
             display(cnv, "Level", std::round(level_enc() * 1000.0f), 2);
             break;
-         case mode_enum::modulation:
-            display(cnv, "---", std::round(modulation_enc() * 1000.0f), 2);
+         case mode_enum::phase:
+            display(cnv, "Phase", std::round(phase_enc() * 1800.0f), 1);
+            proc._fls.start_phase(phase_enc() * q::one_cyc);
             break;
          case mode_enum::factor:
             display(cnv, "---", std::round(factor_enc() * 1000.0f), 2);
@@ -191,9 +188,11 @@ void start()
       }
 
       // Set the sustain level
-      constexpr q::clip clamp{ 1.0f };
       proc._level += level_pid(level_enc()/8, proc._fls.envelope());
-      proc._level = clamp(proc._level);
+      if (proc._level > 1.0f)
+         proc._level = 1.0f;
+      else if (proc._level < 0.0f)
+         proc._level = 0.0f;
 
       delay_ms(10);
    }
