@@ -118,6 +118,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/system_clock_config.cpp</locationURI>
 		</link>
 		<link>
+			<name>src/ui.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/app/ui.hpp</locationURI>
+		</link>
+		<link>
 			<name>q/detail/sin_table.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/detail/sin_table.hpp</locationURI>
