@@ -29,16 +29,18 @@ namespace cycfi { namespace infinity
    //    Config is a class that sets the AGC parameters. Config must declare
    //    some configuration constants:
    //
-   //       1) low_threshold: Sets the low threshold when the noise gate will
+   //       1) max_gain: The maximum gain of the AGC,
+   //       2) low_threshold: Sets the low threshold when the noise gate will
    //          kick in and inhibit the output.
-   //       2) high_threshold: Sets the high threshold when the noise gate will
+   //       3) high_threshold: Sets the high threshold when the noise gate will
    //          open.
    //
    //    Example:
    //
    //       struct agc_config
    //       {
-   //          static constexpr float low_threshold = 0.01f;
+   //          static constexpr float max_gain = 50.0f;
+   //          static constexpr float low_threshold = 0.005f;
    //          static constexpr float high_threshold = 0.05f;
    //       };
    //
@@ -46,6 +48,7 @@ namespace cycfi { namespace infinity
    template <typename Config>
    struct agc
    {
+      static constexpr float max_gain = Config::max_gain;
       static constexpr float low_threshold = Config::low_threshold;
       static constexpr float high_threshold = Config::high_threshold;
 
@@ -67,7 +70,7 @@ namespace cycfi { namespace infinity
 				return 0;
 
          // Automatic gain control
-         _gain = q::fast_inverse(env);
+         _gain = std::min<float>(q::fast_inverse(env), max_gain);
          return s * _gain;
       }
 
