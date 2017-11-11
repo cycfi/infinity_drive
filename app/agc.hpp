@@ -25,12 +25,34 @@ namespace cycfi { namespace infinity
    //       4) Automatic gain control: Attempts to maintain a constant
    //          amplitude by dynamically applying gain. The lower the signal
    //          level (detected by the envelope follower), the higher the gain.
+   //
+   //    Config is a class that sets the AGC parameters. Config must declare
+   //    some configuration constants:
+   //
+   //       1) low_threshold: Sets the low threshold when the noise gate will
+   //          kick in and inhibit the output.
+   //       2) high_threshold: Sets the high threshold when the noise gate will
+   //          open.
+   //
+   //    Example:
+   //
+   //       struct agc_config
+   //       {
+   //          static constexpr float low_threshold = 0.01f;
+   //          static constexpr float high_threshold = 0.05f;
+   //       };
+   //
    ////////////////////////////////////////////////////////////////////////////
-   template <std::uint32_t sps>
+   template <typename Config>
    struct agc
    {
-      static constexpr float l_threshold = 0.005f;
-      static constexpr float h_threshold = 0.05f;
+      static constexpr float low_threshold = Config::low_threshold;
+      static constexpr float high_threshold = Config::high_threshold;
+
+      agc(float decay, uint32_t sps)
+       : _env_follow(decay, sps)
+       , _dc_block(10.0f /* hz */, sps)
+      {}
 
       float operator()(float s)
       {
@@ -59,9 +81,9 @@ namespace cycfi { namespace infinity
          return _env_follow();
       }
 
-      q::window_comparator _noise_gate = { l_threshold, h_threshold };
-      q::envelope_follower _env_follow = {/* decay */ 0.999f};
-      q::dc_block          _dc_block = { 10.0f /* hz */, sps };
+      q::window_comparator _noise_gate = { low_threshold, high_threshold };
+      q::envelope_follower _env_follow;
+      q::dc_block          _dc_block;
       float                _gain = { 1.0f };
    };
 }}

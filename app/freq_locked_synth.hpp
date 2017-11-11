@@ -33,8 +33,9 @@ namespace cycfi { namespace infinity
 
       enum { stop, wait, run };
 
-      freq_locked_synth(Synth& synth_, uint32_t start_phase_)
-       : _synth(synth_)
+      freq_locked_synth(Synth& synth_, q::signed_phase_t start_phase_)
+       : _agc(0.05f /* seconds */, sps)
+       , _synth(synth_)
        , _start_phase(start_phase_)
       {}
 
@@ -101,9 +102,25 @@ namespace cycfi { namespace infinity
          return _agc.envelope();
       }
 
+      q::signed_phase_t start_phase() const
+      {
+         return _start_phase;
+      }
+
+      void start_phase(q::signed_phase_t start_phase_)
+      {
+         _start_phase = start_phase_;
+      }
+
    private:
 
-      agc<sps>          _agc;
+      struct agc_config
+      {
+         static constexpr float low_threshold = 0.01f;
+         static constexpr float high_threshold = 0.05f;
+      };
+
+      agc<agc_config>   _agc;
       period_trigger    _trig;
       Synth&            _synth;
       q::one_pole_lp    _period_lp = {0.6};
