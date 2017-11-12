@@ -19,6 +19,8 @@ namespace cycfi { namespace infinity
    {
    public:
 
+      static constexpr auto start_phase = q::osc_phase(q::pi / 4);
+
       float operator()(float s, uint32_t sample_clock)
       {
          return _fls(s, sample_clock++);
@@ -35,7 +37,7 @@ namespace cycfi { namespace infinity
       using fls_type = freq_locked_synth<sin_synth, sps, latency>;
 
       sin_synth   _synth = q::sin(0.0, sps, 0.0);
-      fls_type    _fls = { _synth, 0 };
+      fls_type    _fls = { _synth, start_phase };
    };
 }}
 

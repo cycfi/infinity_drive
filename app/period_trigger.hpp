@@ -91,7 +91,7 @@ namespace cycfi { namespace infinity
          return _state;
       }
 
-      bool state() const { return _state; }
+      bool operator()() const { return _state; }
 
       peak_trigger   _pos_peak = {0.999};
       peak_trigger   _neg_peak = {0.999};

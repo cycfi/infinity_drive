@@ -43,14 +43,14 @@ namespace cycfi { namespace infinity
       {
          bool was_active = _agc.active();
          auto agc_out = _agc(s);
-         int prev_state = _trig.state();
+         int prev_state = _trig();
          bool is_active = _agc.active();
 
          if (!is_active)
          {
             _synth.period(0);
             _synth.phase(0);
-            _edges_from_onset = 0;
+            // _edges_from_onset = 0;
             _stage = stop;
             return 0.0f;
          }
@@ -63,25 +63,39 @@ namespace cycfi { namespace infinity
             if (!onset)
             {
                // update the synth frequency and phase
-               float period = sample_clock - _edge_start;
-               if (_edges_from_onset <= 1)
-               {
-                  _period_lp.y = period;
-                  if (_stage != run)
-                     _stage = wait;
-               }
-               else
-               {
-                  period = _period_lp(period);
-               }
+               float period = _period_lp(sample_clock - _edge_start);
+               // if (_edges_from_onset++ <= 1)
+               // {
+               //    _period_lp.y = period;
+               //    if (_stage != run)
+               //       _stage = wait;
+               // }
+               // else
+               // {
+               //    period = _period_lp(period);
+               // }
 
                _synth.period(period);
                std::size_t samples_delay = period - std::fmod(latency, period);
                auto target_phase = _start_phase - (samples_delay * _synth.freq());
 
+               // _synth.phase(target_phase);
+
                q::signed_phase_t phase_diff = target_phase - _synth.phase();
-               auto shift = _synth.freq() * (phase_diff / q::pow2<float>(32));
+               auto shift = (((long long)_synth.freq()) * phase_diff) >> 32;
                _synth.shift(shift);
+
+               // q::signed_phase_t phase_diff = target_phase - _synth.phase();
+               // auto shift = _synth.freq() * (phase_diff / q::pow2<float>(32));
+               // _synth.shift(shift);
+
+               // q::signed_phase_t error = target_phase - _synth.phase();
+               // auto freq = _synth.freq();
+               // if (error > 0)
+               //    _synth.shift(freq / 16);
+               // else if (error < 0)
+               //    _synth.shift(-freq / 16);
+
             }
             _edge_start = sample_clock;
          }
@@ -117,17 +131,17 @@ namespace cycfi { namespace infinity
       struct agc_config
       {
          static constexpr float max_gain = 50.0f;
-         static constexpr float low_threshold = 0.005f;
+         static constexpr float low_threshold = 0.01f;
          static constexpr float high_threshold = 0.05f;
       };
 
       agc<agc_config>   _agc;
       period_trigger    _trig;
       Synth&            _synth;
-      q::one_pole_lp    _period_lp = {0.6};
+      q::one_pole_lp    _period_lp = {0.4};
       uint32_t          _edge_start = 0;
       uint32_t          _start_phase;
-      uint32_t          _edges_from_onset = 0;
+      // uint32_t          _edges_from_onset = 0;
       int               _stage = stop;
    };
 }}

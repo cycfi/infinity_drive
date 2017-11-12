@@ -41,7 +41,6 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
    static constexpr auto latency = buffer_size / sps_div;
-   static constexpr auto start_phase = q::osc_phase(0);
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {

@@ -70,7 +70,10 @@ namespace cycfi { namespace infinity
 				return 0;
 
          // Automatic gain control
-         _gain = std::min<float>(q::fast_inverse(env), max_gain);
+         _gain = q::fast_inverse(env);
+         if (_gain > max_gain)
+            _gain = max_gain;
+         // _gain = q::fast_inverse(env);
          return s * _gain;
       }
 
