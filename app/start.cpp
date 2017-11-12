@@ -11,6 +11,9 @@
 #include "sustainer.hpp"
 #include "ui.hpp"
 
+#include <array>
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Frequency-Locked Synthesizer sustain test with PID
 //
@@ -36,21 +39,31 @@ struct my_processor
    static constexpr auto oversampling = sps_div;
    static constexpr auto adc_id = 1;
    static constexpr auto timer_id = 2;
-   static constexpr auto channels = 1;
+   static constexpr auto channels = 2;
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
    static constexpr auto latency = buffer_size / sps_div;
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      out[0] = _sustainer(s, _sample_clock++);
-      out[1] = s;
+      out[0] += _sustainers[channel](s, _sample_clock);
+      out[1] += s;
+
+      if (channel == channels-1)
+         ++_sample_clock;
+   }
+
+   void update_level(float level)
+   {
+      for (auto& s : _sustainers)
+         s.update_level(ui.level());
    }
 
    using sustainer_type = inf::sustainer<sps, latency>;
+   using sustainer_array_type = std::array<sustainer_type, channels>;
 
-   sustainer_type _sustainer;
-   uint32_t       _sample_clock = 0;
+   sustainer_array_type _sustainers;
+   uint32_t             _sample_clock = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;
@@ -59,7 +72,7 @@ inf::multi_channel_processor<inf::processor<my_processor>> proc;
 // Configuration
 auto config = inf::config(
    ui.setup(),
-   proc.config<0>()
+   proc.config<0, 1>()
 );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,7 +87,7 @@ void start()
       ui.refresh();
 
       // Update the sustain level
-      proc._sustainer.update_level(ui.level());
+      proc.update_level(ui.level());
       delay_ms(10);
    }
 }
