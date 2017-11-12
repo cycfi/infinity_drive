@@ -31,7 +31,7 @@ namespace cycfi { namespace infinity
    {
    public:
 
-      enum { stop, wait, run };
+      enum { stop, run, release };
 
       freq_locked_synth(Synth& synth_, q::signed_phase_t start_phase_)
        : _agc(0.05f /* seconds */, sps)
@@ -47,68 +47,15 @@ namespace cycfi { namespace infinity
          bool is_active = _agc.active();
 
          if (!is_active)
-         {
-            _synth.period(0);
-            _synth.phase(0);
-            // _edges_from_onset = 0;
-            _stage = stop;
-            return 0.0f;
-         }
+            return deactivate();
 
+         _stage = run;
          int state = _trig(agc_out, is_active);
          bool onset = !was_active && is_active;
 
          if (prev_state != state && state)
-         {
-            if (!onset)
-            {
-               // update the synth frequency and phase
-               float period = _period_lp(sample_clock - _edge_start);
-               // if (_edges_from_onset++ <= 1)
-               // {
-               //    _period_lp.y = period;
-               //    if (_stage != run)
-               //       _stage = wait;
-               // }
-               // else
-               // {
-               //    period = _period_lp(period);
-               // }
-
-               _synth.period(period);
-               std::size_t samples_delay = period - std::fmod(latency, period);
-               auto target_phase = _start_phase - (samples_delay * _synth.freq());
-
-               // _synth.phase(target_phase);
-
-               q::signed_phase_t phase_diff = target_phase - _synth.phase();
-               auto shift = (((long long)_synth.freq()) * phase_diff) >> 32;
-               _synth.shift(shift);
-
-               // q::signed_phase_t phase_diff = target_phase - _synth.phase();
-               // auto shift = _synth.freq() * (phase_diff / q::pow2<float>(32));
-               // _synth.shift(shift);
-
-               // q::signed_phase_t error = target_phase - _synth.phase();
-               // auto freq = _synth.freq();
-               // if (error > 0)
-               //    _synth.shift(freq / 16);
-               // else if (error < 0)
-               //    _synth.shift(-freq / 16);
-
-            }
-            _edge_start = sample_clock;
-         }
-
-         auto synth_out = _synth();
-         if (_stage == wait)
-         {
-            if (_synth.is_start())
-            	_stage = run;
-            else
-               return 0.0f;
-         }
-         return synth_out;
+            sync(sample_clock, onset);
+         return _synth();
       }
 
       float envelope() const
@@ -135,13 +82,53 @@ namespace cycfi { namespace infinity
          static constexpr float high_threshold = 0.05f;
       };
 
+      // Synchronize the synth
+      void sync(uint32_t sample_clock, bool onset)
+      {
+         if (!onset)
+         {
+            // update the synth frequency and phase
+            float period = _period_lp(sample_clock - _edge_start);
+            _synth.period(period);
+            std::size_t samples_delay = period - std::fmod(latency, period);
+            auto target_phase = _start_phase - (samples_delay * _synth.freq());
+
+            q::signed_phase_t phase_diff = target_phase - _synth.phase();
+            auto shift = (((long long)_synth.freq()) * phase_diff) >> 32;
+            _synth.shift(shift);
+         }
+         _edge_start = sample_clock;
+      }
+
+      // Release the synth
+      float deactivate()
+      {
+         switch (_stage)
+         {
+            case stop:
+               return 0.0f;
+
+            case run:
+               _stage = release;
+               // fall through...
+
+            case release: // continue until the next start phase
+               if (_synth.is_start())
+               {
+                  _stage = stop;
+                  return 0.0f;
+               }
+               return _synth();
+         }
+         return 0.0f;
+      }
+
       agc<agc_config>   _agc;
       period_trigger    _trig;
       Synth&            _synth;
       q::one_pole_lp    _period_lp = {0.4};
       uint32_t          _edge_start = 0;
       uint32_t          _start_phase;
-      // uint32_t          _edges_from_onset = 0;
       int               _stage = stop;
    };
 }}
