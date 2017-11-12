@@ -94,7 +94,7 @@ namespace cycfi { namespace infinity
       switch (mode)
       {
          case mode_enum::level:
-            display("Level", std::round(level_enc() * 1000.0f), 3);
+            display("Level", std::round(level_enc() * 1000.0f), 2);
             break;
          case mode_enum::phase:
             display("Phase", std::round(phase_enc() * 1800.0f), 1);

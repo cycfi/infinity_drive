@@ -18,8 +18,8 @@ namespace cycfi { namespace infinity
    //    {
    //       float static constexpr p = 0.1f;          // Proportional gain
    //       float static constexpr i = 0.5f;          // Integral gain
-   //       float static constexpr d = 0.01f;         // derivative gain
-   //       float static constexpr sps = 100.0f;      // 100 Hz
+   //       float static constexpr d = 0.01f;         // Derivative gain
+   //       float static constexpr sps = 100.0f;      // Update Frequency (Hz)
    //    };
    //
    //    pid<my_pid> the_pid;
@@ -33,7 +33,7 @@ namespace cycfi { namespace infinity
    {
       float static constexpr kp = Config::p;          // Proportional gain
       float static constexpr ki = Config::i;          // Integral gain
-      float static constexpr kd = Config::d;          // derivative gain
+      float static constexpr kd = Config::d;          // Derivative gain
       float static constexpr dt = 1.0f / Config::sps; // Time interval
 
       float operator()(double set_point, double process_val)

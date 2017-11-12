@@ -6,7 +6,6 @@
 #include <inf/multi_processor.hpp>
 #include <inf/app.hpp>
 #include <inf/support.hpp>
-#include <inf/pid.hpp>
 #include <q/synth.hpp>
 
 #include "sustainer.hpp"
@@ -44,9 +43,7 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      auto synth_out = _sustainer(s, _sample_clock++);
-
-      out[0] = synth_out * _level;
+      out[0] = _sustainer(s, _sample_clock++);
       out[1] = s;
    }
 
@@ -54,21 +51,9 @@ struct my_processor
 
    sustainer_type _sustainer;
    uint32_t       _sample_clock = 0;
-   float          _level = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;
-
-///////////////////////////////////////////////////////////////////////////////
-struct level_pid_config
-{
-   float static constexpr p = 0.05f;         // Proportional gain
-   float static constexpr i = 0.0f;          // Integral gain
-   float static constexpr d = 0.03f;         // derivative gain
-   float static constexpr sps = 100.0f;      // 100 Hz
-};
-
-inf::pid<level_pid_config> level_pid;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
@@ -88,13 +73,8 @@ void start()
    {
       ui.refresh();
 
-      // Set the sustain level
-      proc._level += level_pid(ui.level(), proc._sustainer.envelope());
-      if (proc._level > 1.0f)
-         proc._level = 1.0f;
-      else if (proc._level < 0.0f)
-         proc._level = 0.0f;
-
+      // Update the sustain level
+      proc._sustainer.update_level(ui.level());
       delay_ms(10);
    }
 }
