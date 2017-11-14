@@ -42,12 +42,12 @@ namespace cycfi { namespace infinity
 
       // Update the level. This should be called approximately
       // every 10ms (or adjust level_pid_config sps accordingly).
-      void update_level(float level)
+      void update_level(float level, float max)
       {
          _level += _level_pid(level, envelope());
 
-         // Clamp the level to 0.0...1.0
-         _level = std::max(std::min(_level, 1.0f), 0.0f);
+         // Clamp the level to 0 to max
+         _level = std::max(std::min(_level, max), 0.0f);
       }
 
    private:

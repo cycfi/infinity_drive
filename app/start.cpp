@@ -13,7 +13,6 @@
 
 #include <array>
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Frequency-Locked Synthesizer sustain test with PID
 //
@@ -39,7 +38,7 @@ struct my_processor
    static constexpr auto oversampling = sps_div;
    static constexpr auto adc_id = 1;
    static constexpr auto timer_id = 2;
-   static constexpr auto channels = 2;
+   static constexpr auto channels = 3;
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
    static constexpr auto latency = buffer_size / sps_div;
@@ -55,8 +54,9 @@ struct my_processor
 
    void update_level(float level)
    {
+      float max = 1.0f / channels;
       for (auto& s : _sustainers)
-         s.update_level(ui.level());
+         s.update_level(ui.level(), max);
    }
 
    using sustainer_type = inf::sustainer<sps, latency>;
@@ -72,7 +72,7 @@ inf::multi_channel_processor<inf::processor<my_processor>> proc;
 // Configuration
 auto config = inf::config(
    ui.setup(),
-   proc.config<0, 1>()
+   proc.config<0, 1, 2>()
 );
 
 ///////////////////////////////////////////////////////////////////////////////
