@@ -6,7 +6,6 @@
 #if !defined(CYCFI_INFINITY_PLL_HPP_SEPTEMBER_27_2017)
 #define CYCFI_INFINITY_PLL_HPP_SEPTEMBER_27_2017
 
-#include <q/fx.hpp>
 #include <q/synth.hpp>
 #include <cmath>
 
@@ -17,55 +16,71 @@ namespace cycfi { namespace infinity
    // software. See https://en.wikipedia.org/wiki/Phase-locked_loop
    ////////////////////////////////////////////////////////////////////////////
 
+   struct flip_flop
+   {
+      bool operator()(bool set, bool reset)
+      {
+         _out = !reset && (_out || (set && !_prev));
+         _prev = set;
+         return _out;
+      }
+
+      bool operator()() const
+      {
+         return _out;
+      }
+
+      bool _out = 0;
+      bool _prev = 0;
+   };
+
+   ////////////////////////////////////////////////////////////////////////////
    struct phase_detector
    {
       int operator()(bool sig, bool ref)
       {
-         // Reset the "flip-flop" of the phase-frequency detector when both
-         // signal and reference are high
-         bool rst = !(_qsig && _qref);
+         // Reset the flip-flops when both signal (sig) and reference (ref)
+         // are high.
+         bool reset = _qsig() && _qref();
 
-         // Trigger signal flip-flop and leading edge of signal
-         _qsig = (_qsig || (sig && !_lsig)) && rst;
+         // Trigger signal (_qsig) and reference (_qref) flip-flops on
+         // leading edge of signal and reference (respectively).
+         _qsig(sig, reset);
+         _qref(ref, reset);
 
-         // Trigger reference flip-flop on leading edge of reference
-         _qref = (_qref || (ref && !_lref)) && rst;
-
-         // Store these values for next iteration (for edge detection)
-         _lref = ref;
-         _lsig = sig;
-
-         // Compute the error signal (whether frequency should increase
-         // or decrease). Error signal is given by one or the other flip
-         // flop signal.
-         return _qref - _qsig;
+         // Compute the error signal. Returns 1 if the reference is leading,
+         // -1 if the signal is leading, or 0 if both are in sync.
+         return _qref() - _qsig();
       }
 
-      bool  _qsig = 0;  // current signal
-      bool  _qref = 0;  // current reference
-      bool  _lsig = 0;  // previous signal
-      bool  _lref = 0;  // previous reference
+      flip_flop   _qsig;   // signal flip-flop
+      flip_flop   _qref;   // reference flip-flop
    };
 
    ////////////////////////////////////////////////////////////////////////////
    struct pll_loop_filter
    {
       // Loop filter constants (proportional and derivative)
-      // Currently powers of two to facilitate multiplication by shifts
-      static constexpr int32_t kp = q::pow2<int32_t>(19);
-      static constexpr int32_t kd = q::pow2<int32_t>(10);
+      // Currently powers of two to facilitate multiplication and
+      // by division using shifts.
+      static constexpr auto kp = q::pow2<int32_t>(19);
+      static constexpr auto kd = q::pow2<int32_t>(10);
 
-      q::phase_t operator()(int ersig)
+      q::phase_t operator()(int error)
       {
          // Implement a pole-zero filter by proportional and derivative
-         // input to frequency
-         auto filtered_ersig = ersig + (ersig - _lersig) * kd;
+         // input to frequency. Derivative uses kd gain (above) which is
+         // a statically known power of two constexpr. The multiplication
+         // will be optimized by the compiler using shifts.
+         auto delta = error - _prev_error;
+         auto out = error + (delta * kd);
+         _prev_error = error;
 
-         // Keep error signal for proportional output
-         _lersig = ersig;
-
-         // Integrate VCO frequency using the error signal
-         _freq -= (q::one_cyc / kp) * filtered_ersig;
+         // Integrate VCO frequency using the error signal, scaled to
+         // the phase_t range (see synth.hpp). The computation uses kp gain.
+         // The division will be optimized out by the compiler since
+         // both one_cyc and kp are statically known constexprs.
+         _freq -= (q::one_cyc / kp) * out;
          return _freq;
       }
 
@@ -74,7 +89,7 @@ namespace cycfi { namespace infinity
          return _freq;
       }
 
-      int         _lersig = 0;
+      int         _prev_error = 0;
       q::phase_t  _freq = 0;
    };
 
@@ -87,6 +102,7 @@ namespace cycfi { namespace infinity
       pll(Synth& synth)
        : _synth(synth)
       {
+         // Initialize the loop filter _freq to sync with the _synth's
          _lf._freq = _synth.freq();
       }
 
@@ -94,10 +110,8 @@ namespace cycfi { namespace infinity
       {
          auto ref = synth_phase() > pi;
          auto error = _pd(sig, ref);
-         auto val = _synth();
-         auto freq = _lf(error);
-         _synth.freq(freq);
-         return val;
+         _synth.freq(_lf(error));
+         return _synth();
       }
 
       q::phase_t synth_phase() const
