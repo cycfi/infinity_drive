@@ -82,18 +82,22 @@ namespace cycfi { namespace infinity
    template <typename Synth>
    struct pll
    {
-      static constexpr q::phase_t pi = q::phase::angle(q::pi);
+      static constexpr q::phase_t pi = q::one_cyc / 2;
 
       pll(Synth& synth)
-       : _synth(synth) {}
-
-      float operator()(bool s)
+       : _synth(synth)
       {
-         auto error = _pd(s, synth_phase() > pi);
+         _lf._freq = _synth.freq();
+      }
+
+      float operator()(bool sig)
+      {
+         auto ref = synth_phase() > pi;
+         auto error = _pd(sig, ref);
          auto val = _synth();
          auto freq = _lf(error);
          _synth.freq(freq);
-         return val; // float(freq) / q::one_cyc;
+         return val;
       }
 
       q::phase_t synth_phase() const

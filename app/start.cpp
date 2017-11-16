@@ -25,7 +25,7 @@ constexpr uint32_t sps = 20000;
 
 // auto comp = q::pi/3.2;
 auto synth = q::sin(440.0, sps, 0);
-auto ref_synth = q::sin(440.05, sps, 0);
+auto ref_synth = q::sin(450.0, sps, 0);
 
 using pls_type = inf::pls<decltype(ref_synth), sps, 1000>;
 pls_type pls{ref_synth, q::phase::angle(q::pi/2)};
