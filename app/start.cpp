@@ -3,92 +3,80 @@
 
    Distributed under the MIT License [ https://opensource.org/licenses/MIT ]
 =============================================================================*/
-#include <inf/multi_processor.hpp>
+#include <inf/timer.hpp>
+#include <inf/pin.hpp>
 #include <inf/app.hpp>
-#include <inf/support.hpp>
+#include <inf/dac.hpp>
 #include <q/synth.hpp>
-
-#include "sustainer.hpp"
-#include "ui.hpp"
-
-#include <array>
+#include <q/fx.hpp>
+#include "pls.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Frequency-Locked Synthesizer sustain test with PID
-//
-// Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-// pins PA4 and PA5 to an oscilloscope to see the input and output waveforms.
+// PLL test
 ///////////////////////////////////////////////////////////////////////////////
+
 namespace inf = cycfi::infinity;
 namespace q = cycfi::q;
-using inf::delay_ms;
+using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our UI
-inf::ui ui;
+// Our synthesizer
+constexpr uint32_t sps = 20000;
+
+// auto comp = q::pi/3.2;
+auto synth = q::sin(440.0, sps, 0);
+auto ref_synth = q::sin(440.05, sps, 0);
+
+using pls_type = inf::pls<decltype(ref_synth), sps, 1000>;
+pls_type pls{ref_synth, q::phase::angle(q::pi/2)};
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our multi-processor
-static constexpr auto clock = 80000;
-static constexpr auto sps_div = 4;
-static constexpr auto sps = clock / sps_div;
+// Peripherals
+inf::dac<0> dac1;
+inf::dac<1> dac2;
+inf::timer<3> tmr;
 
-struct my_processor
+///////////////////////////////////////////////////////////////////////////////
+// Our timer task
+void timer_task()
 {
-   static constexpr auto oversampling = sps_div;
-   static constexpr auto adc_id = 1;
-   static constexpr auto timer_id = 2;
-   static constexpr auto channels = 3;
-   static constexpr auto sampling_rate = clock;
-   static constexpr auto buffer_size = 1024;
-   static constexpr auto latency = buffer_size / sps_div;
+   // We generate a 12 bit signals, but we do not want to saturate the
+   // DAC output buffer (the buffer is not rail-to-rail), so we limit
+   // the signals to 0.8.
 
-   void process(std::array<float, 2>& out, float s, std::uint32_t channel)
-   {
-      out[0] += _sustainers[channel](s, _sample_clock);
-      out[1] += s;
-
-      if (channel == channels-1)
-         ++_sample_clock;
-   }
-
-   void update_level(float level)
-   {
-      float max = 1.0f / channels;
-      for (auto& s : _sustainers)
-         s.update_level(ui.level(), max);
-   }
-
-   using sustainer_type = inf::sustainer<sps, latency>;
-   using sustainer_array_type = std::array<sustainer_type, channels>;
-
-   sustainer_array_type _sustainers;
-   uint32_t             _sample_clock = 0;
-};
-
-inf::multi_channel_processor<inf::processor<my_processor>> proc;
+   auto val = synth();
+   dac1((0.8f * val * 2047) + 2048);
+   dac2((0.8f * pls(val) * 2047) + 2048);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
+constexpr uint32_t tmr_freq = 80000000;
+
 auto config = inf::config(
-   ui.setup(),
-   proc.config<0, 1, 2>()
+   dac1.setup(),
+   dac2.setup(),
+   tmr.setup(tmr_freq, sps, timer_task)   // calls timer_task every 100kHz
 );
 
 ///////////////////////////////////////////////////////////////////////////////
 // The main loop
 void start()
 {
-   proc.start();
-   ui.start();
+   tmr.start();
 
    while (true)
    {
-      ui.refresh();
+      // auto freq = q::osc_freq(400, sps);
+      // auto incr = freq / 1000;
+      // synth.freq(freq);
 
-      // Update the sustain level
-      proc.update_level(ui.level());
-      delay_ms(10);
+      // for (int i = 0; i < 1000; ++i)
+      // {
+      //    synth.freq(synth.freq() + incr);
+      //    inf::delay_ms(10);
+      // }
+
    }
 }
 
