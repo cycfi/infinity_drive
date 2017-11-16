@@ -65,18 +65,18 @@ void start()
 {
    tmr.start();
 
+   inf::delay_ms(3000);
    while (true)
    {
-      // auto freq = q::osc_freq(400, sps);
-      // auto incr = freq / 1000;
-      // synth.freq(freq);
+      auto freq = q::phase::freq(400.0, sps);
+      auto incr = freq / 1000;
+      synth.freq(freq);
 
-      // for (int i = 0; i < 1000; ++i)
-      // {
-      //    synth.freq(synth.freq() + incr);
-      //    inf::delay_ms(10);
-      // }
-
+      for (int i = 0; i < 1000; ++i)
+      {
+         synth.freq(synth.freq() + incr);
+         inf::delay_ms(10);
+      }
    }
 }
 

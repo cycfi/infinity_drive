@@ -52,8 +52,8 @@ namespace cycfi { namespace infinity
    {
       // Loop filter constants (proportional and derivative)
       // Currently powers of two to facilitate multiplication by shifts
-      static constexpr float kp = 128; // n / 128
-      static constexpr int kd = 64;    // n * 64
+      static constexpr int32_t kp = q::pow2<int32_t>(19);
+      static constexpr int32_t kd = q::pow2<int32_t>(10);
 
       q::phase_t operator()(int ersig)
       {
@@ -91,7 +91,9 @@ namespace cycfi { namespace infinity
       {
          auto error = _pd(s, synth_phase() > pi);
          auto val = _synth();
-         return error;
+         auto freq = _lf(error);
+         _synth.freq(freq);
+         return val; // float(freq) / q::one_cyc;
       }
 
       q::phase_t synth_phase() const
