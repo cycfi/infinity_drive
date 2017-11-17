@@ -15,7 +15,6 @@ namespace cycfi { namespace infinity
    // PLL classes. Based on Implementing a digital phase-locked loop in
    // software. See https://en.wikipedia.org/wiki/Phase-locked_loop
    ////////////////////////////////////////////////////////////////////////////
-
    struct flip_flop
    {
       bool operator()(bool set, bool reset)
@@ -108,15 +107,10 @@ namespace cycfi { namespace infinity
 
       float operator()(bool sig)
       {
-         auto ref = synth_phase() > pi;
+         auto ref = _synth.phase() < pi;
          auto error = _pd(sig, ref);
          _synth.freq(_lf(error));
          return _synth();
-      }
-
-      q::phase_t synth_phase() const
-      {
-         return _synth.phase() + _synth.shift();
       }
 
       Synth&            _synth;

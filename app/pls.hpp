@@ -25,17 +25,16 @@ namespace cycfi { namespace infinity
    // sustain.
    //
    ////////////////////////////////////////////////////////////////////////////
-   template <typename Synth, uint32_t sps, uint32_t latency>
+   template <typename Synth, uint32_t sps>
    class pls
    {
    public:
 
       enum { stop, run, release };
 
-      pls(Synth& synth_, q::phase_t start_phase_)
+      pls(Synth& synth_)
        : _agc(0.05f /* seconds */, sps)
        , _pll(synth_)
-       , _start_phase(start_phase_)
       {}
 
       float operator()(float s)
@@ -44,31 +43,27 @@ namespace cycfi { namespace infinity
          bool is_active = _agc.active();
          int state = _trig(agc_out, is_active);
 
+         // If we're not active, start the deactivation process
          if (!is_active)
             return deactivate();
 
+         // We are running
          _stage = run;
-         return _pll(state);
-      }
 
-      float envelope() const
-      {
-         return _agc.envelope();
-      }
+         // Update the pll
+         auto val = _pll(state);
 
-      q::phase_t start_phase() const
-      {
-         return _start_phase;
-      }
-
-      void start_phase(q::phase_t start_phase_)
-      {
-         _start_phase = start_phase_;
+         return val;
       }
 
       Synth& synth()
       {
          return _pll._synth;
+      }
+
+      float envelope() const
+      {
+         return _agc.envelope();
       }
 
    private:
@@ -106,7 +101,6 @@ namespace cycfi { namespace infinity
       agc<agc_config>   _agc;
       period_trigger    _trig;
       pll<Synth>        _pll;
-      uint32_t          _start_phase;
       int               _stage = stop;
    };
 }}

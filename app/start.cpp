@@ -23,12 +23,11 @@ using namespace inf::port;
 // Our synthesizer
 constexpr uint32_t sps = 20000;
 
-// auto comp = q::pi/3.2;
-auto synth = q::sin(440.0, sps, 0);
-auto ref_synth = q::sin(450.0, sps, 0);
+auto synth = q::sin(440.0, sps);
+auto ref_synth = q::sin(450.0, sps, q::pi/3);
 
-using pls_type = inf::pls<decltype(ref_synth), sps, 1000>;
-pls_type pls{ref_synth, q::phase::angle(q::pi/2)};
+using pls_type = inf::pls<decltype(ref_synth), sps>;
+pls_type pls{ ref_synth };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Peripherals
@@ -40,7 +39,7 @@ inf::timer<3> tmr;
 // Our timer task
 void timer_task()
 {
-   // We generate a 12 bit signals, but we do not want to saturate the
+   // We generate 12 bit signals, but we do not want to saturate the
    // DAC output buffer (the buffer is not rail-to-rail), so we limit
    // the signals to 0.8.
 
@@ -64,15 +63,15 @@ auto config = inf::config(
 void start()
 {
    tmr.start();
-
    inf::delay_ms(3000);
+   auto start = q::phase::freq(80.0, sps);
+   auto stop = q::phase::freq(1600.0, sps);
+   auto incr = start / 200;
+
    while (true)
    {
-      auto freq = q::phase::freq(400.0, sps);
-      auto incr = freq / 1000;
-      synth.freq(freq);
-
-      for (int i = 0; i < 1000; ++i)
+      synth.freq(start);
+      while (synth.freq() < stop)
       {
          synth.freq(synth.freq() + incr);
          inf::delay_ms(10);
