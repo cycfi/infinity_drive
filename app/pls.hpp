@@ -58,18 +58,12 @@ namespace cycfi { namespace infinity
          {
             if (!onset)
             {
-               int period;
                if (_cycles++)
-               {
-                  period = _period_lp(sample_clock-_edge_start);
-               }
+                  _period_lp(sample_clock-_edge_start);
                else
-               {
-                  period = sample_clock-_edge_start;
-                  _period_lp.y = period * period_filter_k;
-               }
+                  _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
 
-               auto new_freq = q::phase::period(period);
+               auto new_freq = q::phase::period(_period_lp() / period_filter_k);
                synth().freq(new_freq);
 
                // std::size_t samples_delay = period - (latency % period);
@@ -144,7 +138,6 @@ namespace cycfi { namespace infinity
       period_trigger    _trig;
       pll<Synth>        _pll;
       period_filter_t   _period_lp;
-      q::one_pole_lp    _shift_lp = { 0.05 };
       int               _stage = stop;
       uint32_t          _cycles = 0;
       q::phase_t        _start_phase;
