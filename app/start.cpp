@@ -50,7 +50,7 @@ struct synth_gate
             state = stop;
       }
       bool enable = (state == sustain || state == release);
-      return  enable? _synth() : 0.0f;
+      return enable? _synth() : 0.0f;
    };
 
    void note_on()
@@ -110,7 +110,7 @@ void start()
 
    sgate.note_on();
    inf::delay_ms(3000);
-   auto start = q::phase::freq(80.0, sps);
+   auto start = q::phase::freq(82.41, sps);
    auto stop = q::phase::freq(1600.0, sps);
    auto constexpr step = 1.059463094359295f;
 ;

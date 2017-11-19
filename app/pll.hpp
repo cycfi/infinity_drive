@@ -108,21 +108,15 @@ namespace cycfi { namespace infinity
 
       float operator()(bool sig)
       {
-         auto ref = _synth.phase() < pi;
-         auto error = _pd(sig, ref);
-         // _zeros += (error == 0)? 1 : -1;
-         // if (_zeros > 100)
-         //    _zeros = 100;
-         // else if (_zeros < 0)
-         //    _zeros = 0;
-         _synth.freq(_lf(error));
+         // auto ref = _synth.phase() < pi;
+         // auto error = _pd(sig, ref);
+         // _synth.freq(_lf(error));
          return _synth();
       }
 
       Synth&            _synth;
       phase_detector    _pd;
       pll_loop_filter   _lf;
-      int32_t           _zeros;
    };
 }}
 

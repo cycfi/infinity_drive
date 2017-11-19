@@ -58,24 +58,23 @@ namespace cycfi { namespace infinity
          {
             if (!onset)
             {
-               // latency compensation
                auto period = sample_clock - _edge_start;
                std::size_t samples_delay = period - (latency % period);
+               auto new_freq = q::phase::period(period);
 
-               if (_start++ < 10)
+               if (_cycles++)
                {
-                  if (_start > 1)
-                  {
-                     auto new_freq = q::phase::period(period);
-                     synth().freq(new_freq);
-                     _pll._lf._freq = new_freq;
-                  }
+                  synth().freq(_freq_lp(new_freq) / freq_filter_k);
                }
-               _start = 0;
+               else
+               {
+                  synth().freq(new_freq);
+                  _freq_lp.y = new_freq * freq_filter_k;
+               }
 
-               auto freq = synth().freq();
-               auto shift = _start_phase - (samples_delay * freq);
-               synth().shift(_shift_lp(shift));
+               // auto freq = synth().freq();
+               // auto shift = _start_phase - (samples_delay * freq);
+               // synth().shift(_shift_lp(shift));
 
                // auto curr_shift = synth().shift();
                // if (curr_shift < shift)
@@ -116,7 +115,8 @@ namespace cycfi { namespace infinity
          {
             case stop:
                _edge_start = 0;
-               _start = 0;
+               _cycles = 0;
+               synth().phase(0);
                return 0.0f;
 
             case run:
@@ -134,12 +134,16 @@ namespace cycfi { namespace infinity
          return 0.0f;
       }
 
+      static constexpr auto freq_filter_k = q::pow2<int32_t>(2);
+      using freq_filter_t = q::fixed_pt_leaky_integrator<freq_filter_k>;
+
       agc<agc_config>   _agc;
       period_trigger    _trig;
       pll<Synth>        _pll;
+      freq_filter_t     _freq_lp;
       q::one_pole_lp    _shift_lp = { 0.05 };
-      int               _start = 0;
       int               _stage = stop;
+      uint32_t          _cycles = 0;
       q::phase_t        _start_phase;
       uint32_t          _edge_start = 0;
       q::phase_t        _target_phase = 0;
