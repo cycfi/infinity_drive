@@ -58,19 +58,22 @@ namespace cycfi { namespace infinity
          {
             if (!onset)
             {
-               auto period = sample_clock - _edge_start;
-               std::size_t samples_delay = period - (latency % period);
-               auto new_freq = q::phase::period(period);
-
+               int period;
                if (_cycles++)
                {
-                  synth().freq(_freq_lp(new_freq) / freq_filter_k);
+                  period = _period_lp(sample_clock-_edge_start);
                }
                else
                {
-                  synth().freq(new_freq);
-                  _freq_lp.y = new_freq * freq_filter_k;
+                  period = sample_clock-_edge_start;
+                  _period_lp.y = period * period_filter_k;
                }
+
+               auto new_freq = q::phase::period(period);
+               synth().freq(new_freq);
+
+               // std::size_t samples_delay = period - (latency % period);
+
 
                // auto freq = synth().freq();
                // auto shift = _start_phase - (samples_delay * freq);
@@ -134,13 +137,13 @@ namespace cycfi { namespace infinity
          return 0.0f;
       }
 
-      static constexpr auto freq_filter_k = q::pow2<int32_t>(2);
-      using freq_filter_t = q::fixed_pt_leaky_integrator<freq_filter_k>;
+      static constexpr auto period_filter_k = q::pow2<int32_t>(8);
+      using period_filter_t = q::fixed_pt_leaky_integrator<period_filter_k>;
 
       agc<agc_config>   _agc;
       period_trigger    _trig;
       pll<Synth>        _pll;
-      freq_filter_t     _freq_lp;
+      period_filter_t   _period_lp;
       q::one_pole_lp    _shift_lp = { 0.05 };
       int               _stage = stop;
       uint32_t          _cycles = 0;
