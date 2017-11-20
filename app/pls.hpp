@@ -58,25 +58,28 @@ namespace cycfi { namespace infinity
          {
             if (!onset)
             {
-               if (_cycles++)
-                  _period_lp(sample_clock-_edge_start);
-               else
-                  _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
+               if (_cycles++ < 10)
+               {
+                  if (_cycles)
+                     _period_lp(sample_clock-_edge_start);
+                  else
+                     _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
 
-               auto new_freq = q::phase::period(_period_lp() / period_filter_k);
-               synth().freq(new_freq);
+                  auto new_freq = q::phase::period(_period_lp() / period_filter_k);
+                  synth().freq(new_freq);
 
-               // std::size_t samples_delay = period - (latency % period);
+                  // std::size_t samples_delay = period - (latency % period);
 
 
-               // auto freq = synth().freq();
-               // auto shift = _start_phase - (samples_delay * freq);
-               // synth().shift(_shift_lp(shift));
+                  // auto freq = synth().freq();
+                  // auto shift = _start_phase - (samples_delay * freq);
+                  // synth().shift(_shift_lp(shift));
 
-               // auto curr_shift = synth().shift();
-               // if (curr_shift < shift)
-               //    freq = -freq;
-               // synth().shift(curr_shift + freq);
+                  // auto curr_shift = synth().shift();
+                  // if (curr_shift < shift)
+                  //    freq = -freq;
+                  // synth().shift(curr_shift + freq);
+               }
             }
             _edge_start = sample_clock;
          }
@@ -131,7 +134,7 @@ namespace cycfi { namespace infinity
          return 0.0f;
       }
 
-      static constexpr auto period_filter_k = q::pow2<int32_t>(8);
+      static constexpr auto period_filter_k = q::pow2<int32_t>(2);
       using period_filter_t = q::fixed_pt_leaky_integrator<period_filter_k>;
 
       agc<agc_config>   _agc;

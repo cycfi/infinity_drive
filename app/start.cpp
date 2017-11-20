@@ -110,10 +110,13 @@ void start()
 
    sgate.note_on();
    inf::delay_ms(3000);
+   sgate.note_off();
+   inf::delay_ms(2000);
+
    auto start = q::phase::freq(82.41, sps);
    auto stop = q::phase::freq(1600.0, sps);
    auto constexpr step = 1.059463094359295f;
-;
+
    while (true)
    {
       sgate.note_off();
@@ -123,7 +126,7 @@ void start()
       while (synth.freq() < stop)
       {
          synth.freq(synth.freq() * step);
-         inf::delay_ms(1000);
+         inf::delay_ms(2000);
          sgate.note_off();
          inf::delay_ms(500);
          sgate.note_on();

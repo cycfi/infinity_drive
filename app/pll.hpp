@@ -62,14 +62,14 @@ namespace cycfi { namespace infinity
       // Loop filter constants (proportional and derivative)
       // Currently powers of two to facilitate multiplication and
       // by division using shifts.
-      static constexpr auto kp = q::pow2<int32_t>(20);
-      static constexpr auto kd = q::pow2<int32_t>(12);
+      static constexpr auto kp = q::pow2<int32_t>(20); // 21
+      static constexpr auto kd = q::pow2<int32_t>(10); // 11
 
-      q::phase_t operator()(int error)
+      q::phase_t operator()(int error, q::phase_t freq)
       {
          // Implement a pole-zero filter by proportional and derivative
          // input to frequency. Derivative uses kd gain (above) which is
-         // a statically known power of two constexpr. The multiplication
+         // a statically known power of two (constexpr). The multiplication
          // will be optimized by the compiler using shifts.
          auto delta = error - _prev_error;
          auto out = error + (delta * kd);
@@ -79,18 +79,11 @@ namespace cycfi { namespace infinity
          // the phase_t range (see synth.hpp). The computation uses kp gain.
          // The division will be optimized out by the compiler since
          // both one_cyc and kp are statically known constexprs.
-         _freq -= (q::one_cyc / kp) * out;
-         return _freq;
+         freq -= (q::one_cyc / kp) * out;
+         return freq;
       }
 
-      q::phase_t operator()() const
-      {
-         return _freq;
-      }
-
-      int         _prev_error = 0;
-      q::phase_t  _ly = 0;
-      q::phase_t  _freq = 0;
+      int   _prev_error = 0;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -101,16 +94,13 @@ namespace cycfi { namespace infinity
 
       pll(Synth& synth)
        : _synth(synth)
-      {
-         // Initialize the loop filter _freq to sync with the _synth's
-         _lf._freq = _synth.freq();
-      }
+      {}
 
       float operator()(bool sig)
       {
-         // auto ref = _synth.phase() < pi;
-         // auto error = _pd(sig, ref);
-         // _synth.freq(_lf(error));
+         auto ref = _synth.phase() < pi;
+         auto error = _pd(sig, ref);
+         _synth.freq(_lf(error, _synth.freq()));
          return _synth();
       }
 
