@@ -30,7 +30,7 @@ namespace cycfi { namespace infinity
    {
    public:
 
-      enum { stop, run, release };
+      enum { stop, wait, run, release };
 
       pls(Synth& synth_)
        : _agc(0.05f /* seconds */, sps)
@@ -49,8 +49,6 @@ namespace cycfi { namespace infinity
          if (!is_active)
             return deactivate();
 
-         // We are running
-         _stage = run;
          int state = _trig(agc_out, is_active);
          bool onset = !was_active && is_active;
 
@@ -75,26 +73,23 @@ namespace cycfi { namespace infinity
                auto shift = _start_phase - (samples_delay * synth().freq());
 
                if (_cycles == 1)
+               {
+                  _stage = run;
                   _shift_lp.y = shift;
+                  synth().phase(-shift);
+               }
                synth().shift(_shift_lp(shift));
-
-
-
-
-               // auto freq = synth().freq();
-               // auto shift = _start_phase - (samples_delay * freq);
-               // synth().shift(_shift_lp(shift));
-
-               // auto curr_shift = synth().shift();
-               // if (curr_shift < shift)
-               //    freq = -freq;
-               // synth().shift(curr_shift + freq);
+            }
+            else
+            {
+               _stage = wait;
             }
             _edge_start = sample_clock;
          }
 
          // Update the pll
-         return _pll(state);
+         auto val = _pll(state);
+         return (_stage != run)? 0.0f : val;
       }
 
       Synth& synth()
@@ -149,7 +144,7 @@ namespace cycfi { namespace infinity
       period_trigger    _trig;
       pll<Synth>        _pll;
       period_filter_t   _period_lp;
-      q::one_pole_lp    _shift_lp = { 0.0005 };
+      q::one_pole_lp    _shift_lp = { 0.001 };
       int               _stage = stop;
       uint32_t          _cycles = 0;
       q::phase_t        _start_phase;
