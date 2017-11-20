@@ -65,20 +65,12 @@ namespace cycfi { namespace infinity
                   else
                      _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
 
-                  auto new_freq = q::phase::period(_period_lp() / period_filter_k);
+                  auto period = _period_lp() / period_filter_k;
+                  auto new_freq = q::phase::period(period);
                   synth().freq(new_freq);
 
-                  // std::size_t samples_delay = period - (latency % period);
-
-
-                  // auto freq = synth().freq();
-                  // auto shift = _start_phase - (samples_delay * freq);
-                  // synth().shift(_shift_lp(shift));
-
-                  // auto curr_shift = synth().shift();
-                  // if (curr_shift < shift)
-                  //    freq = -freq;
-                  // synth().shift(curr_shift + freq);
+                  auto samples_delay = period - (latency % period);
+                  _target_phase = _start_phase - (samples_delay * synth().freq());
                }
             }
             _edge_start = sample_clock;
