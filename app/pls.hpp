@@ -52,33 +52,47 @@ namespace cycfi { namespace infinity
          int state = _trig(agc_out, is_active);
          bool onset = !was_active && is_active;
 
+         if (sample_clock & 128)
+            _sync = true;
+
          if (prev_state != state && state)
          {
             if (!onset)
             {
                if (_cycles++)
+               {
                   _period_lp(sample_clock-_edge_start);
+                  _stage = run;
+               }
                else
+               {
                   _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
+               }
 
                auto period = _period_lp() / period_filter_k;
+               auto synth_freq = synth().freq();
 
-               if (_cycles < 10)
+               if (_cycles < 8)
                {
                   auto new_freq = q::phase::period(period);
                   synth().freq(new_freq);
                }
 
-               auto samples_delay = period - (latency % period);
-               auto shift = _start_phase - (samples_delay * synth().freq());
-
-               if (_cycles == 1)
+               if (_sync)
                {
-                  _stage = run;
-                  _shift_lp.y = shift;
-                  synth().phase(-shift);
+                  auto synth_period = q::one_cyc / synth_freq;
+                  period = (period + synth_period) / 2;
+                  auto samples_delay = period - (latency % period);
+                  auto shift = _start_phase - (samples_delay * synth_freq);
+
+                  if (_cycles == 1)
+                  {
+                     _shift_lp.y = shift;
+                     synth().phase(-shift);
+                  }
+                  synth().shift(_shift_lp(shift));
+                  _sync = false; // done
                }
-               synth().shift(_shift_lp(shift));
             }
             else
             {
@@ -137,19 +151,21 @@ namespace cycfi { namespace infinity
          return 0.0f;
       }
 
-      static constexpr auto period_filter_k = q::pow2<int32_t>(2);
+      static constexpr auto period_filter_k = q::pow2<int32_t>(3);
       using period_filter_t = q::fixed_pt_leaky_integrator<period_filter_k>;
 
       agc<agc_config>   _agc;
       period_trigger    _trig;
       pll<Synth>        _pll;
       period_filter_t   _period_lp;
-      q::one_pole_lp    _shift_lp = { 0.001 };
+      q::one_pole_lp    _shift_lp = { 0.05 };
       int               _stage = stop;
       uint32_t          _cycles = 0;
       q::phase_t        _start_phase;
       uint32_t          _edge_start = 0;
       q::phase_t        _target_phase = 0;
+      q::phase_t        _prev_freq = 0;
+      bool              _sync = false;
    };
 }}
 

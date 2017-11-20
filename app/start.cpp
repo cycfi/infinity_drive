@@ -116,6 +116,7 @@ void start()
    auto start = q::phase::freq(82.41, sps);
    auto stop = q::phase::freq(1600.0, sps);
    auto constexpr step = 1.059463094359295f;
+   bool continuous = false;
 
    while (true)
    {
@@ -127,10 +128,14 @@ void start()
       {
          synth.freq(synth.freq() * step);
          inf::delay_ms(2000);
-         sgate.note_off();
-         inf::delay_ms(500);
-         sgate.note_on();
+         if (!continuous)
+         {
+            sgate.note_off();
+            inf::delay_ms(500);
+            sgate.note_on();
+         }
       }
+      continuous = !continuous;
    }
 }
 
