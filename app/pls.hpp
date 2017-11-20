@@ -32,10 +32,10 @@ namespace cycfi { namespace infinity
 
       enum { stop, run, release };
 
-      pls(Synth& synth_)
+      pls(Synth& synth_, q::phase_t start_phase)
        : _agc(0.05f /* seconds */, sps)
        , _pll(synth_)
-       , _start_phase(synth_.shift())
+       , _start_phase(start_phase)
       {}
 
       float operator()(float s, uint32_t sample_clock)
@@ -77,7 +77,7 @@ namespace cycfi { namespace infinity
          }
 
          // Update the pll
-         auto val = _pll(state);
+         auto val = _pll(state, _start_phase);
          return val;
       }
 
