@@ -21,7 +21,7 @@ using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
-constexpr uint32_t sps = 20000;
+constexpr uint32_t sps = 16000;
 
 auto synth = q::sin(110.0, sps);
 auto ref_synth = q::sin(150.0, sps, q::pi/4);
@@ -108,12 +108,17 @@ void start()
 {
    tmr.start();
 
-   sgate.note_on();
-   inf::delay_ms(3000);
-   sgate.note_off();
-   inf::delay_ms(2000);
+   // sgate.note_on();
+   // inf::delay_ms(3000);
+   // sgate.note_off();
+   // inf::delay_ms(2000);
 
-   auto start = q::phase::freq(82.41, sps);
+   // synth.freq(q::phase::freq(174.61411571650107, sps));
+   // sgate.note_on();
+   // while (true)
+   //    ;
+
+   auto start = q::phase::freq(55.0, sps);
    auto stop = q::phase::freq(1600.0, sps);
    auto constexpr step = 1.059463094359295f;
    bool continuous = false;
@@ -121,17 +126,17 @@ void start()
    while (true)
    {
       sgate.note_off();
-      inf::delay_ms(500);
+      inf::delay_ms(300);
       sgate.note_on();
       synth.freq(start);
       while (synth.freq() < stop)
       {
          synth.freq(synth.freq() * step);
-         inf::delay_ms(2000);
+         inf::delay_ms(1000);
          if (!continuous)
          {
             sgate.note_off();
-            inf::delay_ms(500);
+            inf::delay_ms(300);
             sgate.note_on();
          }
       }

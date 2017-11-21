@@ -96,9 +96,9 @@ namespace cycfi { namespace infinity
        : _synth(synth)
       {}
 
-      float operator()(bool sig)
+      float operator()(bool sig, q::phase_t phase)
       {
-         auto ref = _synth.phase() <= pi;
+         auto ref = _synth.phase() >= phase;
          auto error = _pd(sig, ref);
          _synth.freq(_lf(error, _synth.freq()));
          return _synth();

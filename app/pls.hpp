@@ -90,7 +90,6 @@ namespace cycfi { namespace infinity
                   _target_shift = (_cycles == 1) ?
                      (_shift_lp.y = shift) : _shift_lp(shift)
                   ;
-                  synth().shift(_target_shift);
                   _sync = false; // done
                }
             }
@@ -102,7 +101,7 @@ namespace cycfi { namespace infinity
          }
 
          // Update the pll
-         auto val = _pll(state);
+         auto val = _pll(state, _target_shift);
          return (_stage != run)? 0.0f : val;
       }
 
