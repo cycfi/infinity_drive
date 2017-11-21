@@ -63,7 +63,7 @@ namespace cycfi { namespace infinity
       // Currently powers of two to facilitate multiplication and
       // by division using shifts.
       static constexpr auto kp = q::pow2<int32_t>(20);
-      static constexpr auto kd = q::pow2<int32_t>(10);
+      static constexpr auto kd = q::pow2<int32_t>(11);
 
       q::phase_t operator()(int error, q::phase_t freq)
       {
@@ -98,7 +98,7 @@ namespace cycfi { namespace infinity
 
       float operator()(bool sig, q::phase_t phase)
       {
-         auto ref = _synth.phase() >= phase;
+         auto ref = _synth.phase() < pi;
          auto error = _pd(sig, ref);
          _synth.freq(_lf(error, _synth.freq()));
          return _synth();

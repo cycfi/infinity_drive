@@ -38,7 +38,7 @@ namespace cycfi { namespace infinity
        , _start_phase(synth_.shift())
        , _target_shift(_start_phase)
       {
-         synth_.shift(0);
+         // synth_.shift(0);
       }
 
       float operator()(float s, uint32_t sample_clock)
@@ -55,7 +55,7 @@ namespace cycfi { namespace infinity
          int state = _trig(agc_out, is_active);
          bool onset = !was_active && is_active;
 
-         if (sample_clock & 128)
+         if (sample_clock & 256)
             _sync = true;
 
          if (prev_state != state && state)
