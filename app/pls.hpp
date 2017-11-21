@@ -36,7 +36,9 @@ namespace cycfi { namespace infinity
        : _agc(0.05f /* seconds */, sps)
        , _pll(synth_)
        , _start_phase(synth_.shift())
-      {}
+      {
+         synth_.shift(0);
+      }
 
       float operator()(float s, uint32_t sample_clock)
       {
@@ -85,12 +87,10 @@ namespace cycfi { namespace infinity
                   auto samples_delay = period - (latency % period);
                   auto shift = _start_phase - (samples_delay * synth_freq);
 
-                  if (_cycles == 1)
-                  {
-                     _shift_lp.y = shift;
-                     synth().phase(-shift);
-                  }
-                  synth().shift(_shift_lp(shift));
+                  _target_shift = (_cycles == 1) ?
+                     (_shift_lp.y = shift) : _shift_lp(shift)
+                  ;
+                  synth().shift(_target_shift);
                   _sync = false; // done
                }
             }
@@ -163,7 +163,7 @@ namespace cycfi { namespace infinity
       uint32_t          _cycles = 0;
       q::phase_t        _start_phase;
       uint32_t          _edge_start = 0;
-      q::phase_t        _target_phase = 0;
+      q::phase_t        _target_shift = 0;
       q::phase_t        _prev_freq = 0;
       bool              _sync = false;
    };
