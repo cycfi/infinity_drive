@@ -36,6 +36,7 @@ namespace cycfi { namespace infinity
        : _agc(0.05f /* seconds */, sps)
        , _pll(synth_)
        , _start_phase(synth_.shift())
+       , _target_shift(_start_phase)
       {
          synth_.shift(0);
       }
