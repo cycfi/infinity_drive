@@ -88,9 +88,8 @@ namespace cycfi { namespace infinity
                   auto shift = _start_phase - (samples_delay * synth_freq);
 
                   _target_shift = (_cycles == 1) ?
-                     (_shift_lp.y = shift) : _shift_lp(shift)
-                  ;
-                  _sync = false; // done
+                     (_shift_lp.y = shift) : _shift_lp(shift);
+                  _sync = false; // done sync
                }
             }
             else
@@ -150,7 +149,7 @@ namespace cycfi { namespace infinity
          return 0.0f;
       }
 
-      static constexpr auto period_filter_k = q::pow2<int32_t>(3);
+      static constexpr auto period_filter_k = q::pow2<int32_t>(2);
       using period_filter_t = q::fixed_pt_leaky_integrator<period_filter_k>;
 
       agc<agc_config>   _agc;
