@@ -59,44 +59,9 @@ namespace cycfi { namespace infinity
          if (prev_state != state && state)
          {
             if (!onset)
-            {
-               if (_cycles++)
-               {
-                  _period_lp(sample_clock-_edge_start);
-                  _stage = run;
-               }
-               else
-               {
-                  _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
-               }
-
-               auto period = _period_lp() / period_filter_k;
-               auto synth_freq = synth().freq();
-
-               if (_cycles < 8)
-               {
-                  auto new_freq = q::phase::period(period);
-                  synth().freq(new_freq);
-               }
-
-               if (_sync)
-               {
-                  // Dynamic filter. We increase the time constant with
-                  // decreasing frequency. The higher the frequency, the
-                  // lower the time constant.
-                  _shift_lp.a = 0.05f / period;
-
-                  auto synth_period = q::one_cyc / synth_freq;
-                  period = (period + synth_period) / 2;
-                  auto samples_delay = period - (latency % period);
-                  _target_shift = _start_phase - (samples_delay * synth_freq);
-                  _sync = false; // done sync
-               }
-            }
+               sync(sample_clock);
             else
-            {
                _stage = wait;
-            }
             _edge_start = sample_clock;
          }
 
@@ -126,6 +91,42 @@ namespace cycfi { namespace infinity
          static constexpr float low_threshold = 0.01f;
          static constexpr float high_threshold = 0.05f;
       };
+
+      void sync(uint32_t sample_clock)
+      {
+         if (_cycles++)
+         {
+            _period_lp(sample_clock-_edge_start);
+            _stage = run;
+         }
+         else
+         {
+            _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
+         }
+
+         auto period = _period_lp() / period_filter_k;
+         auto synth_freq = synth().freq();
+
+         if (_cycles < 8)
+         {
+            auto new_freq = q::phase::period(period);
+            synth().freq(new_freq);
+         }
+
+         if (_sync)
+         {
+            // Dynamic filter. We increase the time constant with
+            // decreasing frequency. The higher the frequency, the
+            // lower the time constant.
+            _shift_lp.a = 0.05f / period;
+
+            auto synth_period = q::one_cyc / synth_freq;
+            period = (period + synth_period) / 2;
+            auto samples_delay = period - (latency % period);
+            _target_shift = _start_phase - (samples_delay * synth_freq);
+            _sync = false; // done sync
+         }
+      }
 
       // Release the synth
       float deactivate()
