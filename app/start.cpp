@@ -26,7 +26,7 @@ constexpr uint32_t sps = 20000;
 auto synth = q::sin(110.0, sps);
 auto ref_synth = q::sin(150.0, sps, q::pi/4);
 
-using pls_type = inf::pls<decltype(ref_synth), sps, 256>;
+using pls_type = inf::pls<decltype(ref_synth), sps, 100>;
 pls_type pls{ ref_synth };
 
 template <typename Synth>
@@ -108,20 +108,17 @@ void start()
 {
    tmr.start();
 
-   // sgate.note_on();
-   // inf::delay_ms(3000);
-   // sgate.note_off();
-   // inf::delay_ms(2000);
-
-   // synth.freq(q::phase::freq(174.61411571650107, sps));
-   // sgate.note_on();
-   // while (true)
-   //    ;
-
+   // auto start = q::phase::freq(1000, sps);
    auto start = q::phase::freq(55, sps);
    auto stop = q::phase::freq(1600, sps);
    auto constexpr step = 1.059463094359295f;
    bool continuous = false;
+
+   // synth.freq(q::phase::freq(174.61411571650107, sps));
+   // synth.freq(start);
+   // sgate.note_on();
+   // while (true)
+   //    ;
 
    while (true)
    {

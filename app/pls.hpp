@@ -37,9 +37,7 @@ namespace cycfi { namespace infinity
        , _pll(synth_)
        , _start_phase(synth_.shift())
        , _target_shift(_start_phase)
-      {
-         // synth_.shift(0);
-      }
+      {}
 
       float operator()(float s, uint32_t sample_clock)
       {
@@ -83,13 +81,15 @@ namespace cycfi { namespace infinity
 
                if (_sync)
                {
+                  // Dynamic filter. We increase the time constant with
+                  // decreasing frequency. The higher the frequency, the
+                  // lower the time constant.
+                  _shift_lp.a = 0.05f / period;
+
                   auto synth_period = q::one_cyc / synth_freq;
                   period = (period + synth_period) / 2;
                   auto samples_delay = period - (latency % period);
-                  auto shift = _start_phase - (samples_delay * synth_freq);
-
-                  _target_shift = (_cycles == 1) ?
-                     (_shift_lp.y = shift) : _shift_lp(shift);
+                  _target_shift = _start_phase - (samples_delay * synth_freq);
                   _sync = false; // done sync
                }
             }
@@ -100,8 +100,11 @@ namespace cycfi { namespace infinity
             _edge_start = sample_clock;
          }
 
+         // Compensate for latency by shifting the phase
+         synth().shift(_shift_lp(_target_shift));
+
          // Update the pll
-         auto val = _pll(state, _target_shift);
+         auto val = _pll(state);
          return (_stage != run)? 0.0f : val;
       }
 
@@ -157,7 +160,7 @@ namespace cycfi { namespace infinity
       period_trigger    _trig;
       pll<Synth>        _pll;
       period_filter_t   _period_lp;
-      q::one_pole_lp    _shift_lp = { 0.05 };
+      q::one_pole_lp    _shift_lp = { 0.001 };
       int               _stage = stop;
       uint32_t          _cycles = 0;
       q::phase_t        _start_phase;
