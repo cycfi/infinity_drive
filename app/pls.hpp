@@ -34,9 +34,9 @@ namespace cycfi { namespace infinity
 
       pls(Synth& synth_)
        : _agc(0.05f /* seconds */, sps)
-       , _pll(synth_)
+       , _synth(synth_)
        , _start_phase(synth_.shift())
-       , _target_shift(_start_phase)
+       , _target_phase(_start_phase)
       {}
 
       float operator()(float s, uint32_t sample_clock)
@@ -53,7 +53,8 @@ namespace cycfi { namespace infinity
          int state = _trig(agc_out, is_active);
          bool onset = !was_active && is_active;
 
-         if (sample_clock & 256)
+         // Update phase every 512 clock cycles
+         if (sample_clock & 512)
             _sync = true;
 
          if (prev_state != state && state)
@@ -66,16 +67,20 @@ namespace cycfi { namespace infinity
          }
 
          // Compensate for latency by shifting the phase
-         synth().shift(_shift_lp(_target_shift));
+         _synth.shift(_shift_lp(_target_phase));
 
-         // Update the pll
-         auto val = _pll(state);
-         return (_stage != run)? 0.0f : val;
-      }
+         // Synthesize!
+         auto val = _synth();
 
-      Synth& synth()
-      {
-         return _pll._synth;
+         // Avoid synthesizer startup glitch. Wait for zero-crossing.
+         if (_stage == wait)
+         {
+            if (_synth.is_start())
+               _stage = run;
+            else
+               return 0.0f;
+         }
+         return val;
       }
 
       float envelope() const
@@ -95,35 +100,25 @@ namespace cycfi { namespace infinity
       void sync(uint32_t sample_clock)
       {
          if (_cycles++)
-         {
             _period_lp(sample_clock-_edge_start);
-            _stage = run;
-         }
          else
-         {
-            _period_lp.y = (sample_clock-_edge_start) * period_filter_k;
-         }
+            _period_lp.y = sample_clock-_edge_start;
 
-         auto period = _period_lp() / period_filter_k;
-         auto synth_freq = synth().freq();
+         auto period = _period_lp();
+         auto synth_freq = _synth.freq();
 
-         if (_cycles < 8)
-         {
-            auto new_freq = q::phase::period(period);
-            synth().freq(new_freq);
-         }
+         auto new_freq = q::phase::period(period);
+         _synth.freq(new_freq);
 
          if (_sync)
          {
-            // Dynamic filter. We increase the time constant with
-            // decreasing frequency. The higher the frequency, the
-            // lower the time constant.
-            _shift_lp.a = 0.05f / period;
+            auto iperiod = std::lround(period);
+            auto samples_delay = iperiod - latency % iperiod;
+            _target_phase = _start_phase - (samples_delay * synth_freq);
+            _target_phase -= _synth.phase();
 
-            auto synth_period = q::one_cyc / synth_freq;
-            period = (period + synth_period) / 2;
-            auto samples_delay = period - (latency % period);
-            _target_shift = _start_phase - (samples_delay * synth_freq);
+            if (_cycles == 1)
+               _shift_lp.y = _target_phase;
             _sync = false; // done sync
          }
       }
@@ -136,7 +131,7 @@ namespace cycfi { namespace infinity
             case stop:
                _edge_start = 0;
                _cycles = 0;
-               synth().phase(0);
+               _synth.phase(0);
                return 0.0f;
 
             case run:
@@ -144,29 +139,26 @@ namespace cycfi { namespace infinity
                // fall through...
 
             case release: // continue until the next start phase
-               if (synth().is_start())
+               if (_synth.is_start())
                {
                   _stage = stop;
                   return 0.0f;
                }
-               return synth()();
+               return _synth();
          }
          return 0.0f;
       }
 
-      static constexpr auto period_filter_k = q::pow2<int32_t>(2);
-      using period_filter_t = q::fixed_pt_leaky_integrator<period_filter_k>;
-
       agc<agc_config>   _agc;
       period_trigger    _trig;
-      pll<Synth>        _pll;
-      period_filter_t   _period_lp;
+      Synth&            _synth;
+      q::one_pole_lp    _period_lp = { 0.4 };
       q::one_pole_lp    _shift_lp = { 0.001 };
       int               _stage = stop;
       uint32_t          _cycles = 0;
       q::phase_t        _start_phase;
       uint32_t          _edge_start = 0;
-      q::phase_t        _target_shift = 0;
+      q::phase_t        _target_phase = 0;
       q::phase_t        _prev_freq = 0;
       bool              _sync = false;
    };
