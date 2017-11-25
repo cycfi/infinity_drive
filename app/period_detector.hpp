@@ -60,8 +60,7 @@ namespace cycfi { namespace infinity
             auto sum = _prev + p;
             if (within(sum))
                return update(sum);
-            _lp(_prev);
-            return update(p);
+            return update(sum / 2);
          }
          else
          {
