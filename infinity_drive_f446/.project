@@ -98,6 +98,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/main.cpp</locationURI>
 		</link>
 		<link>
+			<name>src/period_detector.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/app/period_detector.hpp</locationURI>
+		</link>
+		<link>
 			<name>src/period_trigger.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/app/period_trigger.hpp</locationURI>

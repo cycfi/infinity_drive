@@ -7,84 +7,81 @@
 #define CYCFI_INFINITY_PERIOD_DETECTOR_HPP_NOVEMBER_11_2017
 
 #include <q/fx.hpp>
+#include <cmath>
 
 namespace cycfi { namespace infinity
 {
-
-   template <int samples_ = 32>
    struct period_detector
    {
-      static constexpr int samples = samples_;
+      period_detector(float a)
+       : _lp(a)
+      {}
 
-      bool near(int p)
+      period_detector(float freq, uint32_t sps)
+       : _lp(freq, sps)
+      {}
+
+      bool within(int p)
       {
          // Test that p falls within (approximately)
          // one semitone from the mean (higher or lower).
-         return (b > _min) && (b < _max);
+         return (p > _min) && (p < _max);
       }
 
-      float update(int p);
+      float update(int p)
       {
-         _acc = 0.0f;         // Reset the accumulator
-         _oc = 0;             // Reset outlier count
-         ++_hc;               // Increment hit count
-         auto val = _lp(p);   // Update the filter and return the current mean
-
-         compute_min_max(val);
-         return val;
+         _prev = 0;
+         auto val = _lp(p);                  // Update the filter
+         compute_min_max(std::ceil(val));    // Compute min and max
+         return val;                         // Return the current mean
       }
 
       void compute_min_max(int mean)
       {
-         // Compute the _min and _max (approximately 1 semitone below and above val).
-         _max = mean + (mean / 16);
-         _min = mean  (mean / 8);
+         // Compute the _min and _max (approximately 1 semitone
+         // below and above val).
+         auto mean_div_16 = mean / 16;
+         _max = mean + mean_div_16;
+         _min = mean - mean_div_16;
+      }
+
+      float operator()() const
+      {
+         return _lp();
       }
 
       float operator()(int p)
       {
-         // Check if the current period is approximately one semitone from the
-         // mean. If so, we got a hit.
-         if (near(p))
+         if (within(p))
             return update(p);
 
-         // Check if the current period + _acc is approximately one semitone
-         // from the mean. If so, we got a hit. This is a check for octave
-         // errors and other similar erroneous artifacts.
-         if (near(p + _acc))
-            return update(p + _acc);
-
-         // We count all outliers into _oc and compare it against the current hit
-         // count. if we have too many outliers (i.e. outlier count, _oc, exceeds
-         // hit count, _hc), they wouldn't be outliers anymore, eh? ;). In that case,
-         // we get the average and make it the new mean.
-         if (_oc++ > _hc)
+         if (_prev)
          {
-            _hc = 0;          // Reset hit count to 0
-            _lp = _acc / _oc; // Average and set the moving average
+            auto sum = _prev + p;
+            if (within(sum))
+               return update(sum);
+            _lp(_prev);
             return update(p);
          }
-
-         // We probably got an outlier, accumulate it into _acc.
-         _acc += p;
-
-         // Now return the previous stable period
+         else
+         {
+            _prev = p;
+         }
          return _lp();
       }
 
       period_detector& operator=(int p)
       {
-         _lp = p;       // Reset hit count to 1
-         _acc = 0.0f;   // Reset the accumulator
-         _oc = 0;       // Reset outlier count
-         _hc = 1;       // Reset hit count
-
-         compute_min_max(p);
+         _prev = 0;
+         _lp = p;             // Set the filter
+         compute_min_max(p);  // Compute min and max
          return *this;
       }
 
-      float _acc;
       int _min, _max;
-      uint32_t _oc = 0, _hc = 0;
-      q::exp_moving_average<samples> _lp;
+      int _prev = 0;
+      q::one_pole_lp _lp;
    };
+}}
+
+#endif

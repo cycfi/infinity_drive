@@ -9,6 +9,7 @@
 #include "pll.hpp"
 #include "agc.hpp"
 #include "period_trigger.hpp"
+#include "period_detector.hpp"
 #include <cmath>
 
 namespace cycfi { namespace infinity
@@ -102,7 +103,7 @@ namespace cycfi { namespace infinity
          if (_cycles++)
             _period_lp(sample_clock-_edge_start);
          else
-            _period_lp.y = sample_clock-_edge_start;
+            _period_lp = sample_clock-_edge_start;
 
          auto period = _period_lp();
          auto synth_freq = _synth.freq();
@@ -149,18 +150,18 @@ namespace cycfi { namespace infinity
          return 0.0f;
       }
 
-      agc<agc_config>   _agc;
-      period_trigger    _trig;
-      Synth&            _synth;
-      q::one_pole_lp    _period_lp = { 0.4 };
-      q::one_pole_lp    _shift_lp = { 0.001 };
-      int               _stage = stop;
-      uint32_t          _cycles = 0;
-      q::phase_t        _start_phase;
-      uint32_t          _edge_start = 0;
-      q::phase_t        _target_phase = 0;
-      q::phase_t        _prev_freq = 0;
-      bool              _sync = false;
+      agc<agc_config>      _agc;
+      period_trigger       _trig;
+      Synth&               _synth;
+      period_detector      _period_lp = { 0.4 };
+      q::one_pole_lp       _shift_lp = { 0.001 };
+      int                  _stage = stop;
+      uint32_t             _cycles = 0;
+      q::phase_t           _start_phase;
+      uint32_t             _edge_start = 0;
+      q::phase_t           _target_phase = 0;
+      q::phase_t           _prev_freq = 0;
+      bool                 _sync = false;
    };
 }}
 
