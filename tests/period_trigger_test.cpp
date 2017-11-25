@@ -39,7 +39,14 @@ struct my_processor
       out[1] = s;
    }
 
-   inf::agc<sps>        _agc;
+   struct agc_config
+   {
+      static constexpr float max_gain = 50.0f;
+      static constexpr float low_threshold = 0.01f;
+      static constexpr float high_threshold = 0.05f;
+   };
+
+   inf::agc<agc_config> _agc = { 0.05f /* seconds */, sps };
    inf::period_trigger  _trig;
 };
 

@@ -12,17 +12,17 @@
 // AGC test. Tests the AGC (automatic gain control).
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-// pin PA4 to an oscilloscope to see the waveform. 
+// pins PA4 and PA5 to an oscilloscope to see the input and output waveforms.
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our multi-processor
-static constexpr auto clock = 64000;
+static constexpr auto clock = 80000;
 static constexpr auto sps_div = 4;
 static constexpr auto sps = clock / sps_div;
 
-struct my_processor : inf::agc<sps>
+struct my_processor
 {
    static constexpr auto oversampling = sps_div;
    static constexpr auto adc_id = 1;
@@ -32,10 +32,20 @@ struct my_processor : inf::agc<sps>
    static constexpr auto buffer_size = 8;
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
-   {      
-      out[0] = (*this)(s);
+   {
+      out[0] = _trig(_agc(s), _agc.active());
       out[1] = s;
    }
+
+   struct agc_config
+   {
+      static constexpr float max_gain = 50.0f;
+      static constexpr float low_threshold = 0.01f;
+      static constexpr float high_threshold = 0.05f;
+   };
+
+   inf::agc<agc_config> _agc = { 0.05f /* seconds */, sps };
+   inf::period_trigger  _trig;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;
