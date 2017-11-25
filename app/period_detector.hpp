@@ -14,13 +14,13 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // Period detector
    //
+   //    See Fast and Efficient Pitch Detection:
+   //    http://www.cycfi.com/2017/10/fast-and-efficient-pitch-detection/
+   //
    //    The period_trigger (see period_trigger.hpp) works nicely, but it is
    //    not perfect. Sometimes it generates extranous false triggers with
    //    higher harmonics, esp. since typical of guitars, the second harmonic
    //    is actually more prominent than the fundamental.
-   //
-   //    See Fast and Efficient Pitch Detection:
-   //    http://www.cycfi.com/2017/10/fast-and-efficient-pitch-detection/
    //
    //    Even, with the dual peak triggers, sometimes, the plucked string can
    //    generate significant amount of harmonics that cause multiple triggers
@@ -83,10 +83,10 @@ namespace cycfi { namespace infinity
 
       float update(int p)
       {
-         _prev = 0;
+         _prev = 0;                          // Reset _prev
          auto val = _lp(p);                  // Update the filter
          compute_min_max(std::ceil(val));    // Compute min and max
-         return val;                         // Return the current mean
+         return val;                         // Return the current average
       }
 
       void compute_min_max(int mean)
@@ -105,33 +105,44 @@ namespace cycfi { namespace infinity
 
       float operator()(int p)
       {
+         // Check if the current period is approximately within one semitone
+         // off the average. If so, we got a hit.
          if (within(p))
             return update(p);
 
+         // Check if the current period + _prev is approximately within one
+         // semitone off the average. If so, we got a hit. This is a measure
+         // for false triggers.
          if (_prev)
          {
             auto sum = _prev + p;
             if (within(sum))
                return update(sum);
+
+            // If the sum does not add up to the current average, update the
+            // filter with the sum / 2 (average of the current and previous
+            // periods).
             return update(sum / 2);
          }
          else
          {
+            // Save p for later
             _prev = p;
          }
+         // Return the current average.
          return _lp();
       }
 
       period_detector& operator=(int p)
       {
-         _prev = 0;
+         _prev = 0;           // Reset _prev
          _lp = p;             // Set the filter
          compute_min_max(p);  // Compute min and max
          return *this;
       }
 
-      int _min, _max;
-      int _prev = 0;
+      int            _min, _max;
+      int            _prev = 0;
       q::one_pole_lp _lp;
    };
 }}
