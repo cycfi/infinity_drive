@@ -96,7 +96,6 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
    static constexpr auto latency = buffer_size / sps_div;
-   // static constexpr auto start_phase = q::osc_phase(0);
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
@@ -109,7 +108,7 @@ struct my_processor
    using sin_synth = decltype(q::sin(1.0, sps, 0.0));
    using pls_type = inf::pls<sin_synth, sps, latency>;
 
-   sin_synth   _synth = q::sin(0.0, sps, 0.0);
+   sin_synth   _synth = q::sin(0.0, sps, q::pi/4);
    pls_type    _pls = {_synth };
    uint32_t    _ticks = 0;
    float       _level = 0;
@@ -180,7 +179,6 @@ void start()
             break;
          case mode_enum::phase:
             display(cnv, "Phase", std::round(phase_enc() * 1800.0f), 1);
-            // proc._pls.start_phase(phase_enc() * q::one_cyc);
             break;
          case mode_enum::factor:
             display(cnv, "---", std::round(factor_enc() * 1000.0f), 2);

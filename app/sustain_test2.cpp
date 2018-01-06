@@ -14,10 +14,10 @@
 #include <array>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Frequency-Locked Synthesizer sustain test with PID
+// Phase-Locked Synthesizer sustain test with PID
 //
-// Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-// pins PA4 and PA5 to an oscilloscope to see the input and output waveforms.
+// Setup: Connect input signals to ADC channels 0, 1 and 2. Connect
+// pins PA4 (DAC out) to the sustain driver.
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
 namespace q = cycfi::q;
@@ -54,7 +54,7 @@ struct my_processor
 
    void update_level(float level)
    {
-      float max = 1.0f / channels;
+      constexpr float max = 1.0f / channels;
       for (auto& s : _sustainers)
          s.update_level(ui.level(), max);
    }

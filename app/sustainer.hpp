@@ -8,7 +8,7 @@
 
 #include <q/synth.hpp>
 #include <inf/pid.hpp>
-#include "freq_locked_synth.hpp"
+#include "pls.hpp"
 
 namespace cycfi { namespace infinity
 {
@@ -28,16 +28,14 @@ namespace cycfi { namespace infinity
    {
    public:
 
-      static constexpr auto start_phase = q::osc_phase(q::pi / 4);
-
       float operator()(float s, uint32_t sample_clock)
       {
-         return _fls(s, sample_clock++) * _level;
+         return _pls(s, sample_clock++) * _level;
       }
 
       float envelope() const
       {
-         return _fls.envelope();
+         return _pls.envelope();
       }
 
       // Update the level. This should be called approximately
@@ -53,11 +51,11 @@ namespace cycfi { namespace infinity
    private:
 
       using sin_synth = decltype(q::sin(0.0, sps, 0.0));
-      using fls_type = freq_locked_synth<sin_synth, sps, latency>;
+      using pls_type = pls<sin_synth, sps, latency>;
       using pid_type = pid<level_pid_config>;
 
-      sin_synth   _synth = q::sin(0.0, sps, 0.0);
-      fls_type    _fls = { _synth, start_phase };
+      sin_synth   _synth = q::sin(0.0, sps, q::pi/4);
+      pls_type    _pls = { _synth };
       pid_type    _level_pid;
       float       _level = 0;
    };
