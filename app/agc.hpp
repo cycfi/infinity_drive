@@ -16,7 +16,7 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // Automatic gain control
    //
-   //    The signal chain is s follows:
+   //    The signal chain is as follows:
    //
    //       1) DC blocker: Blocks any DC offset from the signal.
    //       2) Envelope follower: Tracks the envelope of the signal.

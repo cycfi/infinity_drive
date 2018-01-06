@@ -10,11 +10,11 @@
 #include "pls.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Frequency-Locked Synthesizer test
+// Phase-Locked Synthesizer test
 //
-// The freq_locked_synth looks at the input audio and extracts the
-// fundamental frequency and phase from the waveform and uses these
-// information to set the frequency and phase of a sine-wave synthesiser.
+// The pls looks at the input audio and extracts the fundamental frequency
+// and phase from the waveform and uses these information to set the frequency
+// and phase of a sine-wave synthesiser.
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
 // pins PA4 and PA5 to an oscilloscope to see the input and output waveforms.
@@ -43,7 +43,7 @@ struct my_processor
    {
       auto synth_out = _pls(s, _ticks++);
 
-      out[0] = synth_out * 0.8;  // don't let it saturate
+      out[0] = synth_out * 0.3;  // don't let it saturate
       out[1] = s;
    }
 
@@ -60,7 +60,7 @@ inf::multi_channel_processor<inf::processor<my_processor>> proc;
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
 auto config = inf::config(
-   proc.config<2>()
+   proc.config<0>()
 );
 
 ///////////////////////////////////////////////////////////////////////////////

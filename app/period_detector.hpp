@@ -22,7 +22,16 @@ namespace cycfi { namespace infinity
    //    higher harmonics, esp. since typical of guitars, the second harmonic
    //    is actually more prominent than the fundamental.
    //
-   //    Even, with the dual peak triggers, sometimes, the plucked string can
+   //       Note: A naive way to mitigate this issue is by using a low-pass
+   //       or band-pass filter to tame the energetic high frequencies. But
+   //       any form of filter will mess up the phase, so that's out of the
+   //       question. We need precise alignment of phase in order to induce
+   //       infinite sustain using positive feedback. It is not enough to
+   //       synthesize a waveform having the same frequency as the vibrating
+   //       string. The phase must be correct as well. Filtering complicates
+   //       the problem.
+   //
+   //    Even with the dual peak triggers, sometimes, the plucked string can
    //    generate significant amount of harmonics that cause multiple triggers
    //    spanning both the positive and negative peaks. Based on numerous
    //    analysis and tests, the period triggering scheme can generate at most
@@ -31,36 +40,32 @@ namespace cycfi { namespace infinity
    //    but such an unlikely event can be ignored. We will only deal with
    //    single false triggers per cycle.
    //
-   //    A naive way to mitigate this issue is by using a low-pass or band-pass
-   //    filter to tame the energetic high frequencies. But any form of filter
-   //    will mess up the phase, so that's out of the question. We need precise
-   //    alignment of phase in order to induce infinite sustain using positive
-   //    feedback. It is not enough to synthesize a waveform having the same
-   //    frequency as the vibrating string. The phase must be correct as well.
-   //    Filtering complicates the problem.
+   //    So what do we do? The period detector deals with this period detection
+   //    business. It has an averaging (low pass) filter maintaining the
+   //    average period at any given time. For each new period P, a) P is
+   //    compared with the current average. If P falls within approximately
+   //    one semitone off the average, then we are good. The low pass filter is
+   //    updated and a new average is returned.
    //
-   //    So what do we do? The period detector maintains a low pass filter
-   //    for the periods, essentially maintaining the average period at any
-   //    given time. For each new period P, a) P is compared against the
-   //    current average. If P falls within approximately one semitone off the
-   //    average, then we are good. The low pass filter is updated and a new
-   //    average is returned.
+   //       Why one semitone? We could have been stricter, but we still have to
+   //       deal with minor pitch changes with each successive cycle to track
+   //       string bends and vibrato for example.
    //
    //    If the new period P does not fall within one semitone off the average,
-   //    then b) we save the current period for later (call that prev). We
+   //    then b) we save the current period P for later (call that prev). We
    //    return the current average.
    //
-   //    When a new period comes along, we repeat a). If the new period P does
-   //    not fall within one semitone off the average, then, since we saved
-   //    the previous period (prev), we check if the sum of the previous (prev)
-   //    and the new period P falls within one semitone off the average. If it
-   //    does, we're in luck. We successfully detected a false trigger from
-   //    overpowering harmonics. We update the averaging low pass filter with
-   //    the sum of the currrent period P plus the previous period (prev) and
-   //    a new average is returned.
+   //    When a new period comes along, we repeat a). But this time around, if
+   //    the new period P does not fall within one semitone off the average,
+   //    then, since we saved the previous period (prev), c) we check if the
+   //    sum of the previous (prev) and the new period P falls within one
+   //    semitone off the average. If it does, we’re in luck. We successfully
+   //    detected a false trigger. We update the averaging low pass filter with
+   //    the sum of the current period P plus the previous period (prev) and a
+   //    new average is returned.
    //
-   //    If the sum of the new period P and the previous period (prev)
-   //    does not fall within one semitone off the average, then the sum/2
+   //    Finally, if the sum of the new period P and the previous period (prev)
+   //    does not fall within one semitone off the average, then d) the sum/2
    //    is added to the running average and a new average is returned.
    //
    ////////////////////////////////////////////////////////////////////////////
