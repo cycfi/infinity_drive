@@ -12,7 +12,7 @@
 #include <inf/rotary_encoder.hpp>
 #include <inf/pid.hpp>
 #include <q/synth.hpp>
-#include "freq_locked_synth.hpp"
+#include "pls.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Frequency-Locked Synthesizer sustain test with PID
@@ -96,21 +96,21 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 1024;
    static constexpr auto latency = buffer_size / sps_div;
-   static constexpr auto start_phase = q::osc_phase(0);
+   // static constexpr auto start_phase = q::osc_phase(0);
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      auto synth_out = _fls(s, _ticks++);
+      auto synth_out = _pls(s, _ticks++);
 
-      out[0] = s;
-      out[1] = synth_out * _level;
+      out[0] = synth_out * _level;
+      out[1] = s;
    }
 
    using sin_synth = decltype(q::sin(1.0, sps, 0.0));
-   using fls_type = inf::freq_locked_synth<sin_synth, sps, latency>;
+   using pls_type = inf::pls<sin_synth, sps, latency>;
 
    sin_synth   _synth = q::sin(0.0, sps, 0.0);
-   fls_type    _fls = {_synth, start_phase};
+   pls_type    _pls = {_synth };
    uint32_t    _ticks = 0;
    float       _level = 0;
 };
@@ -180,7 +180,7 @@ void start()
             break;
          case mode_enum::phase:
             display(cnv, "Phase", std::round(phase_enc() * 1800.0f), 1);
-            proc._fls.start_phase(phase_enc() * q::one_cyc);
+            // proc._pls.start_phase(phase_enc() * q::one_cyc);
             break;
          case mode_enum::factor:
             display(cnv, "---", std::round(factor_enc() * 1000.0f), 2);
@@ -188,7 +188,7 @@ void start()
       }
 
       // Set the sustain level
-      proc._level += level_pid(level_enc()/8, proc._fls.envelope());
+      proc._level += level_pid(level_enc()/4, proc._pls.envelope());
       if (proc._level > 1.0f)
          proc._level = 1.0f;
       else if (proc._level < 0.0f)
