@@ -18,6 +18,7 @@ namespace cycfi { namespace infinity
 #ifdef STM32F429I_DISCO
     // STM32F429I-Discovery dev board.
    using main_led_type = output_pin<port::portg + 13>;
+   using main_test_pin_type = output_pin<port::porta + 15>;
 #endif
 
 #ifdef NUCLEO_F446RE
@@ -30,10 +31,10 @@ namespace cycfi { namespace infinity
 # endif
 
    using main_button_type = input_pin<port::portc + 13, port::pull_up>;
+   using main_test_pin_type = output_pin<port::portc + 12>;
 
 #endif
 
-using main_test_pin_type = output_pin<port::porta + 15>;
 
 }}
 
