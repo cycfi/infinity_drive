@@ -6,9 +6,8 @@
 #if !defined(CYCFI_INFINITY_SUSTAINER_HPP_NOVEMBER_11_2017)
 #define CYCFI_INFINITY_SUSTAINER_HPP_NOVEMBER_11_2017
 
-#include <q/synth.hpp>
+#include <q/fx.hpp>
 #include <inf/pid.hpp>
-#include "pls.hpp"
 
 namespace cycfi { namespace infinity
 {
@@ -28,14 +27,34 @@ namespace cycfi { namespace infinity
    {
    public:
 
+      static constexpr float max_gain = 2;
+      static constexpr float low_threshold = 0.01f;
+      static constexpr float high_threshold = 0.05f;
+
       float operator()(float s, uint32_t sample_clock)
       {
-         return _pls(s, sample_clock++) * _level;
+         // DC block
+         s = _dc_block(s);
+
+         // Update the envelope follower
+         auto env = _env_follow(std::abs(s));
+
+         // Noise gate
+         if (!_noise_gate(env))
+				return 0;
+
+         // // Automatic gain control
+         // _gain = q::fast_inverse(env) * _level;
+         // if (_gain > max_gain)
+         //    _gain = max_gain;
+         // return s * _gain;
+
+         return s * _level;
       }
 
       float envelope() const
       {
-         return _pls.envelope();
+         return _env_follow();
       }
 
       // Update the level. This should be called approximately
@@ -50,14 +69,14 @@ namespace cycfi { namespace infinity
 
    private:
 
-      using sin_synth = decltype(q::sin(0.0, sps, 0.0));
-      using pls_type = pls<sin_synth, sps, latency>;
       using pid_type = pid<level_pid_config>;
 
-      sin_synth   _synth = q::sin(0.0, sps, q::pi/4);
-      pls_type    _pls = { _synth };
-      pid_type    _level_pid;
-      float       _level = 0;
+      q::dc_block          _dc_block;
+      q::envelope_follower _env_follow;
+      q::window_comparator _noise_gate = { low_threshold, high_threshold };
+      float                _gain = { 1.0f };
+      pid_type             _level_pid;
+      float                _level = 0;
    };
 }}
 

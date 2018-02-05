@@ -107,7 +107,7 @@ namespace cycfi { namespace infinity
 
    float ui::level() const
    {
-      return level_enc() / 8;
+      return level_enc();
    }
 
    void ui::set_mode()
