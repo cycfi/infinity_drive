@@ -25,15 +25,15 @@ namespace cycfi { namespace infinity
    template <std::size_t Channel>
    class dac
    {
-      static constexpr uint16_t dac_gpio = 
+      static constexpr uint16_t dac_gpio =
          (Channel == 0) ? LL_GPIO_PIN_4 : LL_GPIO_PIN_5;
-      static constexpr uint32_t dac_channel = 
+      static constexpr uint32_t dac_channel =
          (Channel == 0) ? LL_DAC_CHANNEL_1 : LL_DAC_CHANNEL_2;
-      
+
       using dac_peripheral_id = io_pin_id<
          port::porta+(Channel == 0) ? 4 : 5>
       ;
-         
+
    public:
 
       static_assert(Channel >=0 && Channel <= 1, "Invalid DAC Channel");
@@ -53,8 +53,8 @@ namespace cycfi { namespace infinity
 
          // Select trigger source
          LL_DAC_SetTriggerSource(DAC1, dac_channel, LL_DAC_TRIG_SOFTWARE);
-         
-         // Set the output for the selected DAC channel
+
+         // Disable the output for the selected DAC channel
          LL_DAC_SetOutputBuffer(DAC1, dac_channel, LL_DAC_OUTPUT_BUFFER_ENABLE);
 
          // Disable DAC channel DMA request

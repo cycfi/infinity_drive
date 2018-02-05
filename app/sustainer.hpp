@@ -27,11 +27,12 @@ namespace cycfi { namespace infinity
    {
    public:
 
-      static constexpr float max_gain = 2;
+      static constexpr float max_gain = 4;
+      static constexpr float set_point_max = 0.4;
       static constexpr float low_threshold = 0.01f;
       static constexpr float high_threshold = 0.05f;
 
-      float operator()(float s, uint32_t sample_clock)
+      float operator()(float s)
       {
          // DC block
          s = _dc_block(s);
@@ -43,12 +44,6 @@ namespace cycfi { namespace infinity
          if (!_noise_gate(env))
 				return 0;
 
-         // // Automatic gain control
-         // _gain = q::fast_inverse(env) * _level;
-         // if (_gain > max_gain)
-         //    _gain = max_gain;
-         // return s * _gain;
-
          return s * _level;
       }
 
@@ -59,12 +54,12 @@ namespace cycfi { namespace infinity
 
       // Update the level. This should be called approximately
       // every 10ms (or adjust level_pid_config sps accordingly).
-      void update_level(float level, float max)
+      void update_level(float level)
       {
-         _level += _level_pid(level, envelope());
+         _level += _level_pid(level * set_point_max, envelope());
 
          // Clamp the level to 0 to max
-         _level = std::max(std::min(_level, max), 0.0f);
+         _level = std::max(std::min(_level, max_gain), 0.0f);
       }
 
    private:
