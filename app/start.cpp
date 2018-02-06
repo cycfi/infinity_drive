@@ -65,10 +65,12 @@ struct my_processor
          out0 = _lim(out0, _env[0]());
          out1 = _lim(out1, _env[1]());
 
-         // Soft-clip the final result
+         // Soft-clip the final result and limit the output to 0.8
+         // of the value so the DAC won't clip (The STM32F4 DAC has
+         // a built-in buffer that is not rail-to-rail).
          static constexpr q::soft_clip clip;
-         out[0] = clip(out0);
-         out[1] = clip(out1);
+         out[0] = clip(out0 * 1.25f) * 0.8f;
+         out[1] = clip(out1 * 1.25f) * 0.8f;
 
       }
    }
