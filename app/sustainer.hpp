@@ -42,9 +42,9 @@ namespace cycfi { namespace infinity
 
          // Noise gate
          if (!_noise_gate(env))
-				return 0;
+				return _lpf(0);
 
-         return s * _level;
+         return _lpf(s * _level);
       }
 
       float envelope() const
@@ -56,7 +56,8 @@ namespace cycfi { namespace infinity
       // every 10ms (or adjust level_pid_config sps accordingly).
       void update_level(float level)
       {
-         _level += _level_pid(level * set_point_max, envelope());
+         auto param = std::pow(2, level) - 1.0f;
+         _level += _level_pid(param * set_point_max, envelope());
 
          // Clamp the level to 0 to max
          _level = std::max(std::min(_level, max_gain), 0.0f);
@@ -69,7 +70,8 @@ namespace cycfi { namespace infinity
       q::dc_block          _dc_block;
       q::envelope_follower _env_follow;
       q::window_comparator _noise_gate = { low_threshold, high_threshold };
-      float                _gain = { 1.0f };
+      q::one_pole_lp       _lpf = { 2000.0f, sps };
+
       pid_type             _level_pid;
       float                _level = 0;
    };

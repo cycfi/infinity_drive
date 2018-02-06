@@ -62,8 +62,14 @@ struct my_processor
          _env[1](out1 * headroom);
 
          // Limit the outputs to 1.0f
-         out[0] = _lim(out0, _env[0]());
-         out[1] = _lim(out1, _env[1]());
+         out0 = _lim(out0, _env[0]());
+         out1 = _lim(out1, _env[1]());
+
+         // Soft-clip the final result
+         static constexpr q::soft_clip clip;
+         out[0] = clip(out0);
+         out[1] = clip(out1);
+
       }
    }
 
