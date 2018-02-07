@@ -42,10 +42,23 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 8;
    static constexpr auto latency = buffer_size / sps_div;
-   static constexpr auto headroom = 2.0f;
+   static constexpr auto headroom = 3.0f;
+
+   my_processor()
+   {
+      _sustainers[0].cutoff(659);   // E
+      _sustainers[1].cutoff(880);   // A
+      _sustainers[2].cutoff(1174);  // D
+      _sustainers[3].cutoff(1568);  // G
+      _sustainers[4].cutoff(1975);  // B
+      _sustainers[5].cutoff(2637);  // E
+   }
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
+      // Disable the sustainer if sustain level is zero.
+      _sustainers[channel].enable(ui.level() != 0.0f);
+
       if (channel < 3)
          out[0] += _sustainers[channel](s);
       else
@@ -71,7 +84,6 @@ struct my_processor
          static constexpr q::soft_clip clip;
          out[0] = clip(out0 * 1.25f) * 0.8f;
          out[1] = clip(out1 * 1.25f) * 0.8f;
-
       }
    }
 
@@ -81,7 +93,7 @@ struct my_processor
          s.update_level(ui.level());
    }
 
-   using sustainer_type = inf::sustainer<sps, latency>;
+   using sustainer_type = inf::sustainer<sps>;
    using sustainer_array_type = std::array<sustainer_type, channels>;
 
    sustainer_array_type                _sustainers;

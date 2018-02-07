@@ -16,29 +16,34 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct level_pid_config
    {
-      float static constexpr p = 0.05f;         // Proportional gain
-      float static constexpr i = 0.0f;          // Integral gain
-      float static constexpr d = 0.03f;         // Derivative gain
-      float static constexpr sps = 100.0f;      // Update Frequency (Hz)
+      float static constexpr p = 0.05f;      // Proportional gain
+      float static constexpr i = 0.0f;       // Integral gain
+      float static constexpr d = 0.03f;      // Derivative gain
+      uint32_t static constexpr sps = 100;   // Update Frequency (Hz)
    };
 
-   template <std::uint32_t sps, std::uint32_t latency>
+   template <std::uint32_t sps>
    class sustainer
    {
    public:
 
-      static constexpr float max_gain = 4;
+      static constexpr float max_gain = 8;
       static constexpr float set_point_max = 0.4;
       static constexpr float low_threshold = 0.01f;
       static constexpr float high_threshold = 0.05f;
 
       float operator()(float s)
       {
+         if (!_enable)
+            return _lpf(0);
+
          // DC block
          s = _dc_block(s);
 
          // Update the envelope follower
          auto env = _env_follow(std::abs(s));
+         // Smooth the envelope
+         _env_smooth(env);
 
          // Noise gate
          if (!_noise_gate(env))
@@ -52,14 +57,24 @@ namespace cycfi { namespace infinity
          return _env_follow();
       }
 
+      void enable(bool val)
+      {
+         _enable = val;
+      }
+
+      void cutoff(float freq)
+      {
+         _lpf.cutoff(freq, sps);
+      }
+
       // Update the level. This should be called approximately
       // every 10ms (or adjust level_pid_config sps accordingly).
       void update_level(float level)
       {
          auto param = std::pow(2, level) - 1.0f;
-         _level += _level_pid(param * set_point_max, envelope());
+         _level += _level_pid(param * set_point_max, _env_smooth());
 
-         // Clamp the level to 0 to max
+         // Clamp the level to 0 to max_gain
          _level = std::max(std::min(_level, max_gain), 0.0f);
       }
 
@@ -69,11 +84,13 @@ namespace cycfi { namespace infinity
 
       q::dc_block          _dc_block;
       q::envelope_follower _env_follow;
-      q::window_comparator _noise_gate = { low_threshold, high_threshold };
-      q::one_pole_lp       _lpf = { 2000.0f, sps };
+      q::window_comparator _noise_gate { low_threshold, high_threshold };
+      q::one_pole_lp       _env_smooth { 0.1f, sps };
+      q::one_pole_lp       _lpf { 2000.0f, sps };
 
       pid_type             _level_pid;
       float                _level = 0;
+      bool                 _enable = true;
    };
 }}
 
