@@ -43,6 +43,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/.DS_Store</locationURI>
 		</link>
 		<link>
+			<name>q/biquad.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/biquad.hpp</locationURI>
+		</link>
+		<link>
 			<name>q/detail</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>

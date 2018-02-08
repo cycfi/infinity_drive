@@ -154,7 +154,7 @@ namespace cycfi { namespace infinity
       period_trigger       _trig;
       Synth&               _synth;
       period_detector      _period_lp = { 0.4 };
-      q::one_pole_lp       _shift_lp = { 0.001 };
+      q::one_pole_lowpass  _shift_lp = { 0.001 };
       int                  _stage = stop;
       uint32_t             _cycles = 0;
       q::phase_t           _start_phase;

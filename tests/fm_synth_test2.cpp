@@ -46,9 +46,9 @@ constexpr float initial_modulator_gain = 0.2;
 constexpr float initial_frequency = 110.0;
 constexpr float initial_factor = 4.0;
 
-q::one_pole_lp freq_lp{10.0f, sps};    // frequency param-change filter (10Hz)
-q::one_pole_lp mod_lp{10.0f, sps};     // modulator param-change filter (10Hz)
-q::one_pole_lp factor_lp{10.0f, sps};  // factor param-change filter (10Hz)
+q::one_pole_lowpass freq_lp{10.0f, sps};     // frequency param-change filter (10Hz)
+q::one_pole_lowpass mod_lp{10.0f, sps};      // modulator param-change filter (10Hz)
+q::one_pole_lowpass factor_lp{10.0f, sps};   // factor param-change filter (10Hz)
 
 auto synth = q::fm(initial_frequency, initial_modulator_gain, initial_factor, sps);
 auto ref_synth = q::sin(initial_frequency, sps);

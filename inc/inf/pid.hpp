@@ -19,7 +19,7 @@ namespace cycfi { namespace infinity
    //       float static constexpr p = 0.1f;          // Proportional gain
    //       float static constexpr i = 0.5f;          // Integral gain
    //       float static constexpr d = 0.01f;         // Derivative gain
-   //       float static constexpr sps = 100.0f;      // Update Frequency (Hz)
+   //       uint32_t static constexpr sps = 100.0f;   // Update Frequency (Hz)
    //    };
    //
    //    pid<my_pid> the_pid;
