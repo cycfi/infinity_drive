@@ -40,6 +40,9 @@ namespace cycfi { namespace infinity
          // DC block
          s = _dc_block(s);
 
+         // Low pass filter
+         s = _lpf(s);
+
          // Update the envelope follower
          auto env = _env_follow(std::abs(s));
          // Smooth the envelope
@@ -49,7 +52,7 @@ namespace cycfi { namespace infinity
          if (!_noise_gate(env))
 				return _lpf(0);
 
-         return _lpf(s * _level);
+         return s * _level;
       }
 
       float envelope() const
@@ -85,8 +88,8 @@ namespace cycfi { namespace infinity
       q::dc_block          _dc_block;
       q::envelope_follower _env_follow;
       q::window_comparator _noise_gate { low_threshold, high_threshold };
-      q::one_pole_lp       _env_smooth { 0.1f, sps };
-      q::one_pole_lp       _lpf { 2000.0f, sps };
+      q::one_pole_lowpass  _env_smooth { 0.1f, sps };
+      q::one_pole_lowpass  _lpf { 2000.0f, sps };
 
       pid_type             _level_pid;
       float                _level = 0;
