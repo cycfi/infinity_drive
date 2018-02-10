@@ -42,7 +42,7 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 8;
    static constexpr auto latency = buffer_size / sps_div;
-   static constexpr auto headroom = 3.0f;
+   static constexpr auto headroom = 2.5f;
 
    my_processor()
    {
