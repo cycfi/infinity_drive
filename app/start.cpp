@@ -46,6 +46,13 @@ struct my_processor
 
    my_processor()
    {
+      _sustainers[0].gain(0.9f);    // E
+      _sustainers[1].gain(0.9f);    // A
+      _sustainers[2].gain(0.8f);    // D
+      _sustainers[3].gain(1.1f);    // G
+      _sustainers[4].gain(1.25f);   // B
+      _sustainers[5].gain(1.6f);    // E
+
       _sustainers[0].cutoff(659);   // E
       _sustainers[1].cutoff(880);   // A
       _sustainers[2].cutoff(1174);  // D
@@ -56,8 +63,8 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      // Disable the sustainer if sustain level is zero.
-      _sustainers[channel].enable(ui.level() != 0.0f);
+      // // Disable the sustainer if sustain level is zero.
+      // _sustainers[channel].enable(ui.level() != 0.0f);
 
       if (channel < 3)
          out[0] += _sustainers[channel](s);
