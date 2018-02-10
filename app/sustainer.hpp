@@ -45,8 +45,6 @@ namespace cycfi { namespace infinity
 
          // Update the envelope follower
          auto env = _env_follow(std::abs(s));
-         // Smooth the envelope
-         _env_smooth(env);
 
          // Noise gate
          if (!_noise_gate(env))
@@ -75,7 +73,7 @@ namespace cycfi { namespace infinity
       void update_level(float level)
       {
          auto param = std::pow(2, level) - 1.0f;
-         _level += _level_pid(param * set_point_max, _env_smooth());
+         _level += _level_pid(param * set_point_max, _env_follow());
 
          // Clamp the level to 0 to max_gain
          _level = std::max(std::min(_level, max_gain), 0.0f);
@@ -88,7 +86,6 @@ namespace cycfi { namespace infinity
       q::dc_block          _dc_block;
       q::envelope_follower _env_follow;
       q::window_comparator _noise_gate { low_threshold, high_threshold };
-      q::one_pole_lowpass  _env_smooth { 0.1f, sps };
       q::one_pole_lowpass  _lpf { 2000.0f, sps };
 
       pid_type             _level_pid;
