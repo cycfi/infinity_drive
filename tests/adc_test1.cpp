@@ -41,7 +41,7 @@ inf::adc<1, 1> adc;
 ///////////////////////////////////////////////////////////////////////////////
 // ADC conversion complete task
 volatile int32_t adc_val = 0;
-inf::one_pole_lp lp{10.0f, sampling_rate}; // 10Hz low pass filter
+inf::one_pole_lowpass lp{10.0f, sampling_rate}; // 10Hz low pass filter
 
 inline void conversion_complete()
 {

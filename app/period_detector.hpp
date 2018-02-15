@@ -148,7 +148,7 @@ namespace cycfi { namespace infinity
 
       int            _min, _max;
       int            _prev = 0;
-      q::one_pole_lp _lp;
+      q::one_pole_lowpass _lp;
    };
 }}
 
