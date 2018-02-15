@@ -92,6 +92,19 @@ namespace cycfi { namespace infinity
    void error_handler();
 
    ////////////////////////////////////////////////////////////////////////////
+   // debounce
+   ////////////////////////////////////////////////////////////////////////////
+   inline bool debounce(uint32_t& time, uint32_t delay)
+   {
+      auto now = millis();
+      auto elapsed = now - time;
+      time = now;
+      if (elapsed < delay)
+         return false;
+      return true;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    // Quick to_string implementation.
    //
    //    n: integer to convert, scaled it by frac if you need

@@ -63,9 +63,7 @@ namespace cycfi { namespace infinity
          if (elapsed < 5)
             return;
 
-         // float scaled_incr = (elapsed > 100)? incr : fast_incr;
-         // float scaled_incr = (elapsed > 100)? incr : fast_incr;
-         float scaled_incr =(elapsed < 20)?
+         float scaled_incr = (elapsed < 20)?
             fast_incr :
             incr * std::max<float>(1.0f, (1000.0f * q::fast_inverse(elapsed)))
          ;
@@ -110,7 +108,7 @@ namespace cycfi { namespace infinity
       pin_b_type pin_b;
       float value = 0.0f;
       float incr;
-      std::uint32_t time = 0.0f;
+      std::uint32_t time = 0;
    };
 
    template <typename T>

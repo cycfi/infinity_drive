@@ -30,7 +30,7 @@ namespace cycfi { namespace infinity
       using oled_type = ssd1306<i2c_type, canvas_type>;
       using oled_type_ptr = std::unique_ptr<oled_type>;
       using encoder_type = rotary_encoder<portc+8, portc+9, 24 /*steps*/>;
-      using mode_button_type = input_pin<portc + 10, pull_up>;
+      using mode_button_type = input_pin<portc + 10, pull_up>; //main_button_type;
 
    public:
 
@@ -62,6 +62,8 @@ namespace cycfi { namespace infinity
       param_type        level_enc   { enc, 0.5, 0, 1, 0.001 };
       param_type        phase_enc   { enc, 0, -1, 2, 0.0001 };
       param_type        factor_enc  { enc, 0, 0, 8, 0.001 };
+
+      std::uint32_t     time = 0;
    };
 
    ///////////////////////////////////////////////////////////////////////////////
@@ -70,8 +72,8 @@ namespace cycfi { namespace infinity
    auto ui::setup()
    {
       auto cfg_i2c = i2c.setup();
-      auto cfg_enc = enc.setup();
-      auto cfg_mode_btn = mode_btn.setup([this]{ set_mode(); } , 10);
+      auto cfg_enc = enc.setup(2);
+      auto cfg_mode_btn = mode_btn.setup([this]{ set_mode(); }, 3);
       return [cfg_i2c, cfg_enc, cfg_mode_btn](auto base)
       {
          return cfg_i2c(cfg_enc(cfg_mode_btn(base)));
@@ -82,7 +84,7 @@ namespace cycfi { namespace infinity
    {
       cnv = std::make_unique<oled_type>(i2c);
       enc.start();
-      mode_btn.start(rising_edge);  // call button_task on the rising edge
+      mode_btn.start(port::falling_edge);  // call button_task on the rising edge
 
       factor_enc.activate();
       phase_enc.activate();
@@ -112,6 +114,9 @@ namespace cycfi { namespace infinity
 
    void ui::set_mode()
    {
+      if (!debounce(time, 50))
+         return;
+
       switch (mode)
       {
          default:
