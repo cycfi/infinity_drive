@@ -20,13 +20,13 @@ namespace cycfi { namespace infinity
       // float static constexpr i = 0.0f;       // Integral gain
       // float static constexpr d = 0.03f;      // Derivative gain
 
-      // float static constexpr p = 1.5f;       // Proportional gain
-      // float static constexpr i = 0.0f;       // Integral gain
-      // float static constexpr d = 0.1f;       // Derivative gain
-
-      float static constexpr p = 0.5f;       // Proportional gain
+      float static constexpr p = 1.5f;       // Proportional gain
       float static constexpr i = 0.0f;       // Integral gain
-      float static constexpr d = 0.2f;       // Derivative gain
+      float static constexpr d = 0.1f;       // Derivative gain
+
+      // float static constexpr p = 0.5f;       // Proportional gain
+      // float static constexpr i = 0.0f;       // Integral gain
+      // float static constexpr d = 0.2f;       // Derivative gain
       uint32_t static constexpr sps = 100;   // Update Frequency (Hz)
    };
 
@@ -36,7 +36,7 @@ namespace cycfi { namespace infinity
    public:
 
       static constexpr float max_gain = 8;
-      static constexpr float set_point_max = 0.15;
+      static constexpr float set_point_max = 0.5;
       static constexpr float low_threshold = 0.01f;
       static constexpr float high_threshold = 0.05f;
 
