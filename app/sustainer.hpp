@@ -35,7 +35,7 @@ namespace cycfi { namespace infinity
    {
    public:
 
-      static constexpr float max_gain = 8;
+      static constexpr float max_gain = 4;
       static constexpr float set_point_max = 0.5;
       static constexpr float low_threshold = 0.01f;
       static constexpr float high_threshold = 0.05f;
