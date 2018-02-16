@@ -46,19 +46,26 @@ struct my_processor
 
    my_processor()
    {
-      _sustainers[0].gain(0.9f);    // E
-      _sustainers[1].gain(0.9f);    // A
-      _sustainers[2].gain(0.8f);    // D
-      _sustainers[3].gain(1.1f);    // G
-      _sustainers[4].gain(1.25f);   // B
-      _sustainers[5].gain(1.6f);    // E
+      _sustainers[0].gain(0.9f);       // E
+      _sustainers[1].gain(0.9f);       // A
+      _sustainers[2].gain(0.8f);       // D
+      _sustainers[3].gain(1.1f);       // G
+      _sustainers[4].gain(1.25f);      // B
+      _sustainers[5].gain(1.6f);       // E
 
-      _sustainers[0].cutoff(659);   // E
-      _sustainers[1].cutoff(880);   // A
-      _sustainers[2].cutoff(1174);  // D
-      _sustainers[3].cutoff(1568);  // G
-      _sustainers[4].cutoff(1975);  // B
-      _sustainers[5].cutoff(2637);  // E
+      _sustainers[0].max_gain(1.5f);   // E
+      _sustainers[1].max_gain(1.5f);   // A
+      _sustainers[2].max_gain(1.5f);   // D
+      _sustainers[3].max_gain(3.0f);   // G
+      _sustainers[4].max_gain(4.0f);   // B
+      _sustainers[5].max_gain(4.0f);   // E
+
+      _sustainers[0].cutoff(659);      // E
+      _sustainers[1].cutoff(880);      // A
+      _sustainers[2].cutoff(1174);     // D
+      _sustainers[3].cutoff(1568);     // G
+      _sustainers[4].cutoff(1975);     // B
+      _sustainers[5].cutoff(2637);     // E
    }
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
