@@ -42,7 +42,7 @@ struct my_processor
    static constexpr auto sampling_rate = clock;
    static constexpr auto buffer_size = 8;
    static constexpr auto latency = buffer_size / sps_div;
-   static constexpr auto headroom = 2.0f;
+   static constexpr auto headroom = 1.2f;
 
    my_processor()
    {
@@ -53,11 +53,11 @@ struct my_processor
       _sustainers[4].gain(1.25f);      // B
       _sustainers[5].gain(1.6f);       // E
 
-      _sustainers[0].max_gain(1.5f);   // E
-      _sustainers[1].max_gain(1.5f);   // A
+      _sustainers[0].max_gain(1.0f);   // E
+      _sustainers[1].max_gain(1.0f);   // A
       _sustainers[2].max_gain(1.5f);   // D
-      _sustainers[3].max_gain(3.0f);   // G
-      _sustainers[4].max_gain(4.0f);   // B
+      _sustainers[3].max_gain(2.0f);   // G
+      _sustainers[4].max_gain(3.0f);   // B
       _sustainers[5].max_gain(4.0f);   // E
 
       _sustainers[0].cutoff(659);      // E
@@ -83,14 +83,13 @@ struct my_processor
          auto out0 = out[0];
          auto out1 = out[1];
 
-         // Update the output envelope followers with
-         // some headroom for the limiters.
-         _env[0](out0 * headroom);
-         _env[1](out1 * headroom);
+         // Update the output envelope followers
+         _env_lp[0](_env[0](std::abs(out0)));
+         _env_lp[1](_env[1](std::abs(out1)));
 
-         // Limit the outputs to 1.0f
-         out0 = _lim(out0, _env[0]());
-         out1 = _lim(out1, _env[1]());
+         // Limit the outputs to 1.0f with some headroom.
+         out0 = _lim(out0, _env_lp[0]() * headroom);
+         out1 = _lim(out1, _env_lp[1]() * headroom);
 
          // Soft-clip the final result and limit the output to 0.8
          // of the value so the DAC won't clip (The STM32F4 DAC has
@@ -112,6 +111,7 @@ struct my_processor
 
    sustainer_array_type                _sustainers;
    std::array<q::envelope_follower, 2> _env;
+   std::array<q::one_pole_lowpass, 2>  _env_lp = {{{100.0f, sps},{100.0f, sps}}};
    q::hard_limiter                     _lim;
 };
 

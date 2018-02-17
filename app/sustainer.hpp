@@ -17,7 +17,7 @@ namespace cycfi { namespace infinity
    struct level_pid_config
    {
       float static constexpr p = 0.8f;       // Proportional gain
-      float static constexpr i = 0.02f;       // Integral gain
+      float static constexpr i = 0.00f;      // Integral gain
       float static constexpr d = 0.03f;      // Derivative gain
 
 
