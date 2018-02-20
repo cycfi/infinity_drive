@@ -80,7 +80,7 @@ namespace cycfi { namespace infinity
                auto src_base = src;
                std::uint32_t val = 0;
                for (auto j = 0; j != oversampling; ++j)
-                  val += (*src_base++)[c];
+                  val += Base::downsample((*src_base++)[c], j);
                Base::process(*i, convert(val), c);
             }
             src += oversampling;

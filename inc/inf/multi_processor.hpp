@@ -116,11 +116,11 @@ namespace cycfi { namespace infinity
 
       template <std::size_t... channels>
       auto config()
-      {         
+      {
          // Config the timer (clock)
          auto cfg1 = _clock.setup(
-            adc_clock_rate, 
-            sampling_rate, 
+            adc_clock_rate,
+            sampling_rate,
             [this]() { this->irq_timer_task(); }
          );
 
@@ -163,7 +163,7 @@ namespace cycfi { namespace infinity
       /////////////////////////////////////////////////////////////////////////
       static float convert(std::uint32_t sample)
       {
-         return (sample / float(half_resolution * oversampling)) - 1.0f;
+         return (sample / float(half_resolution)) - 1.0f;
       }
 
       void irq_conversion_half_complete()

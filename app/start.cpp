@@ -68,7 +68,12 @@ struct my_processor
       _sustainers[5].cutoff(2637);     // E
    }
 
-   void process(std::array<float, 2>& out, float s, uint32_t channel)
+   std::uint32_t downsample(std::uint32_t s, std::uint32_t i)
+   {
+      return s / oversampling;
+   }
+
+   void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
       // // Disable the sustainer if sustain level is zero.
       // _sustainers[channel].enable(ui.level() != 0.0f);
