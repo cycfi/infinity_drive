@@ -15,7 +15,7 @@ namespace cycfi { namespace infinity
 
    struct delta_filter
    {
-      delta_filter(float dfreq, uint32_t sps)
+      delta_filter(float dfreq, std::uint32_t sps)
        : _dlp(dfreq, sps)
       {}
 

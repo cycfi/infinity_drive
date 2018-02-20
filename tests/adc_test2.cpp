@@ -12,7 +12,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ADC and DAC test. We read the signal from ADC channel 0 (pin PA0)
 // and send it out through the DAC (pin PA4). The ADC is buffered. The DAC
-// output will be delayed by 1024 samples (the buffer size). With a sampling 
+// output will be delayed by 1024 samples (the buffer size). With a sampling
 // rate of 32kHz, the delay will be 16ms. This delay is computed as:
 //
 //    ((1/32000) * 1024) / 2
@@ -22,13 +22,13 @@
 //
 //    conversion_half_complete
 //
-// and then again when it concludes the entire conversion for the entire 
+// and then again when it concludes the entire conversion for the entire
 // buffer:
 //
 //    conversion_complete
 //
 // Setup: Connect an input signal (e.g. signal gen) to pin PA0. Connect
-// pin PA4 to an oscilloscope to see the waveform. 
+// pin PA4 to an oscilloscope to see the waveform.
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
@@ -37,7 +37,7 @@ using namespace inf::port;
 using inf::delay_ms;
 
 constexpr int sampling_rate = 32000;
-constexpr uint32_t adc_clock_rate = 2000000;
+constexpr std::uint32_t adc_clock_rate = 2000000;
 constexpr unsigned buffer_size = 1024;
 
 ///////////////////////////////////////////////////////////////////////////////

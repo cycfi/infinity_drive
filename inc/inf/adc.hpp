@@ -21,16 +21,16 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    // adc
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t id>
+   template <size_t id>
    struct adc_conversion_half_complete {};
-   
-   template <std::size_t id>
+
+   template <size_t id>
    struct adc_conversion_complete {};
 
    template <
-      std::size_t id_
-    , std::size_t channels_
-    , std::size_t buffer_size_ = 8
+      size_t id_
+    , size_t channels_
+    , size_t buffer_size_ = 8
    >
    class adc
    {
@@ -44,15 +44,15 @@ namespace cycfi { namespace infinity
       using buffer_type = std::array<sample_group_type, buffer_size_> ;
       using buffer_iterator_type = typename buffer_type::const_iterator;
 
-      static constexpr std::size_t id = id_;
-      static constexpr std::size_t channels = channels_;
-      static constexpr std::size_t buffer_size = buffer_size_;
-      static constexpr std::size_t resolution = 4096;
+      static constexpr size_t id = id_;
+      static constexpr size_t channels = channels_;
+      static constexpr size_t buffer_size = buffer_size_;
+      static constexpr size_t resolution = 4096;
 
       using half_complete_id = adc_conversion_half_complete<id>;
       using complete_id = adc_conversion_complete<id>;
 
-      template <std::size_t tid>
+      template <size_t tid>
       void init(timer<tid> const&)
       {
          static_assert(detail::valid_adc_timer(tid), "Invalid Timer for ADC");
@@ -83,7 +83,7 @@ namespace cycfi { namespace infinity
          clear();
       }
 
-      template <std::size_t tid, typename F>
+      template <size_t tid, typename F>
       auto setup(timer<tid> const& tmr, F complete_task)
       {
          init(tmr);
@@ -93,7 +93,7 @@ namespace cycfi { namespace infinity
          };
       }
 
-      template <std::size_t tid, typename F1, typename F2>
+      template <size_t tid, typename F1, typename F2>
       auto setup(timer<tid> const& tmr, F1 half_complete_task, F2 complete_task)
       {
          init(tmr);
@@ -104,7 +104,7 @@ namespace cycfi { namespace infinity
          };
       }
 
-      template <std::size_t... channels>
+      template <size_t... channels>
       auto enable_channels()
       {
          static_assert(sizeof...(channels) == channels_,
@@ -136,15 +136,15 @@ namespace cycfi { namespace infinity
          detail::stop_adc(get_adc());
       }
 
-      constexpr std::size_t size() { return buffer_size; }
-      constexpr std::size_t num_channels() { return channels; }
+      constexpr size_t size() { return buffer_size; }
+      constexpr size_t num_channels() { return channels; }
 
       buffer_iterator_type begin() const { return _data.begin(); }
       buffer_iterator_type middle() const { return _data.begin() + (buffer_size / 2); }
       buffer_iterator_type end() const { return _data.end(); }
 
-      sample_group_type& operator[](std::size_t i) { return _data[i]; }
-      sample_group_type const& operator[](std::size_t i) const { return _data[i]; }
+      sample_group_type& operator[](size_t i) { return _data[i]; }
+      sample_group_type const& operator[](size_t i) const { return _data[i]; }
 
    private:
 
@@ -155,23 +155,23 @@ namespace cycfi { namespace infinity
          return base;
       }
 
-      template <typename T, std::size_t channel, std::size_t... rest>
+      template <typename T, size_t channel, size_t... rest>
       static auto config_all_channels(T base, std::index_sequence<channel, rest...>)
       {
-         static constexpr std::size_t pin = detail::get_adc_pin<channel>(id);
+         static constexpr size_t pin = detail::get_adc_pin<channel>(id);
          auto cfg = make_basic_config<io_pin_id<pin>>(base);
          return config_all_channels(cfg, std::index_sequence<rest...>{});
       }
 
-      template <std::size_t channel, std::size_t rank>
+      template <size_t channel, size_t rank>
       static void enable_one_channel()
       {
          static_assert(detail::valid_adc_channel(channel), "Invalid ADC Channel");
 
-         static constexpr std::size_t pin = detail::get_adc_pin<channel>(id);
+         static constexpr size_t pin = detail::get_adc_pin<channel>(id);
          static constexpr uint16_t bit = pin % 16;
          static constexpr uint16_t port = pin / 16;
-         static constexpr uint32_t mask = 1 << bit;
+         static constexpr std::uint32_t mask = 1 << bit;
 
          auto* gpio = &detail::get_port<port>();
 
@@ -186,13 +186,13 @@ namespace cycfi { namespace infinity
             get_adc(), detail::adc_channel<channel>(), detail::adc_rank<rank>());
       }
 
-      template <std::size_t rank>
+      template <size_t rank>
       static void enable_all_channels(std::index_sequence<>)
       {
          // end recursion
       }
 
-      template <std::size_t rank, std::size_t channel, std::size_t... rest>
+      template <size_t rank, size_t channel, size_t... rest>
       static void enable_all_channels(std::index_sequence<channel, rest...>)
       {
          enable_one_channel<channel, rank>();

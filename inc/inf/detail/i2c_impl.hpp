@@ -13,13 +13,13 @@
 namespace cycfi { namespace infinity { namespace detail
 {
    template <std::size_t pin>
-   struct scl_pin 
+   struct scl_pin
    {
       static const int i2c_id = -1;
    };
 
    template <std::size_t pin>
-   struct sda_pin 
+   struct sda_pin
    {
       static const int i2c_id = -1;
    };
@@ -84,7 +84,7 @@ namespace cycfi { namespace infinity { namespace detail
 
    inline void i2c_write(
       std::size_t id, std::uint32_t addr,
-      uint8_t const* data, uint32_t len, uint32_t timeout)
+      uint8_t const* data, std::uint32_t len, std::uint32_t timeout)
    {
       HAL_I2C_Master_Transmit(
          &i2c_handles[id-1], addr, const_cast<uint8_t*>(data), len, timeout);
@@ -92,7 +92,7 @@ namespace cycfi { namespace infinity { namespace detail
 
    inline void i2c_read(
       std::size_t id, std::uint32_t addr,
-      uint8_t* data, uint32_t len, uint32_t timeout)
+      uint8_t* data, std::uint32_t len, std::uint32_t timeout)
    {
       HAL_I2C_Master_Receive(
          &i2c_handles[id-1], addr, data, len, timeout);
@@ -100,7 +100,7 @@ namespace cycfi { namespace infinity { namespace detail
 
    inline void i2c_mem_write(
       std::size_t id, std::uint32_t addr, uint16_t mem_addr, uint16_t mem_size,
-      uint8_t const* data, uint32_t len, uint32_t timeout)
+      uint8_t const* data, std::uint32_t len, std::uint32_t timeout)
    {
       HAL_I2C_Mem_Write(
          &i2c_handles[id-1], addr, mem_addr, mem_size, const_cast<uint8_t*>(data), len, timeout);
@@ -108,7 +108,7 @@ namespace cycfi { namespace infinity { namespace detail
 
    inline void i2c_mem_read(
       std::size_t id, std::uint32_t addr, uint16_t mem_addr, uint16_t mem_size,
-      uint8_t* data, uint32_t len, uint32_t timeout)
+      uint8_t* data, std::uint32_t len, std::uint32_t timeout)
    {
       HAL_I2C_Mem_Read(
          &i2c_handles[id-1], addr, mem_addr, mem_size, data, len, timeout);

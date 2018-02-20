@@ -28,18 +28,18 @@ namespace cycfi { namespace infinity
       // tap representation
       struct tap
       {
-         tap(T secs, uint32_t sps) : tsamples(secs * sps) {}
+         tap(T secs, std::uint32_t sps) : tsamples(secs * sps) {}
          T tsamples; // time in samples
       };
 
       // constructor (max_delay in seconds)
-      delay(T max_delay, uint32_t sps)
+      delay(T max_delay, std::uint32_t sps)
        : lu(std::size_t(std::ceil(max_delay * sps)))
       {}
 
       // constructor (max_delay in seconds)
       template <typename Taps>
-      delay(T max_delay, Taps const& taps, uint32_t sps)
+      delay(T max_delay, Taps const& taps, std::uint32_t sps)
        : lu(std::size_t(std::ceil(max_delay * sps)))
        , taps(taps)
       {}
@@ -90,13 +90,13 @@ namespace cycfi { namespace infinity
       typedef Interpolation interpolation_type;
 
       // constructor (max_delay in seconds)
-      single_delay(T max_delay, uint32_t sps)
+      single_delay(T max_delay, std::uint32_t sps)
        : lu(std::size_t(std::ceil(max_delay * sps)))
        , tsamples_delay(max_delay * sps)
       {}
 
       // constructor (max_delay and delay in seconds)
-      single_delay(T max_delay, T delay, uint32_t sps)
+      single_delay(T max_delay, T delay, std::uint32_t sps)
        : lu(std::size_t(std::ceil(max_delay * sps)))
        , tsamples_delay(delay * sps)
       {}
@@ -141,7 +141,7 @@ namespace cycfi { namespace infinity
       }
 
       // get/set the delay (in seconds)
-      void delay(T delay, uint32_t sps) { tsamples_delay = delay * sps; }
+      void delay(T delay, std::uint32_t sps) { tsamples_delay = delay * sps; }
       T delay(uint32_t sps) const { return tsamples_delay / sps; }
 
       // get/set the delay (in samples)

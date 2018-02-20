@@ -21,7 +21,7 @@ namespace cycfi { namespace infinity
    {
       static_assert(detail::valid_scl_pin<scl_pin_>(), "Invalid SCL pin");
       static_assert(detail::valid_sda_pin<sda_pin_>(), "Invalid SDA pin");
-      
+
       static constexpr std::size_t scl_pin = scl_pin_;
       static constexpr std::size_t sda_pin = sda_pin_;
       static constexpr std::size_t id = detail::scl_pin<scl_pin>::i2c_id;
@@ -42,30 +42,30 @@ namespace cycfi { namespace infinity
 
       void write(
          std::uint32_t addr, std::uint8_t const* data,
-         std::size_t len, uint32_t timeout = 0xffffffff
+         std::size_t len, std::uint32_t timeout = 0xffffffff
       );
 
       void read(
          std::uint32_t addr, std::uint8_t* data,
-         std::size_t len, uint32_t timeout = 0xffffffff
+         std::size_t len, std::uint32_t timeout = 0xffffffff
       );
 
       void mem_write8(
-         std::uint32_t addr, std::uint16_t mem_addr, std::uint8_t data, 
-         uint32_t timeout = 0xffffffff
+         std::uint32_t addr, std::uint16_t mem_addr, std::uint8_t data,
+         std::uint32_t timeout = 0xffffffff
       );
 
       void mem_write16(
-         std::uint32_t addr, std::uint16_t mem_addr, std::uint16_t data, 
-         uint32_t timeout = 0xffffffff
+         std::uint32_t addr, std::uint16_t mem_addr, std::uint16_t data,
+         std::uint32_t timeout = 0xffffffff
       );
 
       std::uint8_t mem_read8(
-         std::uint32_t addr, std::uint16_t mem_addr, uint32_t timeout = 0xffffffff
+         std::uint32_t addr, std::uint16_t mem_addr, std::uint32_t timeout = 0xffffffff
       );
-   
+
       std::uint16_t mem_read16(
-         std::uint32_t addr, std::uint16_t mem_addr, uint32_t timeout = 0xffffffff
+         std::uint32_t addr, std::uint16_t mem_addr, std::uint32_t timeout = 0xffffffff
       );
    };
 
@@ -77,11 +77,11 @@ namespace cycfi { namespace infinity
    {
       static constexpr auto scl_port = scl_pin / 16;
       static constexpr auto sda_port = sda_pin / 16;
-      
+
       // Enable GPIO peripheral clocks
       detail::enable_port_clock<scl_port>();
       detail::enable_port_clock<sda_port>();
-      
+
       detail::i2c_config(
          id,
          detail::get_port<scl_port>(),
@@ -94,7 +94,7 @@ namespace cycfi { namespace infinity
    template <std::size_t scl_pin, std::size_t sda_pin>
    inline void i2c_master<scl_pin, sda_pin>::write(
       std::uint32_t addr, std::uint8_t const* data,
-      std::size_t len, uint32_t timeout
+      std::size_t len, std::uint32_t timeout
    )
    {
       detail::i2c_write(id, addr, data, len, timeout);
@@ -103,7 +103,7 @@ namespace cycfi { namespace infinity
    template <std::size_t scl_pin, std::size_t sda_pin>
    inline void i2c_master<scl_pin, sda_pin>::read(
       std::uint32_t addr, std::uint8_t* data,
-      std::size_t len, uint32_t timeout
+      std::size_t len, std::uint32_t timeout
    )
    {
       detail::i2c_read(id, addr, data, len, timeout);
@@ -111,42 +111,42 @@ namespace cycfi { namespace infinity
 
    template <std::size_t scl_pin, std::size_t sda_pin>
    inline void i2c_master<scl_pin, sda_pin>::mem_write8(
-      std::uint32_t addr, std::uint16_t mem_addr, std::uint8_t data, 
-      uint32_t timeout
+      std::uint32_t addr, std::uint16_t mem_addr, std::uint8_t data,
+      std::uint32_t timeout
    )
    {
-      detail::i2c_mem_write(id, addr, mem_addr, 1, &data, 1, timeout);      
+      detail::i2c_mem_write(id, addr, mem_addr, 1, &data, 1, timeout);
    }
 
    template <std::size_t scl_pin, std::size_t sda_pin>
    inline void i2c_master<scl_pin, sda_pin>::mem_write16(
-      std::uint32_t addr, std::uint16_t mem_addr, std::uint16_t data, 
-      uint32_t timeout
+      std::uint32_t addr, std::uint16_t mem_addr, std::uint16_t data,
+      std::uint32_t timeout
    )
    {
-      detail::i2c_mem_write(id, addr, mem_addr, 2, 
+      detail::i2c_mem_write(id, addr, mem_addr, 2,
          reinterpret_cast<std::uint8_t const*>(&data), 2, timeout);
    }
 
    template <std::size_t scl_pin, std::size_t sda_pin>
    inline std::uint8_t i2c_master<scl_pin, sda_pin>::mem_read8(
-      std::uint32_t addr, std::uint16_t mem_addr, uint32_t timeout
+      std::uint32_t addr, std::uint16_t mem_addr, std::uint32_t timeout
    )
    {
       std::uint8_t result;
       detail::i2c_mem_read(id, addr, mem_addr, 1, &result, 1, timeout);
-      return result; 
+      return result;
    }
 
    template <std::size_t scl_pin, std::size_t sda_pin>
    inline std::uint16_t i2c_master<scl_pin, sda_pin>::mem_read16(
-      std::uint32_t addr, std::uint16_t mem_addr, uint32_t timeout
+      std::uint32_t addr, std::uint16_t mem_addr, std::uint32_t timeout
    )
    {
       std::uint16_t result;
-      detail::i2c_mem_read(id, addr, mem_addr, 2, 
+      detail::i2c_mem_read(id, addr, mem_addr, 2,
          reinterpret_cast<std::uint8_t*>(&result), 2, timeout);
-      return result; 
+      return result;
    }
 }}
 

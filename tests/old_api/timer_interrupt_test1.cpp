@@ -17,7 +17,7 @@ using namespace inf::port;
 using inf::main_led_type;
 
 main_led_type main_led;
-constexpr uint32_t base_freq = 10000;
+constexpr std::uint32_t base_freq = 10000;
 
 void start()
 {

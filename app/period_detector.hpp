@@ -75,7 +75,7 @@ namespace cycfi { namespace infinity
        : _lp(a)
       {}
 
-      period_detector(float freq, uint32_t sps)
+      period_detector(float freq, std::uint32_t sps)
        : _lp(freq, sps)
       {}
 

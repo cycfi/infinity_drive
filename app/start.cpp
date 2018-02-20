@@ -83,9 +83,6 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      // // Disable the sustainer if sustain level is zero.
-      // _sustainers[channel].enable(ui.level() != 0.0f);
-
       if (channel < 3)
          out[0] += _sustainers[channel](s);
       else

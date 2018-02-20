@@ -27,17 +27,17 @@ namespace cycfi { namespace infinity
       timer() = default;
       timer(timer const&) = delete;
       timer& operator=(timer const&) = delete;
-      
-      void init(uint32_t clock_frequency, uint32_t frequency)
+
+      void init(uint32_t clock_frequency, std::uint32_t frequency)
       {
          detail::system_clock_config();
-         
+
          // Enable the timer peripheral clock
          periph_enable();
 
          // Set the pre-scaler value
-         uint32_t timer_clock = SystemCoreClock / detail::timer_clock_div<id>();
-         LL_TIM_SetPrescaler(get_timer(), 
+         std::uint32_t timer_clock = SystemCoreClock / detail::timer_clock_div<id>();
+         LL_TIM_SetPrescaler(get_timer(),
             __LL_TIM_CALC_PSC(timer_clock, clock_frequency));
 
          // Set the auto-reload value to have an initial update event frequency
@@ -49,7 +49,7 @@ namespace cycfi { namespace infinity
 
       void enable_interrupt(std::size_t priority = 0)
       {
-         static_assert(detail::timer_irqn<id>() != -1, 
+         static_assert(detail::timer_irqn<id>() != -1,
             "Timer has no interrupt capability.");
 
          // Enable the update interrupt
@@ -75,12 +75,12 @@ namespace cycfi { namespace infinity
       }
 
       auto setup(
-         uint32_t clock_frequency, uint32_t frequency, 
+         std::uint32_t clock_frequency, std::uint32_t frequency,
          std::size_t priority = 0)
       {
          init(clock_frequency, frequency);
          enable_interrupt();
-         return [](auto base) 
+         return [](auto base)
          {
             return make_basic_config<self_type>(base);
          };
@@ -88,12 +88,12 @@ namespace cycfi { namespace infinity
 
       template <typename F>
       auto setup(
-         uint32_t clock_frequency, uint32_t frequency, 
+         std::uint32_t clock_frequency, std::uint32_t frequency,
          F task, std::size_t priority = 0)
       {
          init(clock_frequency, frequency);
          enable_interrupt();
-         return [task](auto base) 
+         return [task](auto base)
          {
             return make_task_config<self_type>(base, task);
          };

@@ -26,7 +26,7 @@ using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
-constexpr uint32_t sps = 40000;
+constexpr std::uint32_t sps = 40000;
 
 auto synth1 = q::fm(440.0, 0.0, 4.0, sps);
 auto synth2 = q::sin(440.0, sps);
@@ -54,7 +54,7 @@ void timer_task()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
-constexpr uint32_t tmr_freq = 80000000;
+constexpr std::uint32_t tmr_freq = 80000000;
 
 auto config = inf::config(
    tpin.setup(),

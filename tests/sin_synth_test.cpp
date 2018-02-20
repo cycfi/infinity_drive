@@ -25,7 +25,7 @@ using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
-constexpr uint32_t sps = 44100;
+constexpr std::uint32_t sps = 44100;
 
 auto synth1 = q::sin(440.0, sps);
 auto synth2 = q::sin(440.0, sps, q::pi / 2); // 90 degree shift
@@ -50,7 +50,7 @@ void timer_task()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
-constexpr uint32_t tmr_freq = 80000000;
+constexpr std::uint32_t tmr_freq = 80000000;
 
 auto config = inf::config(
    dac1.setup(),

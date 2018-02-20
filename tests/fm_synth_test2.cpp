@@ -41,7 +41,7 @@ using mode_button_type = inf::input_pin<portc + 10, pull_up>;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
-constexpr uint32_t sps = 40000;
+constexpr std::uint32_t sps = 40000;
 constexpr float initial_modulator_gain = 0.2;
 constexpr float initial_frequency = 110.0;
 constexpr float initial_factor = 4.0;
@@ -150,7 +150,7 @@ void generate()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
-constexpr uint32_t tmr_freq = 80000000;
+constexpr std::uint32_t tmr_freq = 80000000;
 
 auto config = inf::config(
    dac1.setup(),

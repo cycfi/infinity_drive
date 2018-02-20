@@ -12,8 +12,8 @@ namespace cycfi { namespace infinity { namespace detail
 
    void adc_dma_config(
       ADC_TypeDef* adc_n,
-      uint32_t dma_stream,
-      uint32_t dma_channel,
+      std::uint32_t dma_stream,
+      std::uint32_t dma_channel,
       IRQn_Type dma_channel_irq,
       uint16_t values[],
       uint16_t size
@@ -80,7 +80,7 @@ namespace cycfi { namespace infinity { namespace detail
 
    namespace
    {
-      uint32_t seq_length(uint32_t num_channels)
+      std::uint32_t seq_length(uint32_t num_channels)
       {
          switch (num_channels)
          {
@@ -105,9 +105,9 @@ namespace cycfi { namespace infinity { namespace detail
 
    void adc_config(
       ADC_TypeDef* adc,
-      uint32_t timer_trigger_id,
-      uint32_t adc_periph_id,
-      uint32_t num_channels
+      std::uint32_t timer_trigger_id,
+      std::uint32_t adc_periph_id,
+      std::uint32_t num_channels
    )
    {
       // Configuration of NVIC

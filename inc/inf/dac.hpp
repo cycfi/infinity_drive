@@ -27,7 +27,7 @@ namespace cycfi { namespace infinity
    {
       static constexpr uint16_t dac_gpio =
          (Channel == 0) ? LL_GPIO_PIN_4 : LL_GPIO_PIN_5;
-      static constexpr uint32_t dac_channel =
+      static constexpr std::uint32_t dac_channel =
          (Channel == 0) ? LL_DAC_CHANNEL_1 : LL_DAC_CHANNEL_2;
 
       using dac_peripheral_id = io_pin_id<

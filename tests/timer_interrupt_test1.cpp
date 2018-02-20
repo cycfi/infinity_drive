@@ -29,7 +29,7 @@ void timer_task()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
-constexpr uint32_t base_freq = 10000;
+constexpr std::uint32_t base_freq = 10000;
 
 auto config = inf::config(
    main_led.setup(),

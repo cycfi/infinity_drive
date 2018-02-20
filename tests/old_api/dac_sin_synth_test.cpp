@@ -21,8 +21,8 @@
 namespace inf = cycfi::infinity;
 using namespace inf::port;
 
-constexpr uint32_t tmr_freq = 80000000;
-constexpr uint32_t sps = 100000;
+constexpr std::uint32_t tmr_freq = 80000000;
+constexpr std::uint32_t sps = 100000;
 
 // our synthesizer
 inf::sin synth(1000.0, sps);
@@ -44,7 +44,7 @@ void start()
 void irq(timer_task<3>)
 {
    // We generate a 12 bit signal, but we do not want to saturate the
-   // DAC output buffer (the buffer is not rail-to-rail), so we limit 
+   // DAC output buffer (the buffer is not rail-to-rail), so we limit
    // the signal to 0.9.
    uint16_t val = (0.9f * synth() * 2047) + 2048;
    dac(val);

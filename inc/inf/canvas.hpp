@@ -43,7 +43,7 @@ namespace cycfi { namespace infinity
    // mono_canvas canvas. This is implements routines for drawing
    // into monochromatic OLED frame buffers.
    ////////////////////////////////////////////////////////////////////////////
-   template <std::size_t width_, std::size_t height_>
+   template <size_t width_, size_t height_>
    struct mono_canvas
    {
    public:
@@ -52,7 +52,7 @@ namespace cycfi { namespace infinity
       using color = monochrome::color;
       using font = monochrome::font;
       using bitmap = monochrome::bitmap;
-      static std::size_t const size = (width * height) / 8;
+      static size_t const size = (width * height) / 8;
 
       mono_canvas(std::uint8_t* buffer_)
        : _buffer(buffer_)
@@ -80,8 +80,8 @@ namespace cycfi { namespace infinity
       std::uint8_t*           end()          { return _buffer + size; }
       std::uint8_t const*     end() const    { return _buffer + size; }
 
-      std::uint8_t&           operator[](std::size_t i)        { return _buffer[i]; }
-      std::uint8_t const      operator[](std::size_t i) const  { return _buffer[i]; }
+      std::uint8_t&           operator[](size_t i)        { return _buffer[i]; }
+      std::uint8_t const      operator[](size_t i) const  { return _buffer[i]; }
 
    private:
 

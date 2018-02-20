@@ -52,7 +52,7 @@ namespace cycfi { namespace infinity
       static constexpr float low_threshold = Config::low_threshold;
       static constexpr float high_threshold = Config::high_threshold;
 
-      agc(float decay, uint32_t sps)
+      agc(float decay, std::uint32_t sps)
        : _env_follow(decay, sps)
        , _dc_block(10.0f /* hz */, sps)
       {}

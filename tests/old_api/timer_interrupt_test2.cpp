@@ -13,7 +13,7 @@
 // but since the toggling of the pin happens to halve this frequency, you'll
 // see a frequency of 100kHz.
 //
-// Setup connect an oscilloscope probe to pin PC3 
+// Setup connect an oscilloscope probe to pin PC3
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace inf = cycfi::infinity;
@@ -22,8 +22,8 @@ using inf::output_pin;
 
 output_pin<porta + 0> pin; // porta, pin 0
 
-constexpr uint32_t base_freq = 1000000;
-constexpr uint32_t frequency = 200000;
+constexpr std::uint32_t base_freq = 1000000;
+constexpr std::uint32_t frequency = 200000;
 inf::timer<3> tmr(base_freq, frequency);
 
 void start()

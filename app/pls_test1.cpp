@@ -21,7 +21,7 @@ using namespace inf::port;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our synthesizer
-constexpr uint32_t sps = 20000;
+constexpr std::uint32_t sps = 20000;
 
 auto synth = q::sin(110.0, sps);
 auto ref_synth = q::sin(150.0, sps, q::pi/4);
@@ -85,7 +85,7 @@ void timer_task()
    // DAC output buffer (the buffer is not rail-to-rail), so we limit
    // the signals to 0.8.
 
-   static uint32_t sample_clock = 0;
+   static std::uint32_t sample_clock = 0;
 
    auto val = sgate();
    dac1((0.8f * val * 2047) + 2048);
@@ -94,7 +94,7 @@ void timer_task()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
-constexpr uint32_t tmr_freq = 80000000;
+constexpr std::uint32_t tmr_freq = 80000000;
 
 auto config = inf::config(
    dac1.setup(),
