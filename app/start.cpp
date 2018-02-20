@@ -70,7 +70,15 @@ struct my_processor
 
    std::uint32_t downsample(std::uint32_t s, std::uint32_t i)
    {
-      return s / oversampling;
+      // FIR coefficients
+      static constexpr float coeffs[] = {
+         0.12744100383454346,
+         0.38185474794932256,
+         0.38185474794932256,
+         0.12744100383454346
+      };
+
+      return s * coeffs[i];
    }
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
