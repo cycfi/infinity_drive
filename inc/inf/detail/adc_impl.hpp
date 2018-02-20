@@ -23,8 +23,8 @@ namespace cycfi { namespace infinity { namespace detail
 {
    void adc_dma_config(
       ADC_TypeDef* adc_n,
-      uint32_t dma_stream,
-      uint32_t dma_channel,
+      std::uint32_t dma_stream,
+      std::uint32_t dma_channel,
       IRQn_Type dma_channel_irq,
       uint16_t values[],
       uint16_t size
@@ -32,9 +32,9 @@ namespace cycfi { namespace infinity { namespace detail
 
    void adc_config(
       ADC_TypeDef* adc,
-      uint32_t timer_trigger_id,
-      uint32_t adc_periph_id,
-      uint32_t num_channels
+      std::uint32_t timer_trigger_id,
+      std::uint32_t adc_periph_id,
+      std::uint32_t num_channels
    );
 
    inline void activate_adc(ADC_TypeDef* adc)
@@ -199,29 +199,29 @@ namespace cycfi { namespace infinity { namespace detail
    struct adc_info;
 
    template <std::size_t id>
-   uint32_t adc_timer_trigger_id();
+   std::uint32_t adc_timer_trigger_id();
 
    template <std::size_t id>
-   uint32_t adc_rank();
+   std::uint32_t adc_rank();
 
    template <std::size_t id>
-   uint32_t adc_channel();
+   std::uint32_t adc_channel();
 
 #define INFINITY_ADC(id, stream, channel)                                      \
    template <>                                                                 \
    struct adc_info<id>                                                         \
    {                                                                           \
       static constexpr ADC_TypeDef* adc = ADC##id;                             \
-      static constexpr uint32_t periph_id = LL_APB2_GRP1_PERIPH_ADC##id;       \
+      static constexpr std::uint32_t periph_id = LL_APB2_GRP1_PERIPH_ADC##id;  \
       static constexpr IRQn_Type dma_irq_id = DMA2_Stream##stream##_IRQn;      \
-      static constexpr uint32_t dma_stream = LL_DMA_STREAM_##stream;           \
-      static constexpr uint32_t dma_channel = LL_DMA_CHANNEL_##channel;        \
+      static constexpr std::uint32_t dma_stream = LL_DMA_STREAM_##stream;      \
+      static constexpr std::uint32_t dma_channel = LL_DMA_CHANNEL_##channel;   \
    };                                                                          \
    /***/
 
 #define INFINITY_ADC_TIMER_TRIGGER(id)                                         \
    template <>                                                                 \
-   inline uint32_t adc_timer_trigger_id<id>()                                  \
+   inline std::uint32_t adc_timer_trigger_id<id>()                             \
    {                                                                           \
       return LL_ADC_REG_TRIG_EXT_TIM##id##_TRGO;                               \
    }                                                                           \
@@ -229,7 +229,7 @@ namespace cycfi { namespace infinity { namespace detail
 
 #define INFINITY_ADC_RANK(id)                                                  \
    template <>                                                                 \
-   inline uint32_t adc_rank<id>()                                              \
+   inline std::uint32_t adc_rank<id>()                                         \
    {                                                                           \
       return LL_ADC_REG_RANK_##id;                                             \
    }                                                                           \
@@ -237,7 +237,7 @@ namespace cycfi { namespace infinity { namespace detail
 
 #define INFINITY_ADC_CHANNEL(id)                                               \
    template <>                                                                 \
-   inline uint32_t adc_channel<id>()                                           \
+   inline std::uint32_t adc_channel<id>()                                      \
    {                                                                           \
       return LL_ADC_CHANNEL_##id;                                              \
    }                                                                           \

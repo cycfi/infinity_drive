@@ -16,10 +16,10 @@ namespace cycfi { namespace infinity
    //
    //    struct my_pid
    //    {
-   //       float static constexpr p = 0.1f;          // Proportional gain
-   //       float static constexpr i = 0.5f;          // Integral gain
-   //       float static constexpr d = 0.01f;         // Derivative gain
-   //       uint32_t static constexpr sps = 100.0f;   // Update Frequency (Hz)
+   //       float static constexpr p = 0.1f;             // Proportional gain
+   //       float static constexpr i = 0.5f;             // Integral gain
+   //       float static constexpr d = 0.01f;            // Derivative gain
+   //       std::uint32_t static constexpr sps = 100.0f; // Update Frequency (Hz)
    //    };
    //
    //    pid<my_pid> the_pid;

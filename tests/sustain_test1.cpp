@@ -108,10 +108,10 @@ struct my_processor
    using sin_synth = decltype(q::sin(1.0, sps, 0.0));
    using pls_type = inf::pls<sin_synth, sps, latency>;
 
-   sin_synth   _synth = q::sin(0.0, sps, q::pi/4);
-   pls_type    _pls = {_synth };
-   uint32_t    _ticks = 0;
-   float       _level = 0;
+   sin_synth      _synth = q::sin(0.0, sps, q::pi/4);
+   pls_type       _pls = {_synth };
+   std::uint32_t  _ticks = 0;
+   float          _level = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;

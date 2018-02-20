@@ -24,10 +24,10 @@ namespace cycfi { namespace infinity
       // float static constexpr i = 0.0f;       // Integral gain
       // float static constexpr d = 0.1f;       // Derivative gain
 
-      float static constexpr p = 0.5f;       // Proportional gain
-      float static constexpr i = 0.0f;       // Integral gain
-      float static constexpr d = 0.2f;       // Derivative gain
-      uint32_t static constexpr sps = 100;   // Update Frequency (Hz)
+      float static constexpr p = 0.5f;          // Proportional gain
+      float static constexpr i = 0.0f;          // Integral gain
+      float static constexpr d = 0.2f;          // Derivative gain
+      std::uint32_t static constexpr sps = 100; // Update Frequency (Hz)
    };
 
    template <std::uint32_t sps>

@@ -51,9 +51,9 @@ struct my_processor
    using sin_synth = decltype(q::sin(1.0, sps, 0.0));
    using fls_type = inf::freq_locked_synth<sin_synth, sps, latency>;
 
-   sin_synth   _synth = q::sin(0.0, sps, 0.0);
-   fls_type    _fls = {_synth, start_phase};
-   uint32_t    _ticks = 0;
+   sin_synth      _synth = q::sin(0.0, sps, 0.0);
+   fls_type       _fls = {_synth, start_phase};
+   std::uint32_t  _ticks = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;

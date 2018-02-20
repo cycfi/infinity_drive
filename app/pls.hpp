@@ -26,7 +26,7 @@ namespace cycfi { namespace infinity
    // sustain.
    //
    ////////////////////////////////////////////////////////////////////////////
-   template <typename Synth, uint32_t sps, uint32_t latency>
+   template <typename Synth, std::uint32_t sps, std::uint32_t latency>
    class pls
    {
    public:
@@ -40,7 +40,7 @@ namespace cycfi { namespace infinity
        , _target_phase(_start_phase)
       {}
 
-      float operator()(float s, uint32_t sample_clock)
+      float operator()(float s, std::uint32_t sample_clock)
       {
          bool was_active = _agc.active();
          auto agc_out = _agc(s);
@@ -156,9 +156,9 @@ namespace cycfi { namespace infinity
       period_detector      _period_lp = { 0.4 };
       q::one_pole_lowpass  _shift_lp = { 0.001 };
       int                  _stage = stop;
-      uint32_t             _cycles = 0;
+      std::uint32_t        _cycles = 0;
       q::phase_t           _start_phase;
-      uint32_t             _edge_start = 0;
+      std::uint32_t        _edge_start = 0;
       q::phase_t           _target_phase = 0;
       q::phase_t           _prev_freq = 0;
       bool                 _sync = false;

@@ -42,14 +42,14 @@ namespace cycfi { namespace infinity
       push_pull = LL_GPIO_OUTPUT_PUSHPULL,
       open_drain = LL_GPIO_OUTPUT_OPENDRAIN
    };
-   
+
    namespace port
    {
       auto constexpr low_speed = port_output_speed::low_speed;
       auto constexpr mid_speed = port_output_speed::mid_speed;
       auto constexpr high_speed = port_output_speed::high_speed;
       auto constexpr very_high_speed = port_output_speed::very_high_speed;
-      
+
       auto constexpr push_pull = port_output_type::push_pull;
       auto constexpr open_drain = port_output_type::open_drain;
    }
@@ -120,10 +120,10 @@ namespace cycfi { namespace infinity
    >
    struct output_pin
    {
-      static constexpr size_t    n = N;
-      static constexpr uint16_t  bit = N % 16;
-      static constexpr uint16_t  port = N / 16;
-      static constexpr uint32_t  mask = 1 << bit;
+      static constexpr size_t          n = N;
+      static constexpr uint16_t        bit = N % 16;
+      static constexpr uint16_t        port = N / 16;
+      static constexpr std::uint32_t   mask = 1 << bit;
 
       // there are only 9 ports
       static_assert(port < 9, "Invalid port");
@@ -131,7 +131,7 @@ namespace cycfi { namespace infinity
       using self_type = output_pin;
       using inverse_type = inverse_pin<output_pin>;
       using peripheral_id = io_pin_id<N>;
-      
+
       output_pin() = default;
       output_pin(output_pin const&) = default;
 
@@ -144,10 +144,10 @@ namespace cycfi { namespace infinity
          LL_GPIO_SetPinMode(&gpio(), mask, LL_GPIO_MODE_OUTPUT);
 
          // Configure output push pull or open drain
-         LL_GPIO_SetPinOutputType(&gpio(), mask, uint32_t(type));
+         LL_GPIO_SetPinOutputType(&gpio(), mask, std::uint32_t(type));
 
          // Configure output speed
-         LL_GPIO_SetPinSpeed(&gpio(), mask, uint32_t(speed));
+         LL_GPIO_SetPinSpeed(&gpio(), mask, std::uint32_t(speed));
 
          // Configure pull-up/down resistor
          LL_GPIO_SetPinPull(&gpio(), mask, LL_GPIO_PULL_NO);
@@ -156,7 +156,7 @@ namespace cycfi { namespace infinity
       auto setup()
       {
          init();
-         return [](auto base) 
+         return [](auto base)
             -> basic_config<peripheral_id, decltype(base)>
          {
             return {base};
@@ -168,7 +168,7 @@ namespace cycfi { namespace infinity
          return detail::get_port<port>();
       }
 
-      volatile uint32_t& ref() const
+      volatile std::uint32_t& ref() const
       {
          return gpio().ODR;
       }
@@ -225,10 +225,10 @@ namespace cycfi { namespace infinity
 
    enum class port_edge
    {
-      rising, 
+      rising,
       falling
    };
-   
+
    namespace port
    {
       auto constexpr pull_up = port_input_type::pull_up;
@@ -237,7 +237,7 @@ namespace cycfi { namespace infinity
       auto constexpr falling_edge = port_edge::falling;
    }
 
-   // External interrupt IDs (exti_id) are used to ensure there  
+   // External interrupt IDs (exti_id) are used to ensure there
    // are no input ports interrupt (exti) callback clashes
    // (see config.hpp). With STM32, there are 16 possible unique
    // external interrupts.
@@ -250,7 +250,7 @@ namespace cycfi { namespace infinity
       static constexpr size_t    n = N;
       static constexpr uint16_t  bit = N % 16;
       static constexpr uint16_t  port = N / 16;
-      static constexpr uint32_t  mask = 1 << bit;
+      static constexpr std::uint32_t  mask = 1 << bit;
 
       // there are only 8 ports
       static_assert(port < 8, "Invalid port");
@@ -258,7 +258,7 @@ namespace cycfi { namespace infinity
       using self_type = input_pin;
       using peripheral_id = io_pin_id<N>;
       using interrupt_id = exti_id<bit>;
-      
+
       input_pin() = default;
       input_pin(input_pin const&) = default;
 
@@ -271,7 +271,7 @@ namespace cycfi { namespace infinity
          LL_GPIO_SetPinMode(&gpio(), mask, LL_GPIO_MODE_INPUT);
 
          // Configure pull-up/down resistor
-         LL_GPIO_SetPinPull(&gpio(), mask, uint32_t(type));
+         LL_GPIO_SetPinPull(&gpio(), mask, std::uint32_t(type));
       }
 
       auto setup()
@@ -299,9 +299,9 @@ namespace cycfi { namespace infinity
       void enable_interrupt(std::size_t priority = 0)
       {
          // Connect External Line to the GPIO
-         LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);                  
-         LL_SYSCFG_SetEXTISource(detail::exti_port<port>(), detail::exti_id<bit>()); 
-         
+         LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+         LL_SYSCFG_SetEXTISource(detail::exti_port<port>(), detail::exti_id<bit>());
+
          // Configure NVIC to handle external interrupt
          NVIC_SetPriority(detail::exti_irq<bit>(), priority);
          NVIC_EnableIRQ(detail::exti_irq<bit>());

@@ -63,7 +63,7 @@ struct my_processor
    using sustainer_array_type = std::array<sustainer_type, channels>;
 
    sustainer_array_type _sustainers;
-   uint32_t             _sample_clock = 0;
+   std::uint32_t        _sample_clock = 0;
 };
 
 inf::multi_channel_processor<inf::processor<my_processor>> proc;
