@@ -32,20 +32,33 @@ namespace cycfi { namespace infinity
    //           to -1.0f...1.0f)
    //         - channel: The current channel being processed
    //
-   //       - The base class Base must have a static oversampling constant
-   //         that defines the oversampling factor.
-   //
    //    3) Stores the processed data to the output buffer
-   //
-   // If oversampling > 1, we perform down-sampling. Samples from the ADC
-   // are accumulated. The sum is divided by the oversampling factor before
-   // calling base Processor process function. Thus, the base Processor
-   // process function is called, and the result copied to the output buffer
-   // only once per oversampling.
    //
    ////////////////////////////////////////////////////////////////////////////
    template <typename Base>
    class processor : public Base
+   {
+   public:
+
+      static constexpr auto oversampling = 1;
+      static constexpr auto channels = Base::channels;
+
+      template <typename I1, typename I2, typename Convert>
+      void process(I1 first, I1 last, I2 src, Convert convert)
+      {
+         for (auto i = first; i != last; ++i)
+         {
+            i->fill(0.0f);
+            for (auto c = 0; c != channels; ++c)
+               Base::process(*i, convert((*src)[c]), c);
+            ++src;
+         }
+      }
+   };
+
+   ////////////////////////////////////////////////////////////////////////////
+   template <typename Base>
+   class oversampling_processor : public Base
    {
    public:
 
@@ -58,30 +71,6 @@ namespace cycfi { namespace infinity
 
       template <typename I1, typename I2, typename Convert>
       void process(I1 first, I1 last, I2 src, Convert convert)
-      {
-         process_impl(first, last, src, convert, bool_<oversampling == 1>{});
-      }
-
-   private:
-
-      // case oversampling == 1
-      template <typename I1, typename I2, typename Convert>
-      void process_impl(
-         I1 first, I1 last, I2 src, Convert convert, std::true_type)
-      {
-         for (auto i = first; i != last; ++i)
-         {
-            i->fill(0.0f);
-            for (auto c = 0; c != channels; ++c)
-               Base::process(*i, convert((*src)[c]), c);
-            ++src;
-         }
-      }
-
-      // case oversampling != 1
-      template <typename I1, typename I2, typename Convert>
-      void process_impl(
-         I1 first, I1 last, I2 src, Convert convert, std::false_type)
       {
          for (auto i = first; i != last; ++i)
          {

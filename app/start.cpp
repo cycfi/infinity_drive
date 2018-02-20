@@ -115,7 +115,7 @@ struct my_processor
    q::hard_limiter                     _lim;
 };
 
-inf::multi_channel_processor<inf::processor<my_processor>> proc;
+inf::multi_channel_processor<inf::oversampling_processor<my_processor>> proc;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
