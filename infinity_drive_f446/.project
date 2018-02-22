@@ -63,6 +63,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/fx.hpp</locationURI>
 		</link>
 		<link>
+			<name>q/literals.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/literals.hpp</locationURI>
+		</link>
+		<link>
 			<name>q/support.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/support.hpp</locationURI>

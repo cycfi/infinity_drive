@@ -11,6 +11,8 @@
 
 namespace cycfi { namespace infinity
 {
+   using namespace q::literals;
+
    ////////////////////////////////////////////////////////////////////////////
    // Infinity Sustainer
    ////////////////////////////////////////////////////////////////////////////
@@ -112,8 +114,8 @@ namespace cycfi { namespace infinity
       q::dc_block          _dc_block;
       q::envelope_follower _env_follow;
       q::window_comparator _noise_gate { low_threshold, high_threshold };
-      q::one_pole_lowpass  _lpf { 2000.0f, sps };
-      q::one_pole_lowpass  _level_lp { 10.0f, sps };
+      q::one_pole_lowpass  _lpf { 2_kHz, sps };
+      q::one_pole_lowpass  _level_lp { 100_ms, sps };
       float                _max_gain = 4;
 
       pid_type             _level_pid;
