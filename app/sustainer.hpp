@@ -43,8 +43,8 @@ namespace cycfi { namespace infinity
    public:
 
       static constexpr float set_point_max = 0.5;
-      static constexpr float low_threshold = 0.01f;
-      static constexpr float high_threshold = 0.05f;
+      static constexpr float low_threshold = 0.02f;
+      static constexpr float high_threshold = 0.1f;
 
       float operator()(float s)
       {
@@ -80,7 +80,7 @@ namespace cycfi { namespace infinity
          _enable = val;
       }
 
-      void cutoff(float freq)
+      void cutoff(q::frequency freq)
       {
          _lpf.cutoff(freq, sps);
       }
@@ -112,8 +112,8 @@ namespace cycfi { namespace infinity
 
       float                _gain = 1.0f;
       q::dc_block          _dc_block;
-      q::envelope_follower _env_follow;
-      q::window_comparator _noise_gate { low_threshold, high_threshold };
+      q::envelope_follower _env_follow{ 50_ms, 100_ms, sps };
+      q::window_comparator _noise_gate{ low_threshold, high_threshold };
       q::one_pole_lowpass  _lpf { 2_kHz, sps };
       q::one_pole_lowpass  _level_lp { 100_ms, sps };
       float                _max_gain = 4;

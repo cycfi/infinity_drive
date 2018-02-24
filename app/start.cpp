@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
 namespace q = cycfi::q;
+using namespace q::literals;
 using inf::delay_ms;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,12 +61,12 @@ struct my_processor
       _sustainers[4].max_gain(3.0f);   // B
       _sustainers[5].max_gain(4.0f);   // E
 
-      _sustainers[0].cutoff(659);      // E
-      _sustainers[1].cutoff(880);      // A
-      _sustainers[2].cutoff(1174);     // D
-      _sustainers[3].cutoff(1568);     // G
-      _sustainers[4].cutoff(1975);     // B
-      _sustainers[5].cutoff(2637);     // E
+      _sustainers[0].cutoff(659_Hz);   // E
+      _sustainers[1].cutoff(880_Hz);   // A
+      _sustainers[2].cutoff(1174_Hz);  // D
+      _sustainers[3].cutoff(1568_Hz);  // G
+      _sustainers[4].cutoff(1975_Hz);  // B
+      _sustainers[5].cutoff(2637_Hz);  // E
    }
 
    std::uint32_t downsample(std::uint32_t s, std::uint32_t i)
@@ -120,7 +121,7 @@ struct my_processor
    using sustainer_array_type = std::array<sustainer_type, channels>;
 
    sustainer_array_type                _sustainers;
-   std::array<q::envelope_follower, 2> _env;
+   std::array<q::envelope_follower, 2> _env = {{{ 50_ms, 100_ms, sps }, { 50_ms, 100_ms, sps }}};
    std::array<q::one_pole_lowpass, 2>  _env_lp = {{{100.0f, sps},{100.0f, sps}}};
    q::hard_limiter                     _lim;
 };
