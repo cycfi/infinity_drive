@@ -39,14 +39,16 @@ namespace cycfi { namespace infinity
       enum class mode_enum : char
       {
          level,
-         phase,
-         factor
+         cutoff,
+         delay
       };
 
       auto              setup();
       void              start();
       void              refresh();
       float             level() const;
+      float             cutoff() const;
+      float             delay() const;
 
    private:
 
@@ -59,9 +61,9 @@ namespace cycfi { namespace infinity
       oled_type_ptr     cnv;
       mode_enum         mode = mode_enum::level;
 
-      param_type        level_enc   { enc, 0.5, 0, 1, 0.001 };
-      param_type        phase_enc   { enc, 0, -1, 2, 0.0001 };
-      param_type        factor_enc  { enc, 0, 0, 8, 0.001 };
+      param_type        level_enc   { enc, 0.1, 0, 1, 0.001 };
+      param_type        cutoff_enc  { enc, 500, 100, 3900, 0.1 };
+      param_type        delay_enc  { enc, 0, 0, 1024, 1 };
 
       std::uint32_t     time = 0;
    };
@@ -86,8 +88,8 @@ namespace cycfi { namespace infinity
       enc.start();
       mode_btn.start(port::falling_edge);  // call button_task on the rising edge
 
-      factor_enc.activate();
-      phase_enc.activate();
+      delay_enc.activate();
+      cutoff_enc.activate();
       level_enc.activate();
    }
 
@@ -98,11 +100,11 @@ namespace cycfi { namespace infinity
          case mode_enum::level:
             display("Level", std::round(level_enc() * 1000.0f), 2);
             break;
-         case mode_enum::phase:
-            display("Phase", std::round(phase_enc() * 1800.0f), 1);
+         case mode_enum::cutoff:
+            display("Cutoff", std::round(cutoff_enc() * 10.0f), 1);
             break;
-         case mode_enum::factor:
-            display("---", std::round(factor_enc() * 1000.0f), 2);
+         case mode_enum::delay:
+            display("Delay", std::round(delay_enc() * 10.0f), 1);
             break;
       }
    }
@@ -110,6 +112,16 @@ namespace cycfi { namespace infinity
    float ui::level() const
    {
       return level_enc();
+   }
+
+   float ui::cutoff() const
+   {
+      return cutoff_enc();
+   }
+
+   float ui::delay() const
+   {
+      return delay_enc();
    }
 
    void ui::set_mode()
@@ -122,16 +134,16 @@ namespace cycfi { namespace infinity
          default:
          case mode_enum::level:
             level_enc.deactivate();
-            phase_enc.activate();
-            mode = mode_enum::phase;
+            cutoff_enc.activate();
+            mode = mode_enum::cutoff;
             break;
-         case mode_enum::phase:
-            phase_enc.deactivate();
-            factor_enc.activate();
-            mode = mode_enum::factor;
+         case mode_enum::cutoff:
+            cutoff_enc.deactivate();
+            delay_enc.activate();
+            mode = mode_enum::delay;
             break;
-         case mode_enum::factor:
-            factor_enc.deactivate();
+         case mode_enum::delay:
+            delay_enc.deactivate();
             level_enc.activate();
             mode = mode_enum::level;
             break;

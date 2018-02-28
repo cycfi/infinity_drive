@@ -6,7 +6,7 @@
 #include <inf/multi_processor.hpp>
 #include <inf/app.hpp>
 #include <inf/support.hpp>
-#include <q/synth.hpp>
+#include <q/delay.hpp>
 
 #include "sustainer.hpp"
 #include "ui.hpp"
@@ -14,10 +14,7 @@
 #include <array>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Phase-Locked Synthesizer sustain test with PID
-//
-// Setup: Connect input signals to ADC channels 0, 1 and 2. Connect
-// pins PA4 (DAC out) to the sustain driver.
+// Noise test
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
 namespace q = cycfi::q;
@@ -34,6 +31,165 @@ static constexpr auto clock = 80000;
 static constexpr auto sps_div = 4;
 static constexpr auto sps = clock / sps_div;
 
+namespace cycfi { namespace q
+{
+   struct smoother2
+   {
+      smoother2(float threshold_, frequency f1, frequency f2, std::uint32_t sps)
+       : threshold(threshold_)
+       , a1(1.0f - std::exp(-2_pi * double(f1) / sps))
+       , a2(1.0f - std::exp(-2_pi * double(f2) / sps))
+      {}
+
+      float operator()(float s)
+      {
+         auto dy = s - y;
+         // if (dy < threshold)
+         //    return y += a1 * dy;
+         // else
+            return y += a2 * dy;
+      }
+
+      float operator()() const
+      {
+         return y;
+      }
+
+      smoother2& operator=(float y_)
+      {
+         y = y_;
+         return *this;
+      }
+
+      void config(float threshold_, frequency f1, frequency f2, std::uint32_t sps)
+      {
+         threshold = threshold_;
+         a1 = 1.0f - std::exp(-2_pi * double(f1) / sps);
+         a2 = 1.0f - std::exp(-2_pi * double(f2) / sps);
+      }
+
+      float y = 0.0f, threshold, a1, a2;
+   };
+
+   struct smoother
+   {
+      smoother(frequency min, frequency max, frequency dfreq, std::uint32_t sps)
+       : _lp(double(max), sps)
+       , _dlp(double(dfreq), sps)
+       , _min_a(1.0f -(2_pi * double(min) / sps))
+       , _max_a(1.0f -(2_pi * double(max) / sps))
+      {}
+
+      float operator()(float s)
+      {
+         float dy = s - _lp();
+         float dlp = _dlp(std::abs(dy));
+         _lp.cutoff(linear_interpolate(_min_a, _max_a, dlp));
+         return _lp(s);
+      }
+
+      one_pole_lowpass _lp;
+      one_pole_lowpass _dlp;
+      float _min_a, _max_a;
+   };
+
+   struct dynamic_smoother
+   {
+      dynamic_smoother(frequency base, std::uint32_t sps)
+       : dynamic_smoother(base, 0.5, sps)
+      {}
+
+      dynamic_smoother(frequency base, float sensitivity, std::uint32_t sps)
+       : sense(sensitivity * 4.0f)  // efficient linear cutoff mapping
+       , wc(double(base) / sps)
+      {
+         auto gc = std::tan(pi * wc);
+         g0 = 2.0f * gc / (1.0f + gc);
+      }
+
+      float operator()(float s)
+      {
+         auto lowlz = low1;
+         auto low2z = low2;
+         auto bandz = lowlz - low2z;
+         auto g = std::min(g0 + sense * std::abs(bandz), 1.0f);
+         low1 = lowlz + g * (s - lowlz);
+         low2 = low2z + g * (low1 - low2z);
+         return low2z;
+      }
+
+      void base_frequency(frequency base)
+      {
+         wc = double(base) / sps;
+         auto gc = std::tan(pi * wc);
+         g0 = 2.0f * gc / (1.0f + gc);
+      }
+
+      float sense, wc, g0;
+      float low1 = 0.0f;
+      float low2 = 0.0f;
+   };
+}}
+
+template <std::uint32_t sps>
+struct fx
+{
+   static constexpr float low_threshold = 0.5f;
+   static constexpr float high_threshold = 0.6f;
+
+   float operator()(float s)
+   {
+      // DC block
+      s = _dc_block(s);
+
+      // Smooth
+      // s = _sm(s);
+      // s = _sm2(s);
+      s = _sm3(s);
+
+      // Envelope follower
+      auto env = _env(s);
+
+
+
+      // // Low pass
+      // s = _lp(s);
+
+
+      // Noise Gate
+      // if (env < 0.01)
+      //    return 0;
+
+      // Delay
+      // s = _delay(s);
+
+
+
+      // Drive
+      s = s * _drive;
+
+      // Soft Clip
+      static constexpr q::clip clip;
+      s = clip(s);
+
+      return s;
+   }
+
+   // q::smoother2         _sm3 { 0.01, 300_Hz, 1000_Hz, sps };
+   q::smoother2         _sm3 { 0.005, 500_Hz, 2637_Hz, sps };
+
+   q::single_delay<float>  _delay { 1024u, 0u };
+
+   q::dc_block          _dc_block;
+   // q::one_pole_lowpass  _lp{ 4_kHz, sps };
+
+   q::lowpass           _lp{ 4_kHz, sps, 0.707 };
+
+   q::envelope_follower _env{ 50_ms, 100_ms, sps };
+   q::window_comparator _noise_gate { low_threshold, high_threshold };
+   float                _drive;
+};
+
 struct my_processor
 {
    static constexpr auto oversampling = sps_div;
@@ -47,26 +203,6 @@ struct my_processor
 
    my_processor()
    {
-      _sustainers[0].gain(0.9f);       // E
-      _sustainers[1].gain(0.9f);       // A
-      _sustainers[2].gain(0.8f);       // D
-      _sustainers[3].gain(1.1f);       // G
-      _sustainers[4].gain(1.25f);      // B
-      _sustainers[5].gain(1.6f);       // E
-
-      _sustainers[0].max_gain(1.0f);   // E
-      _sustainers[1].max_gain(1.0f);   // A
-      _sustainers[2].max_gain(1.5f);   // D
-      _sustainers[3].max_gain(3.0f);   // G
-      _sustainers[4].max_gain(3.0f);   // B
-      _sustainers[5].max_gain(4.0f);   // E
-
-      _sustainers[0].cutoff(659_Hz);   // E
-      _sustainers[1].cutoff(880_Hz);   // A
-      _sustainers[2].cutoff(1174_Hz);  // D
-      _sustainers[3].cutoff(1568_Hz);  // G
-      _sustainers[4].cutoff(1975_Hz);  // B
-      _sustainers[5].cutoff(2637_Hz);  // E
    }
 
    std::uint32_t downsample(std::uint32_t s, std::uint32_t i)
@@ -84,46 +220,60 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      if (channel < 3)
-         out[0] += _sustainers[channel](s);
-      else
-         out[1] += _sustainers[channel](s);
-
-      if (channel == channels-1)
+      if (channel == 5)
       {
-         auto out0 = out[0];
-         auto out1 = out[1];
-
-         // Update the output envelope followers
-         _env_lp[0](_env[0](std::abs(out0)));
-         _env_lp[1](_env[1](std::abs(out1)));
-
-         // Limit the outputs to 1.0f with some headroom.
-         out0 = _lim(out0, _env_lp[0]() * headroom);
-         out1 = _lim(out1, _env_lp[1]() * headroom);
-
-         // Soft-clip the final result and limit the output to 0.8
-         // of the value so the DAC won't clip (The STM32F4 DAC has
-         // a built-in buffer that is not rail-to-rail).
-         static constexpr q::soft_clip clip;
-         out[0] = clip(out0 * 1.25f) * 0.8f;
-         out[1] = clip(out1 * 1.25f) * 0.8f;
+         out[1] += _p[channel](s);
       }
+
+
+      // if (channel == 3)
+      // {
+      //    out[1] = _p[channel](s) * _level * 20;
+      //    out[0] = _p[channel]._env();
+      // }
+
+      // if (channel < 3)
+      // {
+      //    // out[0] += 0; // _p[channel](s) * _level * 10;
+      // }
+      // else
+      // {
+      //    out[1] += _p[channel](s) / 3;
+      //    // if (channel == 3)
+      //    //    out[0] = _p[channel]._env();
+      // }
+
+      // if (channel == channels-1)
+      // {
+      //    out[0] = 0; //_lp1(out[0]);
+      //    out[1] = _lp2(out[1]);
+      // }
    }
 
    void update_level(float level)
    {
-      for (auto& s : _sustainers)
-         s.update_level(ui.level());
+      for (auto& s : _p)
+         s._drive = level * 20;
    }
 
-   using sustainer_type = inf::sustainer<sps>;
-   using sustainer_array_type = std::array<sustainer_type, channels>;
+   void update_cutoff(float cutoff)
+   {
+      for (auto& s : _p)
+         s._lp.config(cutoff, sps, 0.707);
+         // s._sm.base_frequency(cutoff);
+         //s._lp.cutoff(cutoff, sps);
+   }
 
-   sustainer_array_type                _sustainers;
-   std::array<q::envelope_follower, 2> _env = {{{ 50_ms, 100_ms, sps }, { 50_ms, 100_ms, sps }}};
-   std::array<q::one_pole_lowpass, 2>  _env_lp = {{{100.0f, sps},{100.0f, sps}}};
-   q::hard_limiter                     _lim;
+   void update_delay(float delay)
+   {
+      for (auto& s : _p)
+         s._delay.samples_delay(delay);
+   }
+
+   // q::lowpass _lp1{4_kHz, sps, 0.707};
+   // q::lowpass _lp2{4_kHz, sps, 0.707};
+
+   std::array<fx<sps>, channels> _p;
 };
 
 inf::multi_channel_processor<inf::oversampling_processor<my_processor>> proc;
@@ -148,6 +298,11 @@ void start()
 
       // Update the sustain level
       proc.update_level(ui.level());
+
+      proc.update_cutoff(ui.cutoff());
+
+      proc.update_delay(ui.delay());
+
       delay_ms(10);
    }
 }
