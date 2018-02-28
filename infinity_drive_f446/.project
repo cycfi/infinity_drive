@@ -48,6 +48,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/biquad.hpp</locationURI>
 		</link>
 		<link>
+			<name>q/buffer.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/buffer.hpp</locationURI>
+		</link>
+		<link>
+			<name>q/delay.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/delay.hpp</locationURI>
+		</link>
+		<link>
 			<name>q/detail</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -66,6 +76,11 @@
 			<name>q/literals.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/literals.hpp</locationURI>
+		</link>
+		<link>
+			<name>q/lut.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/q/inc/q/lut.hpp</locationURI>
 		</link>
 		<link>
 			<name>q/support.hpp</name>
