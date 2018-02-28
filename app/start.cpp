@@ -145,20 +145,20 @@ struct fx
       // Smooth
       // s = _sm(s);
       // s = _sm2(s);
-      s = _sm3(s);
+      // s = _sm3(s);
 
       // Envelope follower
       auto env = _env(s);
 
 
 
-      // // Low pass
-      // s = _lp(s);
+      // Low pass
+      s = _lp(s);
 
 
       // Noise Gate
-      // if (env < 0.01)
-      //    return 0;
+      if (env < 0.01)
+         return 0;
 
       // Delay
       // s = _delay(s);
@@ -183,7 +183,8 @@ struct fx
    q::dc_block          _dc_block;
    // q::one_pole_lowpass  _lp{ 4_kHz, sps };
 
-   q::lowpass           _lp{ 4_kHz, sps, 0.707 };
+   // q::lowpass           _lp{ 4_kHz, sps, 0.707 };
+   q::one_pole_lowpass     _lp{ 2637_Hz, sps };
 
    q::envelope_follower _env{ 50_ms, 100_ms, sps };
    q::window_comparator _noise_gate { low_threshold, high_threshold };
@@ -220,9 +221,14 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      if (channel == 5)
+      // if (channel == 3)
+      // {
+      //    out[1] += _p[channel](s);
+      // }
+
+      if (channel == 0)
       {
-         out[1] += _p[channel](s);
+         out[0] += _p[channel](s);
       }
 
 
@@ -259,7 +265,9 @@ struct my_processor
    void update_cutoff(float cutoff)
    {
       for (auto& s : _p)
-         s._lp.config(cutoff, sps, 0.707);
+    	  ;
+
+//         s._lp.config(cutoff, sps, 0.707);
          // s._sm.base_frequency(cutoff);
          //s._lp.cutoff(cutoff, sps);
    }
