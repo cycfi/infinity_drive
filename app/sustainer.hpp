@@ -18,9 +18,14 @@ namespace cycfi { namespace infinity
    ////////////////////////////////////////////////////////////////////////////
    struct level_pid_config
    {
-      float static constexpr p = 0.8f;       // Proportional gain
+      float static constexpr p = 0.10f;      // Proportional gain
       float static constexpr i = 0.00f;      // Integral gain
-      float static constexpr d = 0.03f;      // Derivative gain
+      float static constexpr d = 0.10f;      // Derivative gain
+
+
+      // float static constexpr p = 0.8f;       // Proportional gain
+      // float static constexpr i = 0.00f;      // Integral gain
+      // float static constexpr d = 0.03f;      // Derivative gain
 
 
       // float static constexpr p = 0.05f;      // Proportional gain
@@ -42,14 +47,14 @@ namespace cycfi { namespace infinity
    {
    public:
 
-      static constexpr float set_point_max = 0.5;
-      static constexpr float low_threshold = 0.02f;
-      static constexpr float high_threshold = 0.1f;
+      static constexpr float set_point_max = 0.25;
+      static constexpr float low_threshold = 0.01f;
+      static constexpr float high_threshold = 0.05f;
 
       float operator()(float s)
       {
          if (!_enable)
-            return _lpf(0);
+            return 0;
 
          // Pre gain
          s = s * _gain;
@@ -65,7 +70,7 @@ namespace cycfi { namespace infinity
 
          // Noise gate
          if (!_noise_gate(env))
-				return _lpf(0);
+            return 0;
 
          return s * _level_lp(_level);
       }
@@ -111,12 +116,12 @@ namespace cycfi { namespace infinity
       using pid_type = pid<level_pid_config>;
 
       float                _gain = 1.0f;
-      q::dc_block          _dc_block;
-      q::envelope_follower _env_follow{ 50_ms, 100_ms, sps };
-      q::window_comparator _noise_gate{ low_threshold, high_threshold };
-      q::one_pole_lowpass  _lpf { 2_kHz, sps };
-      q::one_pole_lowpass  _level_lp { 100_ms, sps };
-      float                _max_gain = 4;
+      q::dc_block          _dc_block   { 0.1_Hz, sps };
+      q::envelope_follower _env_follow { 50_ms, 100_ms, sps };
+      q::window_comparator _noise_gate { low_threshold, high_threshold };
+      q::one_pole_lowpass  _lpf        { 2_kHz, sps };
+      q::one_pole_lowpass  _level_lp   { 100_ms, sps };
+      float                _max_gain   { 4 };
 
       pid_type             _level_pid;
       float                _level = 0;

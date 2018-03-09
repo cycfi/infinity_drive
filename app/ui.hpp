@@ -39,7 +39,7 @@ namespace cycfi { namespace infinity
       enum class mode_enum : char
       {
          level,
-         cutoff,
+         drive,
          delay
       };
 
@@ -47,7 +47,7 @@ namespace cycfi { namespace infinity
       void              start();
       void              refresh();
       float             level() const;
-      float             cutoff() const;
+      float             drive() const;
       float             delay() const;
 
    private:
@@ -62,8 +62,8 @@ namespace cycfi { namespace infinity
       mode_enum         mode = mode_enum::level;
 
       param_type        level_enc   { enc, 0.1, 0, 1, 0.001 };
-      param_type        cutoff_enc  { enc, 500, 100, 3900, 0.1 };
-      param_type        delay_enc  { enc, 0, 0, 1024, 1 };
+      param_type        drive_enc   { enc, 0.0, 0, 1, 0.001 };
+      param_type        delay_enc   { enc, 0, 0, 1024, 1 };
 
       std::uint32_t     time = 0;
    };
@@ -89,7 +89,7 @@ namespace cycfi { namespace infinity
       mode_btn.start(port::falling_edge);  // call button_task on the rising edge
 
       delay_enc.activate();
-      cutoff_enc.activate();
+      drive_enc.activate();
       level_enc.activate();
    }
 
@@ -100,8 +100,8 @@ namespace cycfi { namespace infinity
          case mode_enum::level:
             display("Level", std::round(level_enc() * 1000.0f), 2);
             break;
-         case mode_enum::cutoff:
-            display("Cutoff", std::round(cutoff_enc() * 10.0f), 1);
+         case mode_enum::drive:
+            display("Drive", std::round(drive_enc() * 1000.0f), 2);
             break;
          case mode_enum::delay:
             display("Delay", std::round(delay_enc() * 10.0f), 1);
@@ -114,9 +114,9 @@ namespace cycfi { namespace infinity
       return level_enc();
    }
 
-   float ui::cutoff() const
+   float ui::drive() const
    {
-      return cutoff_enc();
+      return drive_enc();
    }
 
    float ui::delay() const
@@ -134,11 +134,11 @@ namespace cycfi { namespace infinity
          default:
          case mode_enum::level:
             level_enc.deactivate();
-            cutoff_enc.activate();
-            mode = mode_enum::cutoff;
+            drive_enc.activate();
+            mode = mode_enum::drive;
             break;
-         case mode_enum::cutoff:
-            cutoff_enc.deactivate();
+         case mode_enum::drive:
+            drive_enc.deactivate();
             delay_enc.activate();
             mode = mode_enum::delay;
             break;
