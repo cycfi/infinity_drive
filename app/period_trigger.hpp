@@ -10,6 +10,8 @@
 
 namespace cycfi { namespace infinity
 {
+   using namespace q::literals;
+
    ////////////////////////////////////////////////////////////////////////////
    // The peak_trigger generates pulses that coincide with the peaks of a
    // waveform. This is accomplished by sending the signal through an envelope
@@ -23,8 +25,8 @@ namespace cycfi { namespace infinity
       static constexpr float hysteresis = 0.002f;
       static constexpr float drop = 0.80f;
 
-      peak_trigger(float r)
-       : _ef(r), _cmp(hysteresis)
+      peak_trigger(q::duration release, std::uint32_t sps)
+       : _ef(release, sps), _cmp(hysteresis)
       {}
 
       bool operator()(float s)
@@ -32,8 +34,8 @@ namespace cycfi { namespace infinity
          return _cmp(s, _ef(s) * drop);
       }
 
-      q::envelope_follower _ef;
-      q::schmitt_trigger   _cmp;
+      q::peak_envelope_follower  _ef;
+      q::schmitt_trigger         _cmp;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -67,6 +69,11 @@ namespace cycfi { namespace infinity
    {
       static constexpr float dead_zone = 0.5;
 
+      period_trigger(q::duration release, std::uint32_t sps)
+       : _pos_peak(release, sps)
+       , _neg_peak(release, sps)
+      {}
+
       int operator()(float s, bool active = true)
       {
          if (!active)
@@ -93,8 +100,8 @@ namespace cycfi { namespace infinity
 
       bool operator()() const { return _state; }
 
-      peak_trigger   _pos_peak = {0.999};
-      peak_trigger   _neg_peak = {0.999};
+      peak_trigger   _pos_peak;
+      peak_trigger   _neg_peak;
       int            _state = 0;
    };
 }}
