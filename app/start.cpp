@@ -7,13 +7,71 @@
 #include <inf/app.hpp>
 #include <inf/support.hpp>
 
-#include "sustainer.hpp"
 #include "ui.hpp"
-
 #include <array>
 
 ///////////////////////////////////////////////////////////////////////////////
-// Noise test
+// Driver
+///////////////////////////////////////////////////////////////////////////////
+#include "period_trigger.hpp"
+#include <bitset>
+
+float gfreq = 440.0;
+
+namespace cycfi { namespace infinity
+{
+   template <std::uint32_t sps, std::uint32_t buffer_size>
+   struct driver
+   {
+      static constexpr float threshold = 0.02f;
+
+      float operator()(float s)
+      {
+         // DC block
+         s = _dc_block(s);
+
+         // Envelope follower
+         auto env = _env(s);
+
+         // Noise Gate
+         if (env < threshold)
+            return 0;
+
+         // Normalize
+         s = s * q::fast_inverse(env);
+
+         // Peak Trigger
+         bool peak = _trig(s);
+
+         // Collect peaks and process when bitset is full
+         if (_index == buffer_size)
+         {
+            auto_correlate();
+            _index = 0;
+         }
+         _peaks[_index++] = peak;
+
+         s = peak;
+         return s * 0.8;
+      }
+
+      // binary auto correlation
+      void auto_correlate()
+      {
+      }
+
+      q::dc_block                _dc_block   { 0.1_Hz, sps };
+      q::peak_envelope_follower  _env        { 100_ms, sps };
+      peak_trigger               _trig       { (8.2_Hz).period(), sps };
+      float                      _drive;
+      float                      _level;
+
+      std::bitset<buffer_size>   _peaks;
+      std::uint32_t              _index      = 0;
+   };
+}}
+
+///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 namespace inf = cycfi::infinity;
 namespace q = cycfi::q;
@@ -30,43 +88,6 @@ static constexpr auto clock = 80000;
 static constexpr auto sps_div = 4;
 static constexpr auto sps = clock / sps_div;
 
-template <std::uint32_t sps>
-struct sustainer
-{
-   static constexpr float threshold = 0.01f;
-
-   float operator()(float s)
-   {
-      // DC block
-      s = _dc_block(s);
-
-      // Envelope follower
-      auto env = _env(s);
-
-      // Noise Gate
-      if (env < threshold)
-         return 0;
-
-      // Drive
-      s = s * _level;
-
-      // Soft Clip
-      s = _clip(s);
-
-      // Low pass
-      s = _lp(s);
-
-      return s * 0.8;
-   }
-
-   q::dc_block          _dc_block   { 0.1_Hz, sps };
-   q::one_pole_lowpass  _lp         { 2637_Hz, sps };
-   q::envelope_follower _env        { 50_ms, 100_ms, sps };
-   q::soft_clip         _clip;
-   float                _drive;
-   float                _level;
-};
-
 struct my_processor
 {
    static constexpr auto oversampling = sps_div;
@@ -74,7 +95,7 @@ struct my_processor
    static constexpr auto timer_id = 2;
    static constexpr auto channels = 6;
    static constexpr auto sampling_rate = clock;
-   static constexpr auto buffer_size = 8;
+   static constexpr auto buffer_size = 2048;
    static constexpr auto latency = buffer_size / sps_div;
    static constexpr auto headroom = 2.0f;
 
@@ -97,54 +118,26 @@ struct my_processor
 
    void process(std::array<float, 2>& out, float s, std::uint32_t channel)
    {
-      if (channel == 5)
+      if (channel == 0)
       {
-         out[1] += _p[channel](s);
+         out[0] = _driver[channel](s);
+         out[1] = s;
       }
-
-      // if (channel == 0)
-      // {
-      //    out[0] += _p[channel](s);
-      // }
-
-
-      // if (channel == 3)
-      // {
-      //    out[1] = _p[channel](s) * _level * 20;
-      //    out[0] = _p[channel]._env();
-      // }
-
-      // if (channel < 3)
-      // {
-      //    // out[0] += 0; // _p[channel](s) * _level * 10;
-      // }
-      // else
-      // {
-      //    out[1] += _p[channel](s) / 3;
-      //    // if (channel == 3)
-      //    //    out[0] = _p[channel]._env();
-      // }
-
-      // if (channel == channels-1)
-      // {
-      //    out[0] = 0; //_lp1(out[0]);
-      //    out[1] = _lp2(out[1]);
-      // }
    }
 
    void update_level(float level)
    {
-      for (auto& s : _p)
+      for (auto& s : _driver)
          s._level = level * 20;
    }
 
    void update_drive(float drive)
    {
-      for (auto& s : _p)
-    	   ; // s._drive = drive;
+      for (auto& s : _driver)
+    	   s._drive = drive;
    }
 
-   std::array<sustainer<sps>, channels> _p;
+   std::array<inf::driver<sps, buffer_size>, channels> _driver;
 };
 
 inf::multi_channel_processor<inf::oversampling_processor<my_processor>> proc;
@@ -165,10 +158,12 @@ void start()
 
    while (true)
    {
-      ui.refresh();
+      // ui.refresh();
 
-      proc.update_level(ui.level());
-      proc.update_drive(ui.drive());
+      // proc.update_level(ui.level());
+      // proc.update_drive(ui.drive());
+
+      ui.display("Freq:", gfreq * 10, 1);
 
       delay_ms(10);
    }

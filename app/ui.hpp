@@ -11,6 +11,7 @@
 #include <inf/ssd1306.hpp>
 #include <inf/rotary_encoder.hpp>
 #include <memory>
+#include <cmath>
 
 namespace cycfi { namespace infinity
 {
@@ -50,10 +51,11 @@ namespace cycfi { namespace infinity
       float             drive() const;
       float             delay() const;
 
+      void              display(char const* str, int val, int frac);
+
    private:
 
       void              set_mode();
-      void              display(char const* str, int val, int frac);
 
       i2c_type          i2c;
       encoder_type      enc;
