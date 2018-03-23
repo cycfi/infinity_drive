@@ -13,13 +13,74 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Driver
 ///////////////////////////////////////////////////////////////////////////////
-#include "period_trigger.hpp"
-#include <bitset>
+#include <q/fx.hpp>
 
 float gfreq = 440.0;
 
 namespace cycfi { namespace infinity
 {
+   using namespace q::literals;
+
+   template <std::uint32_t N, typename T = std::uint32_t>
+   struct bitset
+   {
+      static_assert(q::is_pow2(N), "N must be a power of 2, except 0");
+      static constexpr auto array_size = sizeof(T) / N;
+
+      void set(std::uint32_t i, bool val)
+      {
+         auto index = i * sizeof(T);
+         auto* p = bits + index;
+         auto mask = i & (sizeof(T) - 1);
+         *p |= 1 << mask;
+      }
+
+      static std::uint32_t count_bits(std::uint32_t i)
+      {
+         // GCC only!!!
+         return __builtin_popcount(i);
+      }
+
+      static std::uint64_t count_bits(std::uint64_t i)
+      {
+         // GCC only!!!
+         return __builtin_popcountll(i);
+      }
+
+      std::uint32_t auto_correlate(int pos)
+      {
+         auto index = pos * sizeof(T);
+         auto* p1 = bits;
+         auto* p2 = bits + index;
+         auto shift = N % pos;
+         auto count = 0;
+
+         if (shift == 0)
+         {
+            for (auto i = 0; i != array_size / 2; ++i)
+               count += count_bits(*p1++ ^ *p2++);
+         }
+         else
+         {
+            auto shift2 = sizeof(T) - shift;
+            for (auto i = 0; i != array_size / 2; ++i)
+            {
+               auto v = *p2++ >> shift;
+               v |= *p2 << shift2;
+               count += count_bits(*p1++ ^ v);
+            }
+         }
+      }
+
+      void auto_correlate(std::array<std::uint32_t, N / 2>& out)
+      {
+         for (auto i = 0; i != N / 2; ++i)
+            out[i] = auto_correlate(i);
+      }
+
+      T bits[array_size];
+   };
+
    template <std::uint32_t sps, std::uint32_t buffer_size>
    struct driver
    {
@@ -49,7 +110,7 @@ namespace cycfi { namespace infinity
             auto_correlate();
             _index = 0;
          }
-         _peaks[_index++] = peak;
+         _peaks.set(_index++, peak);
 
          s = peak;
          return s * 0.8;
@@ -62,11 +123,11 @@ namespace cycfi { namespace infinity
 
       q::dc_block                _dc_block   { 0.1_Hz, sps };
       q::peak_envelope_follower  _env        { 100_ms, sps };
-      peak_trigger               _trig       { (8.2_Hz).period(), sps };
+      q::window_comparator       _trig       { -0.1, 0.1 };
       float                      _drive;
       float                      _level;
 
-      std::bitset<buffer_size>   _peaks;
+      bitset<buffer_size>        _peaks;
       std::uint32_t              _index      = 0;
    };
 }}
