@@ -103,14 +103,14 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/adc.cpp</locationURI>
 		</link>
 		<link>
-			<name>src/agc.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/app/agc.hpp</locationURI>
-		</link>
-		<link>
 			<name>src/canvas.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/inf/canvas.cpp</locationURI>
+		</link>
+		<link>
+			<name>src/driver.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/app/driver.hpp</locationURI>
 		</link>
 		<link>
 			<name>src/i2c.cpp</name>
@@ -123,34 +123,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/main.cpp</locationURI>
 		</link>
 		<link>
-			<name>src/period_detector.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/app/period_detector.hpp</locationURI>
-		</link>
-		<link>
-			<name>src/period_trigger.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/app/period_trigger.hpp</locationURI>
-		</link>
-		<link>
-			<name>src/pll.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/app/pll.hpp</locationURI>
-		</link>
-		<link>
-			<name>src/pls.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/app/pls.hpp</locationURI>
-		</link>
-		<link>
 			<name>src/start.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/app/start.cpp</locationURI>
-		</link>
-		<link>
-			<name>src/sustainer.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/app/sustainer.hpp</locationURI>
 		</link>
 		<link>
 			<name>src/system_clock_config.cpp</name>
